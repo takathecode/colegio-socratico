@@ -27,7 +27,7 @@ class UsuarioAdmin(UserAdmin):
     # Tela de edição de um usuário existente.
     fieldsets = (
         (None, {"fields": ("matricula", "password")}),
-        ("Dados pessoais", {"fields": ("first_name", "last_name", "email")}),
+        ("Dados pessoais", {"fields": ("tratamento", "first_name", "last_name", "email")}),
         ("Perfil no sistema", {"fields": ("perfil",)}),
         (
             "Permissões",
@@ -44,6 +44,7 @@ class UsuarioAdmin(UserAdmin):
                 "classes": ("wide",),
                 "fields": (
                     "matricula",
+                    "tratamento",
                     "first_name",
                     "last_name",
                     "email",

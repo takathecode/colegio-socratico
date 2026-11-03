@@ -36,7 +36,27 @@ Deixe esse terminal aberto: o site só abre enquanto o `runserver` estiver rodan
 O Django Admin fica em http://127.0.0.1:8000/admin/ e o login é feito por matrícula e senha.
 Não existe tela de cadastro: as contas são criadas pelo coordenador ou pelo Django Admin.
 
-Conta de teste do Django Admin: matrícula `admin01`, senha `admin01`. Use somente em desenvolvimento.
+### Dados de demonstração
+
+```powershell
+python manage.py popular_demo
+```
+
+Rodar de novo apaga e recria somente os dados de demonstração, com as datas ajustadas para o dia atual.
+O comando só funciona com `DEBUG=True`.
+
+### Acessos de teste
+
+A senha é igual à matrícula. Essas contas são somente para desenvolvimento.
+
+| Perfil | Matrícula | Observação |
+|---|---|---|
+| Administrador | `admin01` | Criada na instalação, com `createsuperuser`; não é recriada pelo `popular_demo` |
+| Coordenador | `coord01` | |
+| Professor | `prof01` a `prof06` | Um por disciplina |
+| Aluno | `aluno01` a `aluno40` | `aluno01` reproduz os dados do protótipo |
+
+Alunos com dados de risco: `aluno05`, `aluno09`, `aluno14`, `aluno18`, `aluno23`, `aluno27`, `aluno32` e `aluno38`.
 
 ### Se o sistema travar ao conectar no banco
 

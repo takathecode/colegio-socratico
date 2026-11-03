@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Apps do projeto
     "apps.contas",
+    "apps.academico",
 ]
 
 MIDDLEWARE = [
@@ -120,5 +121,9 @@ USE_TZ = True
 
 # Arquivos estáticos (CSS, JavaScript e imagens)
 STATIC_URL = "static/"
+
+# Anexos enviados pelos usuários. Esta pasta fica fora do Git e não tem rota pública em urls.py:
+# atestados contêm dados pessoais e só serão entregues por uma view que confere a permissão.
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

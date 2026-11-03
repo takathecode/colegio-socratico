@@ -45,7 +45,7 @@ Front-end: templates Django + **Tailwind CSS** + JavaScript puro. Sem React/Vue.
 ```
 config/            settings.py, urls.py, celery.py
 apps/contas/       Usuario customizado, login, redirecionamento e decorators de perfil
-apps/academico/    Curso, Turma, Disciplina, Matricula, Avaliacao, Nota, Frequencia, Justificativa, Evento
+apps/academico/    Curso, Turma, Disciplina, Oferta, Matricula, Avaliacao, Nota, Aula, Frequencia, Justificativa, Evento (DER em docs/DER.md)
 apps/aluno/        views e templates da área do aluno        → /aluno/
 apps/professor/    views e templates da área do professor    → /professor/
 apps/coordenacao/  views e templates da área do coordenador  → /coordenacao/
@@ -112,7 +112,8 @@ ml/                modelo treinado (.joblib) — não versionar
 ## Progresso
 - [x] 1. Base do projeto, `.env`, conexão com Supabase, usuário customizado
   - Decisões: Django 5.2 LTS; testes em SQLite na memória (o sistema usa o Supabase); a rede do SENAI não completa conexões na porta 5432, então usar outra rede (ex.: roteador do celular) para acessar o banco; Data API desligada no painel do Supabase, pois as tabelas do Django não têm RLS (não religar).
-- [ ] 2. Modelos acadêmicos + Django Admin + comando `popular_demo`
+- [x] 2. Modelos acadêmicos + Django Admin + comando `popular_demo`
+  - Decisões: nome Colégio Socrático com conteúdo de curso superior, como no protótipo; novas entidades `Oferta` e `Aula`; créditos e coeficiente anteriores ficam na `Matricula`; `Usuario.tratamento` é informado no cadastro; média, frequência e selo são calculados em `apps/academico/calculos.py`; anexos ficam em `media/`, sem rota pública.
 - [ ] 3. Login, redirecionamento por perfil, permissões, `base.html` e layout
 - [ ] 4. Área do aluno
 - [ ] 5. Área do professor

@@ -45,6 +45,8 @@ class Usuario(AbstractUser):
     perfil = models.CharField(
         "perfil", max_length=11, choices=Perfil.choices, default=Perfil.ALUNO
     )
+    # Informado no cadastro (ex.: "Prof." ou "Profa."), em vez de ser deduzido pelo nome.
+    tratamento = models.CharField("tratamento", max_length=10, blank=True)
 
     # Campo usado na tela de login.
     USERNAME_FIELD = "matricula"
@@ -61,3 +63,8 @@ class Usuario(AbstractUser):
     def __str__(self):
         nome = self.get_full_name()
         return f"{self.matricula} - {nome}" if nome else self.matricula
+
+    @property
+    def nome_com_tratamento(self):
+        """Nome usado nas telas, como "Prof. Ricardo Almeida"."""
+        return f"{self.tratamento} {self.get_full_name()}".strip()
