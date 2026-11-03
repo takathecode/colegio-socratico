@@ -1,4 +1,4 @@
-# Colégio Socrático — Sistema de Gestão Acadêmica Inteligente
+# Instituto Socrático — Sistema de Gestão Acadêmica Inteligente
 
 Projeto final do curso de Desenvolvimento de Sistemas (SENAI Morvan Figueiredo).
 Sistema em Django com banco PostgreSQL no Supabase e áreas separadas para aluno, professor e coordenador.
@@ -33,8 +33,22 @@ python manage.py runserver
 
 Deixe esse terminal aberto: o site só abre enquanto o `runserver` estiver rodando.
 
-O Django Admin fica em http://127.0.0.1:8000/admin/ e o login é feito por matrícula e senha.
+O portal abre em http://127.0.0.1:8000/ e o login é feito por matrícula e senha. Depois de entrar,
+cada perfil vai para a sua área. O Django Admin fica em http://127.0.0.1:8000/admin/.
 Não existe tela de cadastro: as contas são criadas pelo coordenador ou pelo Django Admin.
+
+Em "Esqueci minha senha", durante o desenvolvimento, o e-mail com o link aparece no terminal do `runserver`.
+
+### CSS (Tailwind)
+
+O CSS compilado já vem no projeto, então o sistema roda sem o Node. Só é preciso o Node
+para alterar o visual. Depois de usar classes novas do Tailwind nos templates, compile de novo:
+
+```powershell
+npm install        # somente na primeira vez
+npm run css        # compila uma vez
+npm run css:dev    # ou deixe em um terminal separado, recompilando a cada alteração
+```
 
 ### Dados de demonstração
 

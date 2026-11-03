@@ -1,0 +1,13 @@
+{
+  "name": "instituto-socratico",
+  "private": true,
+  "description": "Compila o CSS do sistema com Tailwind. O Django não depende do Node para rodar.",
+  "scripts": {
+    "css": "tailwindcss -i assets/tailwind.css -o static/css/app.css --minify",
+    "css:dev": "tailwindcss -i assets/tailwind.css -o static/css/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.4",
+    "tailwindcss": "4.3.4"
+  }
+}

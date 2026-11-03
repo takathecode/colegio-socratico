@@ -1,4 +1,4 @@
-"""Configurações do projeto Colégio Socrático.
+"""Configurações do projeto Instituto Socrático.
 
 Valores sensíveis (senha do banco e SECRET_KEY) não ficam aqui: eles vêm do arquivo .env,
 que está fora do Git. O modelo desse arquivo é o .env.example.
@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     # Apps do projeto
     "apps.contas",
     "apps.academico",
+    "apps.aluno",
+    "apps.professor",
+    "apps.coordenacao",
 ]
 
 MIDDLEWARE = [
@@ -67,13 +70,14 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.contas.context_processors.menu_lateral",
             ],
         },
     },
@@ -104,6 +108,14 @@ else:
 # Usuário customizado: o login é feito por matrícula (apps/contas/models.py).
 AUTH_USER_MODEL = "contas.Usuario"
 
+# Rotas de login e saída. "/" (contas:inicio) manda cada perfil para a sua área.
+LOGIN_URL = "contas:entrar"
+LOGIN_REDIRECT_URL = "contas:inicio"
+LOGOUT_REDIRECT_URL = "contas:entrar"
+
+# Prazo do link de "Esqueci minha senha": 1 hora, em segundos.
+PASSWORD_RESET_TIMEOUT = 60 * 60
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -121,9 +133,16 @@ USE_TZ = True
 
 # Arquivos estáticos (CSS, JavaScript e imagens)
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Anexos enviados pelos usuários. Esta pasta fica fora do Git e não tem rota pública em urls.py:
 # atestados contêm dados pessoais e só serão entregues por uma view que confere a permissão.
 MEDIA_ROOT = BASE_DIR / "media"
+
+# E-mail. Em desenvolvimento, o backend de console mostra a mensagem no terminal do runserver.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", "Instituto Socrático <nao-responda@institutosocratico.example>"
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

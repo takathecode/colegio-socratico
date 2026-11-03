@@ -1,0 +1,10 @@
+{# Botão principal com estado "carregando". O formulário precisa do atributo data-carregando. #}
+<button type="submit"
+        class="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#1F4E8C] text-sm font-semibold text-white hover:bg-[#0B2545] disabled:cursor-wait disabled:hover:bg-[#1F4E8C]">
+  <span data-estado="normal" class="flex items-center gap-2">
+    {% if icone %}<i data-lucide="{{ icone }}" class="size-4"></i>{% endif %}{{ texto }}
+  </span>
+  <span data-estado="carregando" class="hidden items-center gap-2">
+    <i data-lucide="loader-circle" class="size-4 animate-spin"></i>{{ texto_carregando }}
+  </span>
+</button>

@@ -68,3 +68,13 @@ class Usuario(AbstractUser):
     def nome_com_tratamento(self):
         """Nome usado nas telas, como "Prof. Ricardo Almeida"."""
         return f"{self.tratamento} {self.get_full_name()}".strip()
+
+    @property
+    def iniciais(self):
+        """Letras do avatar: primeiro e último nome, ou o começo da matrícula."""
+        partes = self.get_full_name().split()
+        if not partes:
+            return self.matricula[:2].upper()
+        if len(partes) == 1:
+            return partes[0][0].upper()
+        return (partes[0][0] + partes[-1][0]).upper()

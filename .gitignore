@@ -23,3 +23,6 @@ ml/*.joblib
 
 # Windows
 Thumbs.db
+
+# Dependências do Node (recriadas com npm install)
+node_modules/

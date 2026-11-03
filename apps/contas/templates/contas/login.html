@@ -1,0 +1,49 @@
+{% extends "contas/base_login.html" %}
+
+{% block titulo %}Entrar{% endblock %}
+
+{% block conteudo %}
+  <h1 class="text-3xl font-semibold">Boas-vindas ao seu portal</h1>
+  <p class="mt-2 text-sm text-slate-500">Entre com sua matrícula e senha institucional.</p>
+
+  {% if form.errors %}
+    <div role="alert" class="mt-6 flex gap-3 rounded-lg border border-[#C62828] bg-red-50 p-4 text-[#B71C1C]">
+      <i data-lucide="circle-alert" class="mt-0.5 size-5 shrink-0"></i>
+      <div>
+        {% if form.non_field_errors %}
+          <p class="text-sm font-semibold">Matrícula ou senha incorreta</p>
+          <p class="mt-1 text-xs leading-relaxed">Confira os dados e tente novamente. Se precisar, recupere sua senha.</p>
+        {% else %}
+          <p class="text-sm font-semibold">Preencha a matrícula e a senha</p>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <form method="post" data-carregando class="mt-6 space-y-5">
+    {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+    {% include "componentes/campo.html" with campo=form.username icone="user-round" tipo="text" autocomplete="username" invalido=form.non_field_errors %}
+    {% include "componentes/campo.html" with campo=form.password icone="lock-keyhole" tipo="password" autocomplete="current-password" invalido=form.non_field_errors %}
+
+    <div class="flex items-center justify-between gap-4 text-xs">
+      <label class="flex items-center gap-2 text-slate-500">
+        <input type="checkbox" name="{{ form.manter_conectado.html_name }}" class="size-4 rounded border-[#E5E9F0] accent-[#1F4E8C]" {% if form.manter_conectado.value %}checked{% endif %}>
+        Manter conectado
+      </label>
+      <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-[#1F4E8C] hover:underline">Esqueci minha senha</a>
+    </div>
+
+    {% include "componentes/botao_enviar.html" with texto="Entrar no portal" texto_carregando="Entrando no portal…" icone="arrow-right" %}
+
+    <p data-aviso-carregando class="hidden text-center text-xs leading-relaxed text-slate-500">
+      Verificando seus dados com segurança.<br>Aguarde um instante.
+    </p>
+  </form>
+
+  <div class="mt-6 border-t border-[#E5E9F0] pt-6 text-center text-xs">
+    <p class="text-slate-500">Primeiro acesso ou dificuldade para entrar?</p>
+    <a href="{% url 'contas:atendimento' %}" class="mt-4 inline-block text-sm font-semibold text-[#1F4E8C] hover:underline">Fale com a Central de Atendimento</a>
+  </div>
+{% endblock %}

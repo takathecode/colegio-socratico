@@ -1,0 +1,30 @@
+{% extends "contas/base_login.html" %}
+
+{% block titulo %}Central de Atendimento{% endblock %}
+
+{% block conteudo %}
+  <h1 class="text-3xl font-semibold">Central de Atendimento</h1>
+  <p class="mt-2 text-sm text-slate-500">Orientações para acessar o portal.</p>
+
+  <dl class="mt-6 space-y-5 text-sm">
+    <div>
+      <dt class="font-semibold">É o seu primeiro acesso?</dt>
+      <dd class="mt-1 text-slate-500">As contas são criadas pela coordenação. Procure a secretaria para receber sua matrícula e senha.</dd>
+    </div>
+    <div>
+      <dt class="font-semibold">Esqueceu a senha?</dt>
+      <dd class="mt-1 text-slate-500">
+        <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-[#1F4E8C] hover:underline">Peça um link de redefinição</a>
+        usando o e-mail cadastrado na sua conta.
+      </dd>
+    </div>
+    <div>
+      <dt class="font-semibold">Mudou de e-mail ou o problema continua?</dt>
+      <dd class="mt-1 text-slate-500">Procure a secretaria para atualizar seus dados.</dd>
+    </div>
+  </dl>
+
+  <a href="{% url 'contas:inicio' %}" class="mt-8 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+    <i data-lucide="arrow-left" class="size-4"></i> Voltar ao portal
+  </a>
+{% endblock %}

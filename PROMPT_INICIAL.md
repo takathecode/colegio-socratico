@@ -1,4 +1,4 @@
-Você vai desenvolver comigo, do zero, o TCC "Colégio Socrático — Sistema de Gestão Acadêmica Inteligente".
+Você vai desenvolver comigo, do zero, o TCC "Instituto Socrático — Sistema de Gestão Acadêmica Inteligente".
 Leia primeiro, por completo: `CLAUDE.md` (regras do projeto), `docs/TEMA_8.pdf` (enunciado do professor)
 e `docs/prototipo/prototipo.png` (protótipo). Tudo o que está no CLAUDE.md é obrigatório.
 

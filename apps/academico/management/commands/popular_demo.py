@@ -213,7 +213,7 @@ class Command(BaseCommand):
             last_name=sobrenome,
             tratamento=tratamento,
             # O domínio .example é reservado: nenhum e-mail chega a uma pessoa real.
-            email=f"{matricula}@colegiosocratico.example",
+            email=f"{matricula}@institutosocratico.example",
         )
 
     def perfil_do_aluno(self, matricula):

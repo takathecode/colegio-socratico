@@ -1,0 +1,42 @@
+{% extends "esqueleto.html" %}
+{% load static %}
+{# Layout das telas públicas: painel azul à esquerda e conteúdo à direita. #}
+
+{% block classes_body %}min-h-screen bg-white text-[#0B2545] antialiased{% endblock %}
+
+{% block corpo %}
+  <div class="min-h-screen lg:grid lg:grid-cols-[41%_1fr]">
+    <aside class="hidden flex-col bg-[#0B2545] px-12 py-12 text-white lg:flex xl:px-16">
+      <img src="{% static 'img/socrates.png' %}" alt="" class="mx-auto h-[clamp(150px,34vh,330px)] w-auto">
+      <div class="mt-auto pt-8">
+        <p class="text-xs font-medium tracking-wide text-slate-300">CONHECIMENTO QUE ABRE CAMINHOS</p>
+        <p class="mt-6 text-4xl leading-tight xl:text-5xl xl:leading-[1.35]">Seu futuro se constrói a cada conquista.</p>
+        <span class="mt-6 block h-[3px] w-16 bg-slate-300"></span>
+        <p class="mt-6 max-w-md text-base text-slate-300">Acompanhe sua trajetória acadêmica com clareza. Mais autonomia para cuidar do que importa: sua formação.</p>
+      </div>
+      <p class="mt-10 text-xs leading-relaxed text-slate-300">Instituto Socrático<br>Ensino, pesquisa e novas possibilidades.</p>
+    </aside>
+
+    <div class="flex min-h-screen flex-col">
+      <div class="flex items-center gap-3 bg-[#0B2545] px-6 py-4 text-white lg:hidden">
+        {% include "componentes/logo.html" with claro=True %}
+        <span class="font-bold">Instituto Socrático</span>
+      </div>
+
+      <div class="flex flex-1 flex-col px-6 py-6 sm:px-12 lg:py-14 xl:px-24">
+        <div class="flex items-center justify-between text-xs">
+          <span class="tracking-wide text-slate-500">PORTAL ACADÊMICO</span>
+          <span class="flex items-center gap-1.5 text-green-700"><i data-lucide="lock-keyhole" class="size-3.5"></i>Ambiente seguro</span>
+        </div>
+
+        <main class="mx-auto flex w-full max-w-[416px] flex-1 flex-col justify-center py-10">
+          {% block conteudo %}{% endblock %}
+        </main>
+
+        <footer class="text-center text-xs leading-relaxed text-slate-500">
+          © 2026 Instituto Socrático<br>Privacidade e proteção de dados · Acessibilidade
+        </footer>
+      </div>
+    </div>
+  </div>
+{% endblock %}

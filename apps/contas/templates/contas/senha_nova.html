@@ -1,0 +1,21 @@
+{% extends "contas/base_login.html" %}
+
+{% block titulo %}Criar nova senha{% endblock %}
+
+{% block conteudo %}
+  {% if validlink %}
+    <h1 class="text-3xl font-semibold">Criar nova senha</h1>
+    <p class="mt-2 text-sm text-slate-500">Use pelo menos 8 caracteres, evite senhas comuns e não use só números.</p>
+
+    <form method="post" data-carregando class="mt-6 space-y-5">
+      {% csrf_token %}
+      {% include "componentes/campo.html" with campo=form.new_password1 icone="lock-keyhole" tipo="password" rotulo="Nova senha" autocomplete="new-password" %}
+      {% include "componentes/campo.html" with campo=form.new_password2 icone="lock-keyhole" tipo="password" rotulo="Repita a nova senha" autocomplete="new-password" %}
+      {% include "componentes/botao_enviar.html" with texto="Salvar nova senha" texto_carregando="Salvando…" %}
+    </form>
+  {% else %}
+    <h1 class="text-3xl font-semibold">Link inválido</h1>
+    <p class="mt-2 text-sm text-slate-500">Este link já foi usado ou passou do prazo de 1 hora. Peça um novo para continuar.</p>
+    <a href="{% url 'contas:senha_esqueci' %}" class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-lg bg-[#1F4E8C] text-sm font-semibold text-white hover:bg-[#0B2545]">Pedir novo link</a>
+  {% endif %}
+{% endblock %}

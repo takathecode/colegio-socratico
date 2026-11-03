@@ -1,0 +1,9 @@
+{% extends "contas/base_login.html" %}
+
+{% block titulo %}Senha alterada{% endblock %}
+
+{% block conteudo %}
+  <h1 class="text-3xl font-semibold">Senha alterada</h1>
+  <p class="mt-2 text-sm text-slate-500">Sua nova senha já está valendo.</p>
+  <a href="{% url 'contas:entrar' %}" class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-lg bg-[#1F4E8C] text-sm font-semibold text-white hover:bg-[#0B2545]">Entrar no portal</a>
+{% endblock %}

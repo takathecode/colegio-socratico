@@ -1,4 +1,4 @@
-# Colégio Socrático — Sistema de Gestão Acadêmica Inteligente (TCC SENAI)
+# Instituto Socrático — Sistema de Gestão Acadêmica Inteligente (TCC SENAI)
 
 Projeto final do curso de Desenvolvimento de Sistemas (SENAI Morvan Figueiredo).
 Sistema acadêmico em Django com banco PostgreSQL hospedado no **Supabase**, três áreas
@@ -23,6 +23,8 @@ Responda e escreva comentários, mensagens de commit e textos de interface em **
   **Session pooler** (porta 5432) com `sslmode=require`.
 - Redis: via Docker (`docker run -d -p 6379:6379 redis`) ou Upstash (`rediss://...`).
 - Celery no Windows **precisa** de `--pool=solo`.
+- Node.js: usado só para compilar o CSS do Tailwind. O `static/css/app.css` compilado vai para o Git,
+  então rodar o sistema não exige Node.
 
 ## Comandos
 ```powershell
@@ -34,12 +36,16 @@ python manage.py popular_demo                     # dados fictícios para demons
 python manage.py treinar_modelo                   # treina o modelo de evasão
 celery -A config worker --pool=solo -l info       # worker (terminal separado)
 celery -A config beat -l info                     # agendador (terminal separado)
+npm install                                       # instala o Tailwind (uma vez, em cada computador)
+npm run css                                       # compila o CSS (rodar depois de usar classes novas)
+npm run css:dev                                   # recompila sozinho a cada alteração (terminal separado)
 ```
 
 ## Stack (exigida pelo professor — não trocar)
 django, djangorestframework, django-filter, psycopg2-binary, dj-database-url, python-dotenv,
 pandas, openpyxl, scikit-learn, joblib, matplotlib, reportlab, celery, redis, drf-spectacular.
-Front-end: templates Django + **Tailwind CSS** + JavaScript puro. Sem React/Vue.
+Front-end: templates Django + **Tailwind CSS** (compilado pelo Node: `assets/tailwind.css` gera
+`static/css/app.css`) + JavaScript puro (`static/js/portal.js`). Sem React/Vue.
 
 ## Estrutura
 ```
@@ -54,8 +60,9 @@ apps/alertas/      modelo Alerta, notificações e tarefas Celery
 apps/relatorios/   geração de PDF (reportlab) e Excel (pandas)
 apps/mensagens/    caixa de mensagens interna
 apps/api/          serializers, viewsets e rotas da API REST → /api/ e /api/docs/
-templates/         base.html, componentes/ (parciais reutilizáveis)
-static/            css, js, img
+templates/         esqueleto.html, base.html, 403.html, componentes/ (parciais reutilizáveis)
+assets/            tailwind.css (entrada do Tailwind)
+static/            css (compilado), js, img
 ml/                modelo treinado (.joblib) — não versionar
 ```
 
@@ -87,9 +94,11 @@ ml/                modelo treinado (.joblib) — não versionar
 - Nunca colocar senha, URL do banco ou SECRET_KEY no código. Tudo vem do `.env`.
   Manter `.env.example` atualizado (sem valores reais). `.env` está no `.gitignore`.
 
-## Padrão visual (protótipo Figma "Colégio Socrático")
+## Padrão visual (protótipo Figma)
+- O nome é sempre **Instituto Socrático** e a logo é um "S", mesmo onde o protótipo mostrar outro
+  nome ou outra letra.
 - Fonte Inter. Fundo da página `#F5F7FA`, cards brancos com borda `#E5E9F0` e cantos arredondados.
-- Azul-marinho da marca `#0B2545` (painel lateral do login, logo "H"); botão primário `#1F4E8C`.
+- Azul-marinho da marca `#0B2545` (painel lateral do login, logo "S"); botão primário `#1F4E8C`.
 - Selos: verde "Regular", âmbar "Em atenção", vermelho "Em risco".
 - Layout das áreas internas: barra lateral à esquerda (logo, menu, card "Precisa de ajuda?",
   "Sair do portal"), topo com breadcrumb, busca, sino de notificações e avatar.
@@ -113,8 +122,9 @@ ml/                modelo treinado (.joblib) — não versionar
 - [x] 1. Base do projeto, `.env`, conexão com Supabase, usuário customizado
   - Decisões: Django 5.2 LTS; testes em SQLite na memória (o sistema usa o Supabase); a rede do SENAI não completa conexões na porta 5432, então usar outra rede (ex.: roteador do celular) para acessar o banco; Data API desligada no painel do Supabase, pois as tabelas do Django não têm RLS (não religar).
 - [x] 2. Modelos acadêmicos + Django Admin + comando `popular_demo`
-  - Decisões: nome Colégio Socrático com conteúdo de curso superior, como no protótipo; novas entidades `Oferta` e `Aula`; créditos e coeficiente anteriores ficam na `Matricula`; `Usuario.tratamento` é informado no cadastro; média, frequência e selo são calculados em `apps/academico/calculos.py`; anexos ficam em `media/`, sem rota pública.
-- [ ] 3. Login, redirecionamento por perfil, permissões, `base.html` e layout
+  - Decisões: nome Instituto Socrático com conteúdo de curso superior, como no protótipo; novas entidades `Oferta` e `Aula`; créditos e coeficiente anteriores ficam na `Matricula`; `Usuario.tratamento` é informado no cadastro; média, frequência e selo são calculados em `apps/academico/calculos.py`; anexos ficam em `media/`, sem rota pública.
+- [x] 3. Login, redirecionamento por perfil, permissões, `base.html` e layout
+  - Decisões: nome trocado para Instituto Socrático, com logo "S"; Tailwind compilado com Node e CSS compilado no Git; ilustração do filósofo nos três estados do login, sem a estatística "25 anos"; "Boas-vindas" no lugar de "Bem-vinda", pois antes do login não sabemos quem entra; item de menu sem tela aparece desativado (`apps/contas/menu.py`); busca e sino ainda são só visuais; link de redefinição de senha vale 1 hora.
 - [ ] 4. Área do aluno
 - [ ] 5. Área do professor
 - [ ] 6. Área do coordenador (CRUDs e criação de contas)

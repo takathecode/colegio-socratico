@@ -1,0 +1,65 @@
+{% extends "esqueleto.html" %}
+{# Layout das áreas internas. As telas preenchem os blocos titulo, breadcrumb e conteudo. #}
+
+{% block head_extra %}
+  {# Aplica a preferência antes de desenhar a página, para a barra lateral não "pular". #}
+  <script>
+    try {
+      if (localStorage.getItem("barra-lateral") === "recolhida") {
+        document.documentElement.dataset.sidebar = "recolhida";
+      }
+    } catch (erro) {}
+  </script>
+{% endblock %}
+
+{% block corpo %}
+  {% include "componentes/sidebar.html" %}
+
+  <div class="lg:pl-[235px] lg:recolhida:pl-[86px] transition-[padding] duration-200">
+    <header class="sticky top-0 z-20 flex h-[73px] items-center gap-3 border-b border-[#E5E9F0] bg-white px-4 sm:px-6">
+      <button type="button" data-alternar-menu aria-label="Abrir ou recolher o menu" aria-controls="barra-lateral"
+              class="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:bg-[#F5F7FA]">
+        <i data-lucide="menu" class="size-5"></i>
+      </button>
+
+      <a href="{% url 'contas:inicio' %}" aria-label="Instituto Socrático: ir para o início" class="lg:hidden">
+        {% include "componentes/logo.html" %}
+      </a>
+
+      <nav aria-label="Caminho da página" class="hidden min-w-0 truncate text-sm text-slate-500 lg:block">
+        Portal Acadêmico / <span>{% block breadcrumb %}{% endblock %}</span>
+      </nav>
+
+      <div class="ml-auto flex items-center gap-2 sm:gap-4">
+        {# Busca e sino ainda são só visuais; o sino passa a funcionar na etapa 9. #}
+        <label class="relative hidden md:block" title="A busca estará disponível em breve">
+          <span class="sr-only">Buscar no portal</span>
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
+          <input type="search" disabled placeholder="Buscar no portal"
+                 class="h-9 w-56 rounded-lg bg-[#F5F7FA] pl-9 pr-3 text-sm placeholder:text-slate-500 xl:w-72">
+        </label>
+        <button type="button" disabled aria-label="Buscar no portal (em breve)" title="A busca estará disponível em breve"
+                class="flex size-10 items-center justify-center text-slate-500 md:hidden">
+          <i data-lucide="search" class="size-5"></i>
+        </button>
+        <button type="button" disabled aria-label="Notificações (em breve)" title="As notificações estarão disponíveis em breve"
+                class="flex size-10 items-center justify-center text-slate-500">
+          <i data-lucide="bell" class="size-5"></i>
+        </button>
+
+        <div class="flex items-center gap-3">
+          <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C]" aria-hidden="true">{{ user.iniciais }}</span>
+          <div class="hidden leading-tight sm:block">
+            <p class="text-sm font-medium">{{ user.nome_com_tratamento|default:user.matricula }}</p>
+            <p class="text-xs text-slate-500">{% if user.perfil == "ALUNO" %}RA{% else %}Matrícula{% endif %} {{ user.matricula }}</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="px-4 py-6 sm:px-6">
+      {% include "componentes/mensagens.html" %}
+      {% block conteudo %}{% endblock %}
+    </main>
+  </div>
+{% endblock %}

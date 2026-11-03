@@ -1,0 +1,23 @@
+{# Campo de formulário com ícone. Parâmetros: campo, icone, tipo e, opcionais, rotulo, autocomplete e invalido. #}
+<div>
+  <label for="{{ campo.id_for_label }}" class="text-sm font-medium">{{ rotulo|default:campo.label }}</label>
+  <div class="relative mt-2">
+    <i data-lucide="{{ icone }}" class="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500"></i>
+    <input id="{{ campo.id_for_label }}" name="{{ campo.html_name }}" type="{{ tipo }}" required
+           {% if tipo != "password" and campo.value %}value="{{ campo.value }}"{% endif %}
+           {% if autocomplete %}autocomplete="{{ autocomplete }}"{% endif %}
+           {% if tipo != "password" %}autocapitalize="none" spellcheck="false"{% endif %}
+           {% if invalido or campo.errors %}aria-invalid="true"{% endif %}
+           class="h-12 w-full rounded-lg border bg-white pl-12 pr-12 text-sm outline-none focus:ring-2 focus:ring-[#1F4E8C]/30 {% if invalido or campo.errors %}border-[#C62828]{% else %}border-[#E5E9F0] focus:border-[#1F4E8C]{% endif %}">
+    {% if tipo == "password" %}
+      <button type="button" data-mostrar-senha aria-label="Mostrar senha" aria-pressed="false"
+              class="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:text-[#0B2545]">
+        <span data-olho="fechado"><i data-lucide="eye-off" class="size-5"></i></span>
+        <span data-olho="aberto" class="hidden"><i data-lucide="eye" class="size-5"></i></span>
+      </button>
+    {% endif %}
+  </div>
+  {% for erro in campo.errors %}
+    <p class="mt-1 text-sm text-[#C62828]">{{ erro }}</p>
+  {% endfor %}
+</div>
