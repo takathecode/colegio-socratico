@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block titulo %}Frequência{% endblock %}
+{% block breadcrumb %}Frequência{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Frequência</h1>
+      <p class="mt-1 text-sm text-slate-500">Acompanhe suas presenças e mantenha sua trajetória em dia.</p>
+    </div>
+    {# O relatório é criado na etapa 10. #}
+    <button type="button" disabled title="O relatório estará disponível em breve"
+            class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-slate-400">
+      <i data-lucide="download" class="size-4"></i> Exportar relatório
+    </button>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <form method="get" class="flex flex-wrap items-center gap-3">
+      <span class="inline-flex h-10 items-center rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C]">Semestre {{ matricula.turma.semestre }}</span>
+      <label class="sr-only" for="filtro-disciplina">Filtrar o calendário por disciplina</label>
+      <select id="filtro-disciplina" name="disciplina" data-enviar-ao-mudar
+              class="h-10 rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm font-semibold text-[#1F4E8C]">
+        <option value="">Todas as disciplinas</option>
+        {% for linha in linhas %}
+          <option value="{{ linha.oferta.pk }}" {% if linha.oferta.pk == oferta_id %}selected{% endif %}>{{ linha.oferta.disciplina.nome }}</option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="mes" value="{{ mes|date:'Y-m' }}">
+    </form>
+
+    <button type="button" data-abrir-modal="modal-justificar" {% if not falta_recente %}disabled title="Você não tem faltas para justificar"{% endif %}
+            class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545] disabled:cursor-not-allowed disabled:bg-slate-300">
+      <i data-lucide="plus" class="size-4"></i> Justificar ausência
+    </button>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-[1fr_1.2fr_1.3fr]">
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Frequência global</h2>
+      <p class="mt-1 text-xs text-slate-500">Semestre {{ matricula.turma.semestre }}</p>
+      {% include "componentes/frequencia_global.html" %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <div class="flex items-center justify-between gap-2">
+        <h2 class="font-semibold">{{ mes|date:"F \d\e Y"|capfirst }}</h2>
+        <div class="flex items-center gap-1">
+          <a href="?mes={{ mes_anterior|date:'Y-m' }}{% if oferta_id %}&disciplina={{ oferta_id }}{% endif %}" aria-label="Mês anterior"
+             class="flex size-8 items-center justify-center rounded-lg text-slate-500 hover:bg-[#F5F7FA]"><i data-lucide="chevron-left" class="size-4"></i></a>
+          <a href="?mes={{ mes_seguinte|date:'Y-m' }}{% if oferta_id %}&disciplina={{ oferta_id }}{% endif %}" aria-label="Mês seguinte"
+             class="flex size-8 items-center justify-center rounded-lg text-slate-500 hover:bg-[#F5F7FA]"><i data-lucide="chevron-right" class="size-4"></i></a>
+        </div>
+      </div>
+      <p class="mb-3 mt-1 text-xs text-slate-500">Presenças registradas até {{ hoje|date:"d/m" }}</p>
+      {% include "componentes/calendario_frequencia.html" %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5 lg:col-span-2 xl:col-span-1">
+      <h2 class="font-semibold">Justificativa pendente</h2>
+      {% if falta_recente %}
+        <p class="mt-3">{% include "componentes/selo.html" with situacao="Ação necessária" %}</p>
+        <p class="mt-3 font-semibold">{{ falta_recente.aula.oferta.disciplina.nome }} · {{ falta_recente.aula.data|date:"d/m/Y" }}</p>
+        <p class="mt-2 text-sm text-slate-500">
+          Envie seu comprovante para análise do professor. A justificativa não altera a frequência automaticamente.
+          {% if outras_faltas %}Há mais {{ outras_faltas }} falta{{ outras_faltas|pluralize:"s" }} sem justificativa.{% endif %}
+        </p>
+        <button type="button" data-abrir-modal="modal-justificar"
+                class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+          Enviar justificativa <i data-lucide="arrow-right" class="size-4"></i>
+        </button>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhuma falta aguardando justificativa" icone="circle-check" %}
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <h2 class="font-semibold">Frequência por disciplina</h2>
+    <p class="mb-4 mt-1 text-sm text-slate-500">Aulas e faltas em horas-aula · mínimo exigido de {{ frequencia.minimo }}%</p>
+    {% include "aluno/_disciplinas.html" with coluna="aulas" %}
+  </section>
+
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <h2 class="font-semibold">Minhas justificativas</h2>
+    <p class="mb-3 mt-1 text-sm text-slate-500">Acompanhe a análise dos pedidos enviados.</p>
+    <ul class="divide-y divide-[#E5E9F0]">
+      {% for justificativa in justificativas %}
+        <li class="flex flex-wrap items-start justify-between gap-3 py-3">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-medium">{{ justificativa.frequencia.aula.oferta.disciplina.nome }} · {{ justificativa.frequencia.aula.data|date:"d/m/Y" }}</p>
+            <p class="mt-0.5 text-xs text-slate-500">Enviada em {{ justificativa.criada_em|date:"d/m/Y" }}</p>
+            <p class="mt-1 break-words text-sm text-slate-600">{{ justificativa.motivo }}</p>
+            {% if justificativa.resposta %}
+              <p class="mt-1 break-words text-sm"><span class="font-medium">Resposta:</span> {{ justificativa.resposta }}</p>
+            {% endif %}
+            {% if justificativa.anexo %}
+              <a href="{% url 'aluno:anexo_justificativa' justificativa.pk %}" class="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+                <i data-lucide="download" class="size-4"></i> Baixar anexo
+              </a>
+            {% endif %}
+          </div>
+          {% include "componentes/selo.html" with situacao=justificativa.get_status_display %}
+        </li>
+      {% empty %}
+        <li>{% include "componentes/vazio.html" with titulo="Nenhuma justificativa enviada" texto="Quando você enviar um pedido, ele aparecerá aqui com a resposta." icone="file-text" %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {% if falta_recente %}
+    {% include "componentes/modal.html" with id="modal-justificar" titulo="Justificar ausência" subtitulo="Envie as informações para análise do professor." conteudo="aluno/_form_justificativa.html" aberto=abrir_modal %}
+  {% endif %}
+{% endblock %}

@@ -1,6 +1,6 @@
 # Diagrama de entidades (DER)
 
-Modelos do app `apps/academico` e sua ligação com o usuário do sistema (`contas.Usuario`).
+Modelos dos apps `academico`, `mensagens` e `financeiro` e sua ligação com o usuário do sistema (`contas.Usuario`).
 
 ```mermaid
 erDiagram
@@ -20,6 +20,11 @@ erDiagram
     MATRICULA ||--o{ FREQUENCIA : "tem"
     FREQUENCIA ||--o{ JUSTIFICATIVA : "é justificada por"
     OFERTA |o--o{ EVENTO : "pode ter"
+    USUARIO ||--o{ CONVERSA : "participa (aluno e contato)"
+    OFERTA |o--o{ CONVERSA : "assunto de"
+    CONVERSA ||--o{ MENSAGEM : "tem"
+    USUARIO ||--o{ MENSAGEM : "envia"
+    MATRICULA ||--o{ MENSALIDADE : "gera"
 
     USUARIO {
         string matricula UK
@@ -102,6 +107,31 @@ erDiagram
         text descricao
         bigint oferta_id FK
     }
+    CONVERSA {
+        bigint aluno_id FK
+        bigint contato_id FK
+        string assunto
+        bigint oferta_id FK
+        datetime criada_em
+    }
+    MENSAGEM {
+        bigint conversa_id FK
+        bigint remetente_id FK
+        text texto
+        file anexo
+        datetime enviada_em
+        datetime lida_em
+    }
+    MENSALIDADE {
+        bigint matricula_id FK
+        date competencia
+        int parcela
+        int total_parcelas
+        decimal valor
+        int bolsa_percentual
+        date vencimento
+        date paga_em
+    }
 ```
 
 ## Decisões de modelagem
@@ -112,6 +142,9 @@ erDiagram
 - **Justificativa** aponta para uma falta real. Mesmo aprovada, ela não altera a frequência.
 - **Avaliacao** aparece direto no calendário. **Evento** guarda as demais datas, e um evento sem oferta é institucional.
 - **Histórico simplificado:** os semestres anteriores não são cadastrados. Os créditos concluídos e o coeficiente de rendimento ficam na `Matricula`.
+
+- **Conversa** liga um aluno a um contato: um professor ou um coordenador, que aparece como "Secretaria acadêmica". Mensagem não lida é a que tem `lida_em` vazio.
+- **Mensalidade** é um módulo extra e simulado: o sistema não gera boleto nem processa pagamento. A situação (Pago, A vencer ou Em atraso) é calculada a partir das datas.
 
 ## Valores calculados
 

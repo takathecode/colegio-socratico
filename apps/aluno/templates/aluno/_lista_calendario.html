@@ -1,0 +1,15 @@
+{# Lista de datas do período: visão "Lista" e versão do mês no celular. Parâmetro: lista. #}
+<ul class="divide-y divide-[#E5E9F0]">
+  {% for item in lista %}
+    <li class="flex items-start gap-4 p-4">
+      <p class="w-14 shrink-0 text-xs font-semibold uppercase text-[#1F4E8C]">{{ item.inicio|date:"d M" }}</p>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-semibold">{{ item.titulo }}</p>
+        {% if item.detalhe %}<p class="mt-0.5 text-sm text-slate-500">{{ item.detalhe }}</p>{% endif %}
+      </div>
+      {% include "componentes/selo.html" with situacao=item.rotulo %}
+    </li>
+  {% empty %}
+    <li>{% include "componentes/vazio.html" with titulo="Nada marcado neste período" icone="calendar-days" %}</li>
+  {% endfor %}
+</ul>

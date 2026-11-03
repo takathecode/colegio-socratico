@@ -33,6 +33,13 @@ def validar_tamanho_anexo(arquivo):
         raise ValidationError("O anexo deve ter no máximo 5 MB.")
 
 
+# Usados nos anexos de justificativas e de mensagens.
+VALIDADORES_ANEXO = [
+    FileExtensionValidator(["pdf", "jpg", "jpeg", "png"]),
+    validar_tamanho_anexo,
+]
+
+
 class Curso(models.Model):
     nome = models.CharField("nome", max_length=100, unique=True)
     total_creditos = models.PositiveSmallIntegerField("total de créditos")
@@ -170,6 +177,16 @@ class Matricula(models.Model):
 
     def __str__(self):
         return f"{self.aluno.get_full_name() or self.aluno.matricula} - {self.turma.codigo}"
+
+    @classmethod
+    def atual_de(cls, aluno):
+        """Matrícula ativa mais recente do aluno, ou None se ele não tem nenhuma."""
+        return (
+            cls.objects.filter(aluno=aluno, situacao=cls.Situacao.ATIVA)
+            .select_related("turma__curso")
+            .order_by("-turma__semestre")
+            .first()
+        )
 
     def clean(self):
         if self.aluno_id and self.aluno.perfil != Usuario.Perfil.ALUNO:
@@ -322,10 +339,7 @@ class Justificativa(models.Model):
         "anexo",
         upload_to="justificativas/%Y/%m/",
         blank=True,
-        validators=[
-            FileExtensionValidator(["pdf", "jpg", "jpeg", "png"]),
-            validar_tamanho_anexo,
-        ],
+        validators=VALIDADORES_ANEXO,
     )
     status = models.CharField(
         "situação", max_length=9, choices=Status.choices, default=Status.PENDENTE

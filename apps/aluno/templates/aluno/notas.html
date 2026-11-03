@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block titulo %}Notas e Boletim{% endblock %}
+{% block breadcrumb %}Notas e Boletim{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Notas e Boletim</h1>
+      <p class="mt-1 text-sm text-slate-500">Seu desempenho, avaliação por avaliação.</p>
+    </div>
+    {# O PDF do boletim é criado na etapa 10. #}
+    <button type="button" disabled title="O boletim em PDF estará disponível em breve"
+            class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-slate-400">
+      <i data-lucide="download" class="size-4"></i> Baixar boletim
+    </button>
+  </div>
+
+  <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    {% include "componentes/card_kpi.html" with rotulo="Coeficiente de rendimento" valor=matricula.coeficiente_rendimento|floatformat:1 detalhe="Acumulado do curso" icone="graduation-cap" %}
+    <div class="rounded-xl border border-[#E5E9F0] bg-white p-4">
+      <div class="flex items-start justify-between gap-2">
+        <p class="text-xs text-slate-500">Créditos concluídos</p>
+        <i data-lucide="book-open" class="size-4 shrink-0 text-[#1F4E8C]"></i>
+      </div>
+      <p class="mt-1 text-2xl font-semibold">{{ creditos.concluidos }}/{{ creditos.total }}</p>
+      <p class="mt-1 text-xs text-slate-500">{{ creditos.percentual }}% de integralização</p>
+    </div>
+    <div class="rounded-xl border border-[#E5E9F0] bg-white p-4 sm:col-span-2 xl:col-span-1">
+      <div class="flex items-start justify-between gap-2">
+        <p class="text-xs text-slate-500">Disciplinas em atenção</p>
+        <i data-lucide="info" class="size-4 shrink-0 text-[#1F4E8C]"></i>
+      </div>
+      <p class="mt-1 text-2xl font-semibold">{{ em_atencao|length }} de {{ linhas|length }}</p>
+      <p class="mt-1 truncate text-xs text-slate-500" title="{{ nomes_em_atencao }}">{{ nomes_em_atencao|default:"Nenhuma, continue assim" }}</p>
+    </div>
+  </div>
+
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <div class="mb-4 flex items-start justify-between gap-3">
+      <div>
+        <h2 class="font-semibold">Boletim do semestre</h2>
+        <p class="mt-1 text-sm text-slate-500">
+          Notas parciais de 0 a 10{% if atualizada_em %} · atualização em {{ atualizada_em|date:"d/m/Y" }}{% endif %}
+        </p>
+      </div>
+      <span class="text-sm font-semibold text-[#1F4E8C]">{{ matricula.turma.semestre }}</span>
+    </div>
+    {% include "aluno/_disciplinas.html" with coluna="avaliacoes" %}
+    <p class="mt-4 flex items-start gap-2 text-xs text-slate-500">
+      <i data-lucide="info" class="size-4 shrink-0"></i>
+      Nota parcial = média das avaliações lançadas. Média mínima: {{ media_minima|floatformat:1 }} · Frequência mínima: {{ frequencia_minima }}%.
+    </p>
+  </section>
+
+  {% for linha in em_atencao %}
+    <section class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-5">
+      <div class="flex min-w-0 flex-1 items-start gap-3">
+        <i data-lucide="triangle-alert" class="mt-0.5 size-5 shrink-0 text-amber-600"></i>
+        <div>
+          <p class="font-semibold">{{ linha.oferta.disciplina.nome }} merece sua atenção</p>
+          <p class="mt-1 text-sm text-slate-600">
+            Sua nota parcial é {{ linha.media|floatformat:1|default:"—" }} e a frequência é {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}.
+            Converse com {{ linha.oferta.professor.nome_com_tratamento|default:"o professor" }} sobre seu plano de estudos.
+          </p>
+        </div>
+      </div>
+      <a href="{% url 'mensagens:caixa' %}?para={{ linha.oferta.professor_id }}&assunto={{ linha.oferta.disciplina.nome|urlencode }}"
+         class="inline-flex h-10 items-center rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        Falar com professor
+      </a>
+    </section>
+  {% endfor %}
+{% endblock %}

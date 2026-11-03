@@ -1,6 +1,7 @@
 {# Botão principal com estado "carregando". O formulário precisa do atributo data-carregando. #}
+{# Com compacto=True, o botão tem a largura do texto, para ficar ao lado de outros botões. #}
 <button type="submit"
-        class="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#1F4E8C] text-sm font-semibold text-white hover:bg-[#0B2545] disabled:cursor-wait disabled:hover:bg-[#1F4E8C]">
+        class="flex {% if compacto %}h-10 whitespace-nowrap px-4{% else %}h-12 w-full{% endif %} items-center justify-center gap-2 rounded-lg bg-[#1F4E8C] text-sm font-semibold text-white hover:bg-[#0B2545] disabled:cursor-wait disabled:hover:bg-[#1F4E8C]">
   <span data-estado="normal" class="flex items-center gap-2">
     {% if icone %}<i data-lucide="{{ icone }}" class="size-4"></i>{% endif %}{{ texto }}
   </span>

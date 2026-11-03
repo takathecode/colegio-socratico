@@ -1,0 +1,62 @@
+{# Disciplinas do aluno: tabela no computador e cards no celular. #}
+{# Parâmetros: linhas e coluna ("avaliacoes", "aulas" ou vazio, sem coluna extra nem professor). #}
+{% if linhas %}
+  <div class="hidden md:block">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+          <th scope="col" class="px-3 py-2.5 font-medium">Disciplina</th>
+          {% if coluna == "avaliacoes" %}<th scope="col" class="px-3 py-2.5 font-medium">Avaliações</th>{% endif %}
+          {% if coluna == "aulas" %}<th scope="col" class="px-3 py-2.5 font-medium">Aulas / faltas</th>{% endif %}
+          <th scope="col" class="px-3 py-2.5 font-medium">Nota</th>
+          <th scope="col" class="px-3 py-2.5 font-medium">Frequência</th>
+          <th scope="col" class="px-3 py-2.5 font-medium">Situação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for linha in linhas %}
+          <tr class="border-b border-[#E5E9F0]">
+            <td class="px-3 {% if coluna %}py-3{% else %}py-2{% endif %}">
+              <p class="font-medium">{{ linha.oferta.disciplina.nome }}</p>
+              {% if coluna %}
+                <p class="mt-0.5 text-xs text-slate-500">{{ linha.oferta.disciplina.codigo }} · {{ linha.oferta.professor.nome_com_tratamento }}</p>
+              {% endif %}
+            </td>
+            {% if coluna == "avaliacoes" %}
+              <td class="px-3 py-3 whitespace-nowrap text-slate-500">
+                {% for nota in linha.notas %}{{ nota|floatformat:1 }}{% if not forloop.last %}&nbsp;/&nbsp;{% endif %}{% empty %}—{% endfor %}
+              </td>
+            {% endif %}
+            {% if coluna == "aulas" %}
+              <td class="px-3 py-3 whitespace-nowrap text-slate-500">{{ linha.horas_dadas }} / {{ linha.horas_faltas }}</td>
+            {% endif %}
+            <td class="px-3 font-semibold {% if coluna %}text-base{% endif %}">{{ linha.media|floatformat:1|default:"—" }}</td>
+            <td class="px-3">{% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}</td>
+            <td class="px-3">{% include "componentes/selo.html" with situacao=linha.situacao %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <ul class="divide-y divide-[#E5E9F0] md:hidden">
+    {% for linha in linhas %}
+      <li class="flex items-center justify-between gap-3 py-3">
+        <div class="min-w-0">
+          <p class="text-sm font-medium">{{ linha.oferta.disciplina.nome }}</p>
+          <p class="mt-0.5 text-xs text-slate-500">
+            Nota {{ linha.media|floatformat:1|default:"—" }} ·
+            Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
+            {% if coluna == "aulas" %}· {{ linha.horas_dadas }} / {{ linha.horas_faltas }} h{% endif %}
+          </p>
+          {% if coluna == "avaliacoes" and linha.notas %}
+            <p class="mt-0.5 text-xs text-slate-500">Avaliações: {% for nota in linha.notas %}{{ nota|floatformat:1 }}{% if not forloop.last %} / {% endif %}{% endfor %}</p>
+          {% endif %}
+        </div>
+        {% include "componentes/selo.html" with situacao=linha.situacao %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  {% include "componentes/vazio.html" with titulo="Nenhuma disciplina nesta turma" texto="As disciplinas aparecerão aqui quando forem cadastradas." icone="book-open" %}
+{% endif %}

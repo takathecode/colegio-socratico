@@ -19,7 +19,7 @@ def menu_lateral(request):
             "nome": item["nome"],
             "icone": item["icone"],
             "url": reverse(item["rota"]) if item["rota"] else None,
-            "ativo": item["rota"] == rota_atual,
+            "ativo": rota_atual in (item["rota"], *item.get("tambem_ativo", ())),
         }
         for item in area["itens"]
     ]

@@ -1,0 +1,5 @@
+{# Item de um dia na grade do calendário. Parâmetro: item. #}
+<div title="{{ item.titulo }}{% if item.detalhe %} · {{ item.detalhe }}{% endif %}"
+     class="mt-1 rounded-r border-l-2 px-1.5 py-1 text-[11px] leading-tight {% if item.destaque %}border-[#1F4E8C] bg-[#EAF0F8] text-[#1F4E8C]{% else %}border-slate-400 bg-[#F5F7FA] text-slate-600{% endif %}">
+  <p class="line-clamp-2">{{ item.titulo }}</p>
+</div>

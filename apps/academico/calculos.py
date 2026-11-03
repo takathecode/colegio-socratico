@@ -3,6 +3,7 @@
 Ficam em um só lugar para que todas as telas, relatórios e a API mostrem os mesmos valores.
 """
 
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 from django.db.models import Q, Sum
@@ -51,6 +52,20 @@ def calcular_situacao(media, frequencia):
     ):
         return EM_ATENCAO
     return REGULAR
+
+
+def frequencia_das_linhas(linhas):
+    """Frequência global a partir das linhas do boletim, sem uma nova consulta ao banco."""
+    return calcular_frequencia(
+        sum(linha["horas_dadas"] for linha in linhas),
+        sum(linha["horas_faltas"] for linha in linhas),
+    )
+
+
+def somar_meses(data, meses):
+    """Primeiro dia do mês que fica "meses" à frente (ou atrás, se for negativo) da data."""
+    indice = data.year * 12 + (data.month - 1) + meses
+    return date(indice // 12, indice % 12 + 1, 1)
 
 
 def frequencia_global(matricula):

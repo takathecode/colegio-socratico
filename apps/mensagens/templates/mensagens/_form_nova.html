@@ -1,0 +1,13 @@
+{# Conteúdo do modal "Nova conversa". #}
+<form method="post" enctype="multipart/form-data" action="{% url 'mensagens:nova' %}" data-carregando class="mt-5 space-y-4">
+  {% csrf_token %}
+  {% include "componentes/campo_form.html" with campo=form_nova.contato %}
+  {% include "componentes/campo_form.html" with campo=form_nova.assunto %}
+  {% include "componentes/campo_form.html" with campo=form_nova.texto %}
+  {% include "componentes/campo_anexo.html" with campo=form_nova.anexo %}
+  <div class="flex justify-end gap-3">
+    <button type="button" data-fechar-modal
+            class="h-10 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Cancelar</button>
+    {% include "componentes/botao_enviar.html" with texto="Enviar mensagem" texto_carregando="Enviando..." icone="send" compacto=True %}
+  </div>
+</form>

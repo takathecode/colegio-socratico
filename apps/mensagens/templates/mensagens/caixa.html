@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block titulo %}Mensagens{% endblock %}
+{% block breadcrumb %}Mensagens{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Mensagens</h1>
+      <p class="mt-1 text-sm text-slate-500">
+        {% if user.perfil == "ALUNO" %}Uma conversa mais próxima com professores e secretaria.{% else %}Uma conversa mais próxima com os alunos.{% endif %}
+      </p>
+    </div>
+    {% if pode_iniciar %}
+      <button type="button" data-abrir-modal="modal-nova-conversa"
+              class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+        <i data-lucide="plus" class="size-4"></i> Nova conversa
+      </button>
+    {% endif %}
+  </div>
+
+  <div class="mt-5 grid overflow-hidden rounded-xl border border-[#E5E9F0] bg-white lg:h-[calc(100vh-13rem)] lg:min-h-[560px] lg:grid-cols-[340px_1fr]">
+    {# Lista de conversas. No celular, some quando uma conversa foi aberta. #}
+    <section class="flex min-h-0 flex-col border-[#E5E9F0] lg:border-r {% if conversa_foi_pedida %}max-lg:hidden{% endif %}">
+      <div class="p-4">
+        <div class="flex items-center justify-between gap-2">
+          <h2 class="font-semibold">Caixa de entrada</h2>
+          {% if total_nao_lidas %}
+            <span class="inline-flex items-center gap-1 rounded-md bg-[#EAF0F8] px-2 py-1 text-xs font-medium text-[#1F4E8C]">
+              <i data-lucide="info" class="size-3.5"></i>{{ total_nao_lidas }} nova{{ total_nao_lidas|pluralize:"s" }}
+            </span>
+          {% endif %}
+        </div>
+        <form method="get" action="{% url 'mensagens:caixa' %}" class="relative mt-3">
+          <input type="hidden" name="filtro" value="{{ filtro }}">
+          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
+          <label class="sr-only" for="busca-conversa">Buscar uma conversa</label>
+          <input id="busca-conversa" type="search" name="q" value="{{ busca }}" placeholder="Buscar uma conversa"
+                 class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C]">
+        </form>
+        <div class="mt-3 flex gap-4 text-sm">
+          <a href="{% url 'mensagens:caixa' %}?filtro=todas" class="{% if filtro == 'todas' %}font-semibold text-[#1F4E8C]{% else %}text-slate-500{% endif %}">Todas</a>
+          <a href="{% url 'mensagens:caixa' %}?filtro=nao_lidas" class="{% if filtro == 'nao_lidas' %}font-semibold text-[#1F4E8C]{% else %}text-slate-500{% endif %}">Não lidas ({{ total_nao_lidas }})</a>
+        </div>
+      </div>
+
+      <ul class="min-h-0 flex-1 divide-y divide-[#E5E9F0] overflow-y-auto border-t border-[#E5E9F0]">
+        {% for item in conversas %}
+          <li>
+            <a href="{% url 'mensagens:caixa' %}?conversa={{ item.pk }}&{{ parametros }}" {% if item.pk == conversa.pk %}aria-current="true"{% endif %}
+               class="flex gap-3 border-l-2 p-3 hover:bg-[#F5F7FA] {% if item.pk == conversa.pk %}border-[#1F4E8C] bg-[#EAF0F8]{% else %}border-transparent{% endif %}">
+              <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F5F7FA] text-[11px] font-semibold text-[#1F4E8C]" aria-hidden="true">{{ item.iniciais_do_outro }}</span>
+              <span class="min-w-0 flex-1">
+                <span class="flex items-baseline justify-between gap-2">
+                  <span class="truncate text-xs font-semibold">{{ item.nome_do_outro }}</span>
+                  <span class="shrink-0 text-[11px] text-slate-500">{{ item.rotulo_tempo }}</span>
+                </span>
+                <span class="mt-0.5 flex items-center gap-1.5">
+                  <span class="truncate text-sm {% if item.nao_lidas %}font-semibold{% endif %}">{{ item.assunto }}</span>
+                  {% if item.nao_lidas %}<span class="shrink-0 rounded-full bg-[#1F4E8C] px-1.5 text-[10px] font-semibold text-white"><span class="sr-only">Não lidas: </span>{{ item.nao_lidas }}</span>{% endif %}
+                </span>
+                <span class="mt-0.5 block truncate text-xs text-slate-500">{{ item.previa }}</span>
+              </span>
+            </a>
+          </li>
+        {% empty %}
+          <li>
+            {% if busca or filtro == "nao_lidas" %}
+              {% include "componentes/vazio.html" with titulo="Nenhuma conversa encontrada" texto="Tente mudar a busca ou o filtro." icone="search" %}
+            {% else %}
+              {% include "componentes/vazio.html" with titulo="Nenhuma conversa ainda" texto="Suas conversas aparecerão aqui." icone="messages-square" %}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {# Conversa aberta. No celular, só aparece depois de clicar em uma conversa. #}
+    <section class="flex min-h-0 flex-col {% if not conversa_foi_pedida %}max-lg:hidden{% endif %}">
+      {% if conversa %}
+        <header class="border-b border-[#E5E9F0] p-4 sm:px-6">
+          <a href="{% url 'mensagens:caixa' %}" class="mb-2 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] lg:hidden">
+            <i data-lucide="arrow-left" class="size-4"></i> Voltar
+          </a>
+          <h2 class="text-lg font-semibold">{{ conversa.assunto }}</h2>
+          <p class="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+            <i data-lucide="graduation-cap" class="size-4"></i>
+            {{ conversa.nome_do_outro }}{% if conversa.oferta %} · {{ conversa.oferta.disciplina.nome }}{% endif %}
+          </p>
+        </header>
+
+        <div data-rolar-ate-o-fim class="min-h-0 flex-1 space-y-3 overflow-y-auto p-4 max-lg:max-h-[60vh] sm:px-6">
+          {% for mensagem in mensagens_da_conversa %}
+            {% ifchanged mensagem.enviada_em|date:"Y-m-d" %}
+              <p class="py-1 text-center text-xs text-slate-500">{{ mensagem.enviada_em|date:"d \d\e F \d\e Y"|lower }}</p>
+            {% endifchanged %}
+            <article class="rounded-xl p-4 {% if mensagem.remetente_id == user.pk %}bg-[#EAF0F8]{% else %}bg-[#F5F7FA]{% endif %}">
+              <div class="flex items-baseline justify-between gap-3 text-xs">
+                <p class="font-semibold {% if mensagem.remetente_id == user.pk %}text-[#1F4E8C]{% endif %}">
+                  {% if mensagem.remetente_id == user.pk %}Você{% else %}{{ conversa.nome_do_outro }}{% endif %}
+                </p>
+                <time class="shrink-0 text-slate-500">{{ mensagem.enviada_em|date:"H\hi" }}</time>
+              </div>
+              <div class="mt-2 break-words text-sm">{{ mensagem.texto|linebreaks }}</div>
+              {% if mensagem.anexo %}
+                <a href="{% url 'mensagens:anexo' mensagem.pk %}" class="mt-3 inline-flex max-w-full items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-3 py-2 text-sm text-[#1F4E8C] hover:border-[#1F4E8C]">
+                  <i data-lucide="file-text" class="size-4 shrink-0"></i>
+                  <span class="truncate">{{ mensagem.nome_do_anexo }}</span>
+                  <i data-lucide="download" class="size-4 shrink-0"></i>
+                </a>
+              {% endif %}
+            </article>
+          {% endfor %}
+        </div>
+
+        <form method="post" enctype="multipart/form-data" action="{% url 'mensagens:responder' conversa.pk %}" data-carregando class="border-t border-[#E5E9F0] p-4 sm:px-6">
+          {% csrf_token %}
+          <label class="sr-only" for="{{ form_resposta.texto.id_for_label }}">Escreva sua resposta</label>
+          {{ form_resposta.texto }}
+          {% for erro in form_resposta.texto.errors %}<p class="mt-1 text-sm text-[#C62828]">{{ erro }}</p>{% endfor %}
+          {% for erro in form_resposta.anexo.errors %}<p class="mt-1 text-sm text-[#C62828]">{{ erro }}</p>{% endfor %}
+          <div data-anexo class="mt-3 flex items-center justify-between gap-3">
+            <div class="flex min-w-0 items-center gap-1">
+              <label for="{{ form_resposta.anexo.id_for_label }}" class="flex min-w-0 cursor-pointer items-center gap-2 text-sm text-slate-500 hover:text-[#0B2545]" title="PDF, JPG ou PNG, até 5 MB">
+                <i data-lucide="paperclip" class="size-4 shrink-0"></i>
+                <span data-anexo-nome class="truncate">Anexar arquivo</span>
+              </label>
+              {{ form_resposta.anexo }}
+              <button type="button" data-anexo-remover aria-label="Remover arquivo" class="hidden size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-[#F5F7FA]">
+                <i data-lucide="trash-2" class="size-4"></i>
+              </button>
+            </div>
+            {% include "componentes/botao_enviar.html" with texto="Enviar mensagem" texto_carregando="Enviando..." icone="send" compacto=True %}
+          </div>
+        </form>
+      {% else %}
+        <div class="flex flex-1 items-center justify-center">
+          {% include "componentes/vazio.html" with titulo="Selecione uma conversa" texto="As mensagens aparecerão aqui." icone="messages-square" %}
+        </div>
+      {% endif %}
+    </section>
+  </div>
+
+  {% if pode_iniciar %}
+    {% include "componentes/modal.html" with id="modal-nova-conversa" titulo="Nova conversa" subtitulo="Escreva para um professor da sua turma ou para a secretaria." conteudo="mensagens/_form_nova.html" aberto=abrir_modal %}
+  {% endif %}
+{% endblock %}

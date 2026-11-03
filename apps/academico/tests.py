@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 from decimal import Decimal
 from io import StringIO
 
@@ -12,6 +14,9 @@ from django.db.models import ProtectedError
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+
+from apps.financeiro.models import Mensalidade
+from apps.mensagens.models import Conversa, Mensagem
 
 from . import calculos
 from .management.commands.popular_demo import ALUNOS_EM_RISCO, FERIADOS
@@ -216,7 +221,15 @@ class AdminAcademicoTests(TestCase):
                     self.assertEqual(resposta.status_code, 200)
 
 
-@override_settings(DEBUG=True, PASSWORD_HASHERS=HASH_RAPIDO)
+# A pasta temporária evita que o PDF de exemplo seja gravado na pasta media/ real.
+MEDIA_DE_TESTE = tempfile.mkdtemp(prefix="testes-demo-")
+
+
+def tearDownModule():
+    shutil.rmtree(MEDIA_DE_TESTE, ignore_errors=True)
+
+
+@override_settings(DEBUG=True, PASSWORD_HASHERS=HASH_RAPIDO, MEDIA_ROOT=MEDIA_DE_TESTE)
 class PopularDemoTests(TestCase):
     @classmethod
     def setUpTestData(cls):
@@ -280,6 +293,32 @@ class PopularDemoTests(TestCase):
             Justificativa.objects.filter(frequencia__matricula=self.mariana).exists()
         )
         self.assertTrue(self.mariana.frequencias.filter(presente=False).exists())
+
+    def test_aluno01_tem_as_conversas_do_prototipo(self):
+        conversas = Conversa.objects.filter(aluno=self.mariana.aluno)
+        self.assertEqual(conversas.count(), 5)
+        nao_lidas = Mensagem.objects.filter(conversa__in=conversas, lida_em__isnull=True)
+        self.assertEqual(nao_lidas.exclude(remetente=self.mariana.aluno).count(), 2)
+        self.assertEqual(Mensagem.objects.filter(conversa__in=conversas).exclude(anexo="").count(), 1)
+
+    def test_proxima_parcela_e_a_quinta_e_quem_esta_em_risco_tem_atraso(self):
+        proxima = (
+            Mensalidade.objects.filter(matricula=self.mariana, paga_em__isnull=True)
+            .order_by("vencimento")
+            .first()
+        )
+        self.assertEqual(proxima.parcela, 5)
+        self.assertEqual(proxima.situacao, Mensalidade.A_VENCER)
+        self.assertEqual(Mensalidade.objects.filter(matricula=self.mariana).count(), 6)
+
+        em_risco = Matricula.objects.get(aluno__matricula=ALUNOS_EM_RISCO[0])
+        situacoes = [parcela.situacao for parcela in em_risco.mensalidades.all()]
+        self.assertEqual(situacoes.count(Mensalidade.EM_ATRASO), 1)
+
+    def test_rodar_de_novo_recria_conversas_e_mensalidades_sem_duplicar(self):
+        call_command("popular_demo", stdout=StringIO())
+        self.assertEqual(Conversa.objects.count(), 5)
+        self.assertEqual(Mensalidade.objects.count(), 240)
 
     def test_oito_alunos_em_risco_e_regulares_fora_de_risco(self):
         em_risco = set()

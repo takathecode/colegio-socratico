@@ -4,5 +4,145 @@
 {% block breadcrumb %}Painel{% endblock %}
 
 {% block conteudo %}
-  {% include "componentes/em_construcao.html" with etapa="4" %}
+  <div class="flex flex-wrap items-end justify-between gap-2">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">{{ saudacao }}, {{ user.first_name|default:user.matricula }}</h1>
+      <p class="mt-1 text-sm text-slate-500">{{ matricula.turma.curso.nome }} · {{ matricula.turma.periodo }}º período · {{ matricula.turma.semestre }}</p>
+    </div>
+    <p class="text-sm text-slate-500">{{ hoje|date:"l, d/m/Y"|capfirst }}</p>
+  </div>
+
+  {# Indicadores #}
+  <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% include "componentes/card_kpi.html" with rotulo="Coeficiente de rendimento" valor=matricula.coeficiente_rendimento|floatformat:1 detalhe="Desempenho acumulado" icone="graduation-cap" %}
+    <div class="rounded-xl border border-[#E5E9F0] bg-white p-4">
+      <div class="flex items-start justify-between gap-2">
+        <p class="text-xs text-slate-500">Créditos concluídos</p>
+        <i data-lucide="book-open" class="size-4 shrink-0 text-[#1F4E8C]"></i>
+      </div>
+      <p class="mt-1 text-2xl font-semibold">{{ creditos.concluidos }}/{{ creditos.total }}</p>
+      <p class="mt-1 text-xs text-slate-500">{{ creditos.percentual }}% do curso integralizado</p>
+    </div>
+    {% include "componentes/card_kpi.html" with rotulo="Pendências" valor=pendencias|length detalhe="Acompanhe suas solicitações" icone="clipboard-list" %}
+    {% if proxima_prova %}
+      {% include "componentes/card_kpi.html" with rotulo="Próxima prova" valor=dias_ate_a_prova detalhe=proxima_prova.data_hora|date:"d/m/Y · H\hi" icone="calendar-clock" %}
+    {% else %}
+      {% include "componentes/card_kpi.html" with rotulo="Próxima prova" valor="—" detalhe="Nenhuma prova marcada" icone="calendar-clock" %}
+    {% endif %}
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-[1.9fr_1fr_1fr]">
+    {# O gráfico de barras gerado com matplotlib substitui esta lista na etapa 7. #}
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5 lg:col-span-2 xl:col-span-1">
+      <h2 class="font-semibold">Notas por disciplina</h2>
+      {% if linhas %}
+        <ul class="mt-3 grid gap-x-8 sm:grid-cols-2">
+          {% for linha in linhas %}
+            <li class="flex items-center justify-between gap-3 border-b border-[#E5E9F0] py-2 text-sm">
+              <span class="truncate text-slate-600">{{ linha.oferta.disciplina.nome }}</span>
+              <span class="font-semibold">{{ linha.media|floatformat:1|default:"—" }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhuma nota lançada" icone="chart-no-axes-column" %}
+      {% endif %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Frequência global</h2>
+      {% include "componentes/frequencia_global.html" %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Situação das disciplinas</h2>
+      {% if situacoes.total %}
+        <div class="mt-3 flex items-center gap-5">
+          {# Cada disciplina vale 1 parte do contorno (pathLength). O fundo branco separa os trechos. #}
+          <svg viewBox="0 0 100 100" class="size-28 shrink-0 -rotate-90" role="img"
+               aria-label="{{ situacoes.total }} disciplinas: {{ situacoes.regulares }} regulares, {{ situacoes.atencao }} em atenção, {{ situacoes.risco }} em risco">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E9F0" stroke-width="12"></circle>
+            {% if situacoes.regulares %}
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#1F4E8C" stroke-width="12"
+                      pathLength="{{ situacoes.total }}" stroke-dasharray="{{ situacoes.regulares }} {{ situacoes.total }}"></circle>
+            {% endif %}
+            {% if situacoes.atencao %}
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#D97706" stroke-width="12"
+                      pathLength="{{ situacoes.total }}" stroke-dasharray="{{ situacoes.atencao }} {{ situacoes.total }}"
+                      stroke-dashoffset="{{ situacoes.inicio_atencao }}"></circle>
+            {% endif %}
+            {% if situacoes.risco %}
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#C62828" stroke-width="12"
+                      pathLength="{{ situacoes.total }}" stroke-dasharray="{{ situacoes.risco }} {{ situacoes.total }}"
+                      stroke-dashoffset="{{ situacoes.inicio_risco }}"></circle>
+            {% endif %}
+            <text x="50" y="50" transform="rotate(90 50 50)" text-anchor="middle" dominant-baseline="central" font-size="22" font-weight="600" fill="#0B2545">{{ situacoes.total }}</text>
+          </svg>
+          <ul class="space-y-2 text-xs">
+            <li class="flex items-center gap-1.5 font-medium text-[#1F4E8C]"><i data-lucide="circle-check" class="size-4"></i>{{ situacoes.regulares }} regulares</li>
+            <li class="flex items-center gap-1.5 text-amber-900"><i data-lucide="triangle-alert" class="size-4 text-amber-600"></i>{{ situacoes.atencao }} em atenção</li>
+            <li class="flex items-center gap-1.5 text-red-800"><i data-lucide="circle-alert" class="size-4"></i>{{ situacoes.risco }} em risco</li>
+          </ul>
+        </div>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Sem disciplinas" icone="book-open" %}
+      {% endif %}
+    </section>
+  </div>
+
+  {# Próxima atividade #}
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-[#EAF0F8] px-5 py-3">
+    <p class="flex items-center gap-2 text-xs font-medium uppercase text-[#1F4E8C]">
+      <i data-lucide="calendar-clock" class="size-4"></i> Próxima atividade
+    </p>
+    {% if proxima_atividade %}
+      <p class="mt-1 text-sm font-semibold">
+        {% if proxima_atividade.tipo == "ENTREGA" %}Entrega{% else %}Prova{% endif %} de {{ proxima_atividade.oferta.disciplina.nome }},
+        {{ proxima_atividade.data_hora|date:"d/m/Y, H\hi" }}{% if proxima_atividade.local %} · {{ proxima_atividade.local }}{% endif %}
+      </p>
+    {% else %}
+      <p class="mt-1 text-sm text-slate-600">Nenhuma avaliação marcada nos próximos dias.</p>
+    {% endif %}
+  </section>
+
+  <div class="mt-4 grid gap-4 xl:grid-cols-[2.6fr_1fr]">
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <h2 class="font-semibold">Minhas disciplinas</h2>
+        <a href="{% url 'aluno:notas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+          Ver boletim <i data-lucide="arrow-right" class="size-4"></i>
+        </a>
+      </div>
+      {% include "aluno/_disciplinas.html" with coluna="" %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Frequência · {{ mes|date:"F"|lower }}</h2>
+      <p class="mb-3 mt-1 text-xs text-slate-500">Registros até {{ hoje|date:"d/m/Y" }}</p>
+      {% include "componentes/calendario_frequencia.html" %}
+    </section>
+  </div>
+
+  {# Pendências #}
+  <section class="mt-5">
+    <h2 class="flex items-center gap-2 text-sm font-semibold">
+      <i data-lucide="clipboard-list" class="size-4 text-slate-500"></i>
+      {% if pendencias %}Você tem {{ pendencias|length }} pendência{{ pendencias|length|pluralize:"s" }}{% else %}Nenhuma pendência{% endif %}
+    </h2>
+    {% if pendencias %}
+      <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {% for pendencia in pendencias %}
+          <a href="{{ pendencia.url }}" class="flex items-center justify-between gap-3 rounded-xl border border-[#E5E9F0] bg-white p-3 hover:border-[#1F4E8C]">
+            <span class="min-w-0">
+              <span class="block text-sm font-medium">{{ pendencia.titulo }}</span>
+              <span class="block text-xs text-slate-500">{{ pendencia.detalhe }}</span>
+            </span>
+            {% include "componentes/selo.html" with situacao="Pendente" %}
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="mt-2 text-sm text-slate-500">Tudo em dia por aqui.</p>
+    {% endif %}
+  </section>
 {% endblock %}

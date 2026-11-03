@@ -1,0 +1,16 @@
+{# Janela modal com o elemento <dialog>, aberta pelo atributo data-abrir-modal="id" (portal.js). #}
+{# Parâmetros: id, titulo, subtitulo, conteudo (template incluído dentro) e aberto (abre ao carregar). #}
+<dialog id="{{ id }}" aria-labelledby="{{ id }}-titulo" {% if aberto %}data-abrir-ao-carregar{% endif %}
+        class="m-auto w-[calc(100%-2rem)] max-w-xl rounded-2xl bg-white p-6 text-[#0B2545] backdrop:bg-[#0B2545]/40 sm:p-8">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h2 id="{{ id }}-titulo" class="text-2xl font-semibold">{{ titulo }}</h2>
+      {% if subtitulo %}<p class="mt-1 text-sm text-slate-500">{{ subtitulo }}</p>{% endif %}
+    </div>
+    <button type="button" data-fechar-modal aria-label="Fechar"
+            class="flex size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-[#F5F7FA]">
+      <i data-lucide="x" class="size-5"></i>
+    </button>
+  </div>
+  {% include conteudo %}
+</dialog>

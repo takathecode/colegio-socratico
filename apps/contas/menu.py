@@ -2,18 +2,26 @@
 
 Uma tela nova entra no menu trocando "rota": None pelo nome da rota dela.
 Item com rota None aparece desativado, para nunca existir um link quebrado.
+"tambem_ativo" lista outras rotas que mantêm o item marcado (ex.: formulário com erro).
 """
+
+MENSAGENS = {
+    "nome": "Mensagens",
+    "icone": "messages-square",
+    "rota": "mensagens:caixa",
+    "tambem_ativo": ("mensagens:responder", "mensagens:nova"),
+}
 
 AREAS = {
     "ALUNO": {
         "titulo": "Área do aluno",
         "itens": [
             {"nome": "Painel", "icone": "layout-dashboard", "rota": "aluno:painel"},
-            {"nome": "Notas e Boletim", "icone": "chart-no-axes-column", "rota": None},
-            {"nome": "Frequência", "icone": "calendar-check", "rota": None},
-            {"nome": "Calendário Acadêmico", "icone": "calendar-days", "rota": None},
-            {"nome": "Mensagens", "icone": "messages-square", "rota": None},
-            {"nome": "Financeiro", "icone": "wallet", "rota": None},
+            {"nome": "Notas e Boletim", "icone": "chart-no-axes-column", "rota": "aluno:notas"},
+            {"nome": "Frequência", "icone": "calendar-check", "rota": "aluno:frequencia"},
+            {"nome": "Calendário Acadêmico", "icone": "calendar-days", "rota": "aluno:calendario"},
+            MENSAGENS,
+            {"nome": "Financeiro", "icone": "wallet", "rota": "aluno:financeiro"},
         ],
     },
     "PROFESSOR": {
@@ -25,7 +33,7 @@ AREAS = {
             {"nome": "Chamada", "icone": "fingerprint", "rota": None},
             {"nome": "Justificativas", "icone": "file-check", "rota": None},
             {"nome": "Desempenho", "icone": "chart-no-axes-column", "rota": None},
-            {"nome": "Mensagens", "icone": "messages-square", "rota": None},
+            MENSAGENS,
         ],
     },
     "COORDENADOR": {
@@ -40,6 +48,7 @@ AREAS = {
             {"nome": "Contas", "icone": "key-round", "rota": None},
             {"nome": "Relatórios", "icone": "file-text", "rota": None},
             {"nome": "Alertas", "icone": "bell-ring", "rota": None},
+            MENSAGENS,  # os coordenadores respondem como "Secretaria acadêmica"
         ],
     },
 }

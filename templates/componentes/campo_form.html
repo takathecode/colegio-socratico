@@ -1,0 +1,8 @@
+{# Campo comum de formulário Django, com rótulo e erros. Parâmetro: campo. #}
+<div>
+  <label for="{{ campo.id_for_label }}" class="text-sm font-medium">{{ campo.label }}</label>
+  <div class="mt-2">{{ campo }}</div>
+  {% for erro in campo.errors %}
+    <p class="mt-1 text-sm text-[#C62828]">{{ erro }}</p>
+  {% endfor %}
+</div>

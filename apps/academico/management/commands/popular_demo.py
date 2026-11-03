@@ -4,6 +4,7 @@ Rodar de novo apaga e recria apenas os dados de demonstração. As datas são ca
 do dia em que o comando roda, então vale rodá-lo pouco antes de apresentar o sistema.
 """
 
+import io
 import random
 from datetime import datetime, time, timedelta
 from decimal import Decimal
@@ -11,11 +12,14 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Q
 from django.utils import timezone
+from reportlab.pdfgen import canvas
 
+from apps.academico.calculos import somar_meses
 from apps.academico.models import (
     Aula,
     Avaliacao,
@@ -29,6 +33,8 @@ from apps.academico.models import (
     Oferta,
     Turma,
 )
+from apps.financeiro.models import Mensalidade
+from apps.mensagens.models import Conversa, Mensagem
 
 Usuario = get_user_model()
 
@@ -93,6 +99,13 @@ FERIADOS = (
 )
 EVENTOS_INSTITUCIONAIS = ((10, 15, "Dia dos Professores"), (12, 18, "Encerramento do semestre"))
 
+# Mensalidades: 6 parcelas por semestre, com vencimento sempre neste dia do mês.
+VALOR_MENSALIDADE = Decimal("1480.00")
+BOLSA_PERCENTUAL = 20
+TOTAL_PARCELAS = 6
+PARCELA_A_VENCER = 5  # como no protótipo: a próxima a vencer é a parcela 5 de 6
+DIA_VENCIMENTO = 5
+
 MOTIVOS = (
     "Não pude comparecer à aula por motivo de saúde.",
     "Tive uma consulta médica no horário da aula.",
@@ -135,6 +148,22 @@ class Command(BaseCommand):
         turmas = Turma.objects.filter(codigo__in=TURMAS, curso__nome=CURSO)
         titulos = [item[2] for item in FERIADOS + EVENTOS_INSTITUCIONAIS]
 
+        # Apaga também os arquivos: os anexos podem conter dados pessoais, como atestados.
+        for mensagem in Mensagem.objects.filter(
+            conversa__aluno__matricula__in=self.matriculas_demo
+        ).exclude(anexo=""):
+            mensagem.anexo.delete(save=False)
+        for justificativa in Justificativa.objects.filter(
+            frequencia__matricula__turma__in=turmas
+        ).exclude(anexo=""):
+            justificativa.anexo.delete(save=False)
+
+        Conversa.objects.filter(
+            Q(aluno__matricula__in=self.matriculas_demo)
+            | Q(contato__matricula__in=self.matriculas_demo)
+            | Q(oferta__turma__in=turmas)
+        ).delete()
+        Mensalidade.objects.filter(matricula__turma__in=turmas).delete()
         Justificativa.objects.filter(frequencia__matricula__turma__in=turmas).delete()
         Frequencia.objects.filter(matricula__turma__in=turmas).delete()
         Aula.objects.filter(oferta__turma__in=turmas).delete()
@@ -183,6 +212,9 @@ class Command(BaseCommand):
             self.criar_notas(matriculas, avaliacoes)
             faltas = self.criar_frequencias(matriculas, aulas)
             self.criar_justificativas(faltas, ofertas)
+            self.criar_mensalidades(matriculas)
+            if indice == 0:  # a aluno01 fica na primeira turma
+                self.criar_conversas(matriculas[0], ofertas)
 
     def criar_usuarios(self):
         """Cria as contas, com a senha igual à matrícula. Retorna os professores por disciplina."""
@@ -408,6 +440,165 @@ class Command(BaseCommand):
                 regulares_avaliados += 1
         Justificativa.objects.bulk_create(justificativas)
 
+    def criar_mensalidades(self, matriculas):
+        """Cria as parcelas com datas relativas a hoje: sempre há uma próxima parcela a vencer.
+
+        Quem está em risco deixa a parcela anterior em aberto, para aparecer "Em atraso".
+        """
+        primeiro_dia = self.hoje.replace(day=1)
+        mes_a_vencer = primeiro_dia
+        if self.hoje.day > DIA_VENCIMENTO:
+            mes_a_vencer = somar_meses(primeiro_dia, 1)
+        parcelas = []
+        for matricula in matriculas:
+            em_risco = self.perfil_do_aluno(matricula.aluno.matricula) == "risco"
+            for numero in range(1, TOTAL_PARCELAS + 1):
+                competencia = somar_meses(mes_a_vencer, numero - PARCELA_A_VENCER)
+                vencimento = competencia.replace(day=DIA_VENCIMENTO)
+                atrasada = em_risco and numero == PARCELA_A_VENCER - 1
+                parcelas.append(
+                    Mensalidade(
+                        matricula=matricula,
+                        competencia=competencia,
+                        parcela=numero,
+                        total_parcelas=TOTAL_PARCELAS,
+                        valor=VALOR_MENSALIDADE,
+                        bolsa_percentual=BOLSA_PERCENTUAL,
+                        vencimento=vencimento,
+                        paga_em=(
+                            vencimento - timedelta(days=2)
+                            if vencimento < self.hoje and not atrasada
+                            else None
+                        ),
+                    )
+                )
+        Mensalidade.objects.bulk_create(parcelas)
+
+    def pdf_de_exemplo(self, titulo):
+        """Gera um PDF simples, para a demonstração do anexo baixar um arquivo de verdade."""
+        memoria = io.BytesIO()
+        pagina = canvas.Canvas(memoria)
+        pagina.drawString(72, 760, titulo)
+        pagina.drawString(72, 736, "Arquivo de demonstração do Instituto Socrático.")
+        pagina.save()
+        return memoria.getvalue()
+
+    def criar_conversas(self, matricula, ofertas):
+        """Conversas da aluno01, iguais às do protótipo. Duas ficam como não lidas."""
+        agora = timezone.now()
+        aluna = matricula.aluno
+        data_prova = self.no_dia(3)
+        prazo_entrega = self.no_dia(2)
+
+        def conversa(contato, assunto, oferta, mensagens):
+            """mensagens: lista de (remetente, texto, quanto tempo atrás, foi lida)."""
+            nova = Conversa.objects.create(
+                aluno=aluna, contato=contato, assunto=assunto, oferta=oferta
+            )
+            criadas = []
+            for remetente, texto, tempo_atras, lida in mensagens:
+                enviada_em = agora - tempo_atras
+                criadas.append(
+                    Mensagem.objects.create(
+                        conversa=nova,
+                        remetente=remetente,
+                        texto=texto,
+                        enviada_em=enviada_em,
+                        lida_em=enviada_em if lida else None,
+                    )
+                )
+            return criadas
+
+        professor_calculo = ofertas["MAT204"].professor
+        mensagens_calculo = conversa(
+            professor_calculo,
+            "Orientações para a prova de Cálculo II",
+            ofertas["MAT204"],
+            [
+                (
+                    professor_calculo,
+                    f"Olá, {aluna.first_name}! A prova de Cálculo Diferencial II será em "
+                    f"{data_prova:%d/%m/%Y}, às 19h10, na sala B204.\n\n"
+                    "Revise integrais definidas e suas aplicações. A lista de revisão está "
+                    "anexada. Leve documento de identificação e calculadora científica não "
+                    "programável.",
+                    timedelta(minutes=33),
+                    True,
+                ),
+                (
+                    aluna,
+                    "Obrigada, professor! Vou revisar a lista. A prova também terá questões sobre "
+                    "área entre curvas?",
+                    timedelta(minutes=13),
+                    True,
+                ),
+                (
+                    professor_calculo,
+                    f"Sim, {aluna.first_name}. Área entre curvas faz parte do conteúdo. Priorize os "
+                    "exercícios 4 a 8. Bons estudos!",
+                    timedelta(minutes=1),
+                    False,
+                ),
+            ],
+        )
+        mensagens_calculo[0].anexo.save(
+            "lista_de_revisao_calculo_ii.pdf",
+            ContentFile(self.pdf_de_exemplo("Lista de revisão: Cálculo Diferencial II")),
+        )
+
+        conversa(
+            self.alunos["coord01"],
+            "Atualização dos seus dados cadastrais",
+            None,
+            [
+                (
+                    self.alunos["coord01"],
+                    "Confira telefone e endereço no cadastro.",
+                    timedelta(days=1),
+                    False,
+                )
+            ],
+        )
+        conversa(
+            ofertas["FIS202"].professor,
+            "Atividade de Física Experimental",
+            ofertas["FIS202"],
+            [
+                (
+                    ofertas["FIS202"].professor,
+                    f"A entrega está disponível até {prazo_entrega:%d/%m}.",
+                    timedelta(days=2),
+                    True,
+                )
+            ],
+        )
+        conversa(
+            ofertas["COM203"].professor,
+            "Material de Estruturas de Dados",
+            ofertas["COM203"],
+            [
+                (
+                    ofertas["COM203"].professor,
+                    "Lista de exercícios sobre árvores e grafos.",
+                    timedelta(days=3),
+                    True,
+                )
+            ],
+        )
+        conversa(
+            ofertas["GES201"].professor,
+            "Encontro de orientação de projetos",
+            ofertas["GES201"],
+            [
+                (
+                    ofertas["GES201"].professor,
+                    "Nosso próximo encontro será na sala C102.",
+                    timedelta(days=5),
+                    True,
+                )
+            ],
+        )
+
     def criar_eventos_institucionais(self):
         eventos = [
             Evento(
@@ -456,6 +647,8 @@ class Command(BaseCommand):
             ("Aulas", Aula.objects.filter(oferta__turma__codigo__in=TURMAS)),
             ("Notas", Nota.objects.filter(matricula__turma__codigo__in=TURMAS)),
             ("Presenças e faltas", Frequencia.objects.filter(matricula__turma__codigo__in=TURMAS)),
+            ("Mensalidades", Mensalidade.objects.filter(matricula__turma__codigo__in=TURMAS)),
+            ("Conversas", Conversa.objects.filter(aluno__matricula__in=self.matriculas_demo)),
         )
         for nome, consulta in contagens:
             self.stdout.write(f"  {nome}: {consulta.count()}")

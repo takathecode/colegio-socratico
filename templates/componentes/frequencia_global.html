@@ -1,0 +1,23 @@
+{# Percentual, barra com a marca do mínimo e selo. Parâmetro: frequencia (apps/aluno/views.py). #}
+{% if frequencia.percentual is None %}
+  {% include "componentes/vazio.html" with titulo="Nenhuma aula registrada" icone="calendar-check" %}
+{% else %}
+  <p class="mt-3">
+    <span class="text-4xl font-semibold">{{ frequencia.percentual|floatformat:0 }}%</span>
+    <span class="ml-1 text-xs text-slate-500">de presença</span>
+  </p>
+  <div class="relative mt-4 h-2 rounded-full bg-[#CBD5E1]" role="img"
+       aria-label="Frequência de {{ frequencia.percentual|floatformat:0 }}%. O mínimo exigido é {{ frequencia.minimo }}%.">
+    <div class="h-2 rounded-full bg-[#1F4E8C]" style="width: {{ frequencia.largura }}%"></div>
+    {# Marca do mínimo, com um contorno branco para aparecer sobre a barra azul. #}
+    <div class="absolute -top-1 h-4 w-1 rounded-sm bg-[#0B2545] ring-2 ring-white" style="left: {{ frequencia.minimo }}%"></div>
+  </div>
+  <p class="mt-3 text-xs text-slate-500">Mínimo exigido: {{ frequencia.minimo }}%</p>
+  <p class="mt-3">
+    {% if frequencia.acima_do_minimo %}
+      {% include "componentes/selo.html" with situacao="Acima do mínimo" %}
+    {% else %}
+      {% include "componentes/selo.html" with situacao="Abaixo do mínimo" %}
+    {% endif %}
+  </p>
+{% endif %}

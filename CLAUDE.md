@@ -58,7 +58,8 @@ apps/coordenacao/  views e templates da área do coordenador  → /coordenacao/
 apps/analytics/    gráficos matplotlib e módulo preditivo (scikit-learn)
 apps/alertas/      modelo Alerta, notificações e tarefas Celery
 apps/relatorios/   geração de PDF (reportlab) e Excel (pandas)
-apps/mensagens/    caixa de mensagens interna
+apps/mensagens/    caixa de mensagens interna (mesma tela para os três perfis) → /mensagens/
+apps/financeiro/   modelo Mensalidade (extra e simulado; a tela fica em apps/aluno)
 apps/api/          serializers, viewsets e rotas da API REST → /api/ e /api/docs/
 templates/         esqueleto.html, base.html, 403.html, componentes/ (parciais reutilizáveis)
 assets/            tailwind.css (entrada do Tailwind)
@@ -125,7 +126,8 @@ ml/                modelo treinado (.joblib) — não versionar
   - Decisões: nome Instituto Socrático com conteúdo de curso superior, como no protótipo; novas entidades `Oferta` e `Aula`; créditos e coeficiente anteriores ficam na `Matricula`; `Usuario.tratamento` é informado no cadastro; média, frequência e selo são calculados em `apps/academico/calculos.py`; anexos ficam em `media/`, sem rota pública.
 - [x] 3. Login, redirecionamento por perfil, permissões, `base.html` e layout
   - Decisões: nome trocado para Instituto Socrático, com logo "S"; Tailwind compilado com Node e CSS compilado no Git; ilustração do filósofo nos três estados do login, sem a estatística "25 anos"; "Boas-vindas" no lugar de "Bem-vinda", pois antes do login não sabemos quem entra; item de menu sem tela aparece desativado (`apps/contas/menu.py`); busca e sino ainda são só visuais; link de redefinição de senha vale 1 hora.
-- [ ] 4. Área do aluno
+- [x] 4. Área do aluno
+  - Decisões: apps novos `mensagens` e `financeiro`; a mensagem para a secretaria vai para o primeiro coordenador ativo; Mensagens também ficou ativa no menu do professor e do coordenador, para as conversas terem resposta (o menu do coordenador ganhou esse item); financeiro simulado, com boleto e comprovante desativados; gráfico de notas (etapa 7) e PDF do boletim (etapa 10) ainda não existem, e a tela mostra uma lista e um botão desativado; a análise da justificativa é do professor, então o texto do protótipo que citava a secretaria mudou; várias faltas contam como uma só pendência; anexos ficam na máquina que recebeu o envio e, se faltarem nela, o download responde 404.
 - [ ] 5. Área do professor
 - [ ] 6. Área do coordenador (CRUDs e criação de contas)
 - [ ] 7. Gráficos com matplotlib

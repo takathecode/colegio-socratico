@@ -1,0 +1,29 @@
+{# Calendário de presenças. Parâmetro: semanas (apps/aluno/servicos.py). O ícone repete a cor. #}
+<div class="grid grid-cols-7 gap-1 text-center text-xs" role="table" aria-label="Presenças e ausências do mês">
+  {% for letra in "STQQSSD" %}
+    <span class="py-1 font-medium text-slate-500" aria-hidden="true">{{ letra }}</span>
+  {% endfor %}
+  {% for semana in semanas %}
+    {% for dia in semana %}
+      {% if dia.fora_do_mes %}
+        <span aria-hidden="true"></span>
+      {% elif dia.status == "falta" %}
+        <span title="{{ dia.data|date:'d/m/Y' }}: ausência"
+              class="flex h-8 items-center justify-center gap-0.5 rounded-md bg-amber-50 text-amber-900 {% if dia.hoje %}ring-1 ring-[#1F4E8C]{% endif %}">
+          <i data-lucide="circle-alert" class="size-3"></i>{{ dia.numero }}
+        </span>
+      {% elif dia.status == "presenca" %}
+        <span title="{{ dia.data|date:'d/m/Y' }}: presença"
+              class="flex h-8 items-center justify-center gap-0.5 rounded-md bg-[#EAF0F8] text-[#1F4E8C] {% if dia.hoje %}ring-1 ring-[#1F4E8C]{% endif %}">
+          <i data-lucide="check" class="size-3"></i>{{ dia.numero }}
+        </span>
+      {% else %}
+        <span class="flex h-8 items-center justify-center rounded-md text-slate-500 {% if dia.hoje %}ring-1 ring-[#1F4E8C]{% endif %}">{{ dia.numero }}</span>
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+</div>
+<div class="mt-3 flex items-center gap-4 text-xs">
+  <span class="flex items-center gap-1 text-[#1F4E8C]"><i data-lucide="check" class="size-3"></i> Presença</span>
+  <span class="flex items-center gap-1 text-amber-900"><i data-lucide="circle-alert" class="size-3"></i> Ausência</span>
+</div>

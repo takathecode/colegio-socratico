@@ -1,0 +1,19 @@
+{# Área para escolher um anexo. Mostra o nome e o tamanho do arquivo (portal.js). Parâmetro: campo. #}
+<div data-anexo class="rounded-xl border border-dashed border-[#CBD5E1] p-4 focus-within:border-[#1F4E8C]">
+  <div class="flex items-center gap-3">
+    <i data-lucide="file-text" class="size-5 shrink-0 text-[#1F4E8C]"></i>
+    <label for="{{ campo.id_for_label }}" class="min-w-0 flex-1 cursor-pointer">
+      <span data-anexo-nome class="block truncate text-sm font-semibold">Selecionar arquivo (opcional)</span>
+      <span data-anexo-tamanho class="block text-xs text-slate-500">Clique para procurar no computador</span>
+    </label>
+    {{ campo }}
+    <button type="button" data-anexo-remover aria-label="Remover arquivo"
+            class="hidden size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-[#F5F7FA]">
+      <i data-lucide="trash-2" class="size-4"></i>
+    </button>
+  </div>
+  <p class="mt-2 text-xs text-slate-500">Formatos aceitos: PDF, JPG ou PNG. Máximo de 5 MB.</p>
+  {% for erro in campo.errors %}
+    <p class="mt-1 text-sm text-[#C62828]">{{ erro }}</p>
+  {% endfor %}
+</div>

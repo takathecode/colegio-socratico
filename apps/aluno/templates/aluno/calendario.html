@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block titulo %}Calendário Acadêmico{% endblock %}
+{% block breadcrumb %}Calendário Acadêmico{% endblock %}
+
+{% block conteudo %}
+  <h1 class="text-2xl font-semibold text-[#0B2545]">Calendário Acadêmico</h1>
+  <p class="mt-1 text-sm text-slate-500">Planeje seu mês. Acompanhe avaliações, entregas e datas institucionais.</p>
+
+  <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <a href="?visao={{ visao }}&data={{ hoje|date:'Y-m-d' }}" class="inline-flex h-10 items-center rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Hoje</a>
+      <a href="?visao={{ visao }}&data={{ calendario.anterior }}" aria-label="Período anterior" class="flex size-10 items-center justify-center rounded-lg text-slate-500 hover:bg-white"><i data-lucide="chevron-left" class="size-5"></i></a>
+      <h2 class="text-lg font-semibold sm:text-xl">{{ calendario.titulo }}</h2>
+      <a href="?visao={{ visao }}&data={{ calendario.seguinte }}" aria-label="Próximo período" class="flex size-10 items-center justify-center rounded-lg text-slate-500 hover:bg-white"><i data-lucide="chevron-right" class="size-5"></i></a>
+    </div>
+    <div class="flex items-center gap-2" role="group" aria-label="Forma de visualizar">
+      {% for valor, nome in visoes %}
+        <a href="?visao={{ valor }}&data={{ data_atual }}" {% if valor == visao %}aria-current="true"{% endif %}
+           class="inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold {% if valor == visao %}bg-[#1F4E8C] text-white{% else %}border border-[#E5E9F0] bg-white text-[#1F4E8C] hover:border-[#1F4E8C]{% endif %}">{{ nome }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="mt-4 grid items-start gap-4 xl:grid-cols-[1fr_280px]">
+    <section class="overflow-hidden rounded-xl border border-[#E5E9F0] bg-white">
+      {% if visao == "lista" %}
+        {% include "aluno/_lista_calendario.html" with lista=calendario.lista %}
+      {% else %}
+        {# Sete colunas não cabem em um celular: nele, a grade dá lugar à lista do mesmo período. #}
+        <div class="md:hidden">
+          {% include "aluno/_lista_calendario.html" with lista=calendario.lista %}
+        </div>
+        <div class="hidden md:block">
+          <div class="grid grid-cols-7 border-b border-[#E5E9F0] text-center text-xs font-medium uppercase text-slate-500">
+            {% for nome in dias_da_semana %}<div class="py-3">{{ nome }}</div>{% endfor %}
+          </div>
+          {% for semana in calendario.semanas %}
+            <div class="grid grid-cols-7 {% if not forloop.last %}border-b border-[#E5E9F0]{% endif %}">
+              {% for dia in semana %}
+                <div class="min-h-28 border-r border-[#E5E9F0] p-2 last:border-r-0 {% if dia.hoje %}bg-[#EAF0F8]{% elif dia.fim_de_semana or dia.fora_do_mes %}bg-[#F5F7FA]{% endif %} {% if visao == 'semana' %}min-h-64{% endif %}">
+                  <p class="flex size-6 items-center justify-center rounded-full text-xs {% if dia.hoje %}bg-[#1F4E8C] font-semibold text-white{% elif dia.fora_do_mes %}text-slate-400{% else %}text-slate-600{% endif %}">{{ dia.data.day }}</p>
+                  {% for item in dia.itens %}
+                    {% include "aluno/_item_calendario.html" %}
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+
+    <aside class="space-y-4">
+      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <h2 class="font-semibold">A seguir</h2>
+        <p class="mt-1 text-xs text-slate-500">A partir de {{ hoje|date:"d/m/Y" }}</p>
+        <ul class="mt-3 divide-y divide-[#E5E9F0]">
+          {% for item in a_seguir %}
+            <li class="py-3">
+              <p class="text-xs font-semibold uppercase text-[#1F4E8C]">{{ item.inicio|date:"d M" }}</p>
+              <p class="mt-1 text-sm font-semibold">{{ item.titulo }}</p>
+              {% if item.detalhe %}<p class="mt-1 text-sm text-slate-500">{{ item.detalhe }}</p>{% endif %}
+              <p class="mt-2">{% include "componentes/selo.html" with situacao=item.rotulo %}</p>
+            </li>
+          {% empty %}
+            <li>{% include "componentes/vazio.html" with titulo="Nada marcado por enquanto" icone="calendar-days" %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <h2 class="font-semibold">Legenda</h2>
+        <p class="mt-3 flex items-center gap-2 text-sm text-[#1F4E8C]"><span class="size-3 bg-[#1F4E8C]"></span> Avaliações, entregas e atividades</p>
+        <p class="mt-2 flex items-center gap-2 text-sm text-slate-600"><span class="size-3 border border-slate-400"></span> Datas institucionais e feriados</p>
+        <p class="mt-3 text-xs text-slate-500">Horários no fuso de Brasília.</p>
+      </section>
+    </aside>
+  </div>
+{% endblock %}

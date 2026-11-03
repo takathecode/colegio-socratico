@@ -1,0 +1,20 @@
+{# Selo de situação. Parâmetro: situacao. A cor sempre vem com ícone e texto, nunca sozinha. #}
+{% if situacao == "Regular" or situacao == "Aprovada" or situacao == "Pago" or situacao == "Acima do mínimo" %}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-800">
+    <i data-lucide="circle-check" class="size-3.5"></i>{{ situacao }}
+  </span>
+{% elif situacao == "Em atenção" or situacao == "Pendente" or situacao == "Ação necessária" %}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900">
+    <i data-lucide="triangle-alert" class="size-3.5 text-amber-600"></i>{{ situacao }}
+  </span>
+{% elif situacao == "Em risco" or situacao == "Rejeitada" or situacao == "Em atraso" or situacao == "Abaixo do mínimo" %}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-800">
+    <i data-lucide="circle-alert" class="size-3.5"></i>{{ situacao }}
+  </span>
+{% elif situacao %}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-[#EAF0F8] px-2 py-1 text-xs font-medium text-[#1F4E8C]">
+    <i data-lucide="info" class="size-3.5"></i>{{ situacao }}
+  </span>
+{% else %}
+  <span class="text-xs text-slate-500">Sem dados</span>
+{% endif %}
