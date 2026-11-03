@@ -1,0 +1,125 @@
+# Colégio Socrático — Sistema de Gestão Acadêmica Inteligente (TCC SENAI)
+
+Projeto final do curso de Desenvolvimento de Sistemas (SENAI Morvan Figueiredo).
+Sistema acadêmico em Django com banco PostgreSQL hospedado no **Supabase**, três áreas
+separadas por perfil (aluno, professor, coordenador), dashboards, módulo preditivo de
+evasão, alertas automáticos, relatórios PDF/Excel e API REST.
+
+Responda e escreva comentários, mensagens de commit e textos de interface em **português do Brasil**.
+
+## Referências
+- **Protótipo Figma (fonte da verdade do visual):**
+  https://www.figma.com/design/Vg4TMgHDW53cZ7HsbtZUOB/Col%C3%A9gio-Socr%C3%A1tico?node-id=0-1
+  (file key `Vg4TMgHDW53cZ7HsbtZUOB`). Cópia em imagem: `docs/prototipo/prototipo.png`.
+- **Projeto Supabase:** ref `rgfnazeqoepnefmjoljc`
+  (https://supabase.com/dashboard/project/rgfnazeqoepnefmjoljc). Usar o MCP do Supabase só
+  para consultar; o schema vem das migrações do Django.
+- **Enunciado do professor:** `docs/TEMA_8.pdf`.
+
+## Ambiente
+- Sistema operacional dos desenvolvedores: **Windows** (use comandos PowerShell; caminhos com `\`).
+- Python 3.12+, ambiente virtual em `.venv` (`.venv\Scripts\activate`).
+- Banco: Supabase (PostgreSQL). Conexão pela variável `DATABASE_URL` no `.env`, usando o
+  **Session pooler** (porta 5432) com `sslmode=require`.
+- Redis: via Docker (`docker run -d -p 6379:6379 redis`) ou Upstash (`rediss://...`).
+- Celery no Windows **precisa** de `--pool=solo`.
+
+## Comandos
+```powershell
+python manage.py runserver                        # servidor de desenvolvimento
+python manage.py makemigrations; python manage.py migrate
+python manage.py check                            # validar o projeto
+python manage.py test                             # testes
+python manage.py popular_demo                     # dados fictícios para demonstração
+python manage.py treinar_modelo                   # treina o modelo de evasão
+celery -A config worker --pool=solo -l info       # worker (terminal separado)
+celery -A config beat -l info                     # agendador (terminal separado)
+```
+
+## Stack (exigida pelo professor — não trocar)
+django, djangorestframework, django-filter, psycopg2-binary, dj-database-url, python-dotenv,
+pandas, openpyxl, scikit-learn, joblib, matplotlib, reportlab, celery, redis, drf-spectacular.
+Front-end: templates Django + **Tailwind CSS** + JavaScript puro. Sem React/Vue.
+
+## Estrutura
+```
+config/            settings.py, urls.py, celery.py
+apps/contas/       Usuario customizado, login, redirecionamento e decorators de perfil
+apps/academico/    Curso, Turma, Disciplina, Matricula, Avaliacao, Nota, Frequencia, Justificativa, Evento
+apps/aluno/        views e templates da área do aluno        → /aluno/
+apps/professor/    views e templates da área do professor    → /professor/
+apps/coordenacao/  views e templates da área do coordenador  → /coordenacao/
+apps/analytics/    gráficos matplotlib e módulo preditivo (scikit-learn)
+apps/alertas/      modelo Alerta, notificações e tarefas Celery
+apps/relatorios/   geração de PDF (reportlab) e Excel (pandas)
+apps/mensagens/    caixa de mensagens interna
+apps/api/          serializers, viewsets e rotas da API REST → /api/ e /api/docs/
+templates/         base.html, componentes/ (parciais reutilizáveis)
+static/            css, js, img
+ml/                modelo treinado (.joblib) — não versionar
+```
+
+## Regras de autenticação e perfis
+- **Não existe tela de cadastro.** Nunca criar rota, link ou botão de "criar conta".
+  Contas são criadas pelo coordenador (área de coordenação) ou pelo Django Admin.
+- Model `contas.Usuario` (herda `AbstractUser`), `USERNAME_FIELD = "matricula"`,
+  campo `perfil` com choices: `ALUNO`, `PROFESSOR`, `COORDENADOR`, `ADMIN`.
+  `AUTH_USER_MODEL = "contas.Usuario"` deve existir **antes da primeira migração**.
+- Após o login, `/` redireciona conforme o perfil. ADMIN vai para `/admin/`.
+- Toda view de área usa o decorator `@perfil_requerido(...)` (ou o mixin equivalente).
+  Acesso a área de outro perfil → 403 com página amigável.
+- Professor só vê e edita turmas/disciplinas que leciona. Aluno só vê os próprios dados.
+- Tela de login: matrícula + senha, "Manter conectado", "Esqueci minha senha"
+  (fluxo de redefinição do Django), estados de erro e de carregamento.
+
+## Funções por perfil
+- **Aluno:** painel, notas e boletim (PDF), frequência, justificar ausência (com anexo),
+  calendário acadêmico, mensagens, financeiro (opcional/extra).
+- **Professor:** minhas turmas, lançar notas, chamada com "simulação de biometria",
+  avaliar justificativas, gráficos de desempenho da turma, mensagens.
+- **Coordenador:** visão geral, alunos em risco de evasão, CRUD de alunos, professores,
+  turmas e disciplinas, criação de contas, relatórios PDF/Excel, central de alertas.
+
+## Banco de dados (Supabase)
+- O schema é criado **somente pelas migrações do Django**. Não criar tabelas pelo painel
+  do Supabase nem por SQL manual. Não apagar migrações já aplicadas.
+- O Django conecta com a role `postgres`; não usar a chave `anon`/`service_role` no front-end.
+- Nunca colocar senha, URL do banco ou SECRET_KEY no código. Tudo vem do `.env`.
+  Manter `.env.example` atualizado (sem valores reais). `.env` está no `.gitignore`.
+
+## Padrão visual (protótipo Figma "Colégio Socrático")
+- Fonte Inter. Fundo da página `#F5F7FA`, cards brancos com borda `#E5E9F0` e cantos arredondados.
+- Azul-marinho da marca `#0B2545` (painel lateral do login, logo "H"); botão primário `#1F4E8C`.
+- Selos: verde "Regular", âmbar "Em atenção", vermelho "Em risco".
+- Layout das áreas internas: barra lateral à esquerda (logo, menu, card "Precisa de ajuda?",
+  "Sair do portal"), topo com breadcrumb, busca, sino de notificações e avatar.
+- Responsivo: em telas pequenas a barra lateral vira menu hambúrguer e os cards empilham.
+- Ícones: Lucide (via CDN). Componentes repetidos ficam em `templates/componentes/`.
+
+## Gráficos e ML
+- Matplotlib com `matplotlib.use("Agg")`; gráficos gerados no servidor e enviados como PNG em base64.
+- Evasão: dados simulados gerados por script, modelo `RandomForestClassifier` (ou `LogisticRegression`)
+  com features: frequência, média, tendência das notas, justificativas pendentes. Saída: probabilidade
+  e nível (baixo/médio/alto) + principais motivos. Recalculado por tarefa Celery agendada.
+
+## Como trabalhar neste projeto
+- Trabalhe **uma etapa por vez** (ver "Progresso"). Antes de mudanças grandes, apresente um plano.
+- Ao terminar uma etapa: rodar `python manage.py check`, migrações e testes; atualizar a seção
+  "Progresso" deste arquivo; sugerir mensagem de commit.
+- Prefira código simples e bem comentado: os alunos precisam conseguir explicar tudo na apresentação.
+- Se algo exigir decisão (biblioteca nova, mudança de modelo), pergunte antes.
+
+## Progresso
+- [x] 1. Base do projeto, `.env`, conexão com Supabase, usuário customizado
+  - Decisões: Django 5.2 LTS; testes em SQLite na memória (o sistema usa o Supabase); a rede do SENAI não completa conexões na porta 5432, então usar outra rede (ex.: roteador do celular) para acessar o banco; Data API desligada no painel do Supabase, pois as tabelas do Django não têm RLS (não religar).
+- [ ] 2. Modelos acadêmicos + Django Admin + comando `popular_demo`
+- [ ] 3. Login, redirecionamento por perfil, permissões, `base.html` e layout
+- [ ] 4. Área do aluno
+- [ ] 5. Área do professor
+- [ ] 6. Área do coordenador (CRUDs e criação de contas)
+- [ ] 7. Gráficos com matplotlib
+- [ ] 8. Módulo preditivo de evasão
+- [ ] 9. Alertas automáticos (Celery + Redis)
+- [ ] 10. Relatórios PDF e Excel
+- [ ] 11. API REST documentada
+- [ ] 12. Testes, revisão final e documentação

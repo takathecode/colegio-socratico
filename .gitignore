@@ -1,0 +1,25 @@
+# Segredos: senha do banco e SECRET_KEY ficam só na máquina de cada desenvolvedor
+.env
+
+# Ambiente virtual do Python
+.venv/
+
+# Arquivos gerados pelo Python
+__pycache__/
+*.py[cod]
+
+# Banco SQLite local, caso seja criado
+*.sqlite3
+
+# Arquivos estáticos coletados e anexos enviados pelos usuários
+staticfiles/
+media/
+
+# Modelo treinado: é gerado pelo comando treinar_modelo
+ml/*.joblib
+
+# Configurações pessoais do Claude Code
+.claude/settings.local.json
+
+# Windows
+Thumbs.db
