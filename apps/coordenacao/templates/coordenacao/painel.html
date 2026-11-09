@@ -28,6 +28,15 @@
     {% include "componentes/card_kpi.html" with rotulo="Justificativas pendentes" valor=total_pendentes detalhe="Aguardando os professores" icone="file-check" %}
   </div>
 
+  {# Gráfico de linhas gerado com matplotlib (apps/analytics/graficos.py). #}
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <h2 class="font-semibold">Evolução da frequência</h2>
+    <p class="mt-1 text-sm text-slate-500">Frequência de cada turma do semestre, mês a mês, só com os alunos ativos.</p>
+    <div class="mx-auto mt-3 max-w-4xl">
+      {% include "componentes/grafico.html" with grafico=grafico_frequencia titulo="Nenhuma chamada registrada" texto="O gráfico aparece quando os professores registrarem as primeiras chamadas." icone="calendar-check" %}
+    </div>
+  </section>
+
   <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
     <section class="rounded-xl border border-[#E5E9F0] bg-white p-5 xl:col-span-2">
       <div class="mb-4 flex items-center justify-between gap-3">

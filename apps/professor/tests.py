@@ -24,7 +24,7 @@ from apps.academico.models import (
 
 Usuario = get_user_model()
 
-TELAS = ("painel", "turmas", "notas", "chamada", "justificativas")
+TELAS = ("painel", "turmas", "notas", "chamada", "justificativas", "desempenho")
 HASH_RAPIDO = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 

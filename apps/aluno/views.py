@@ -18,6 +18,7 @@ from apps.academico.calculos import (
 )
 from apps.academico.models import Avaliacao, Justificativa, Matricula, Nota
 from apps.academico.utilidades import baixar_anexo
+from apps.analytics.graficos import notas_por_disciplina
 from apps.contas.decorators import perfil_requerido
 from apps.financeiro.models import Mensalidade
 from apps.mensagens.forms import secretaria
@@ -73,6 +74,7 @@ def painel(request):
             "matricula": matricula,
             "creditos": dados_de_creditos(matricula),
             "linhas": linhas,
+            "grafico_notas": notas_por_disciplina(linhas),
             "frequencia": dados_de_frequencia(linhas),
             "situacoes": servicos.resumo_de_situacoes(linhas),
             "proxima_prova": proxima_prova,

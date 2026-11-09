@@ -1,0 +1,7 @@
+{# Gráfico gerado no servidor (apps/analytics/graficos.py). Parâmetros: grafico e, para o estado vazio, titulo, texto e icone. #}
+{# O "alt" traz os números do gráfico em texto, para quem usa leitor de tela. #}
+{% if grafico %}
+  <img src="data:image/png;base64,{{ grafico.png }}" alt="{{ grafico.descricao }}" class="h-auto w-full">
+{% else %}
+  {% include "componentes/vazio.html" with icone=icone|default:"chart-no-axes-column" %}
+{% endif %}

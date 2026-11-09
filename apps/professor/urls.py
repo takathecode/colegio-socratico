@@ -10,6 +10,7 @@ urlpatterns = [
     path("turmas/<int:pk>/", views.turma, name="turma"),
     path("notas/", views.notas, name="notas"),
     path("chamada/", views.chamada, name="chamada"),
+    path("desempenho/", views.desempenho, name="desempenho"),
     path("justificativas/", views.justificativas, name="justificativas"),
     path(
         "justificativas/<int:pk>/avaliar/",

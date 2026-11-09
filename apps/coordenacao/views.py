@@ -22,6 +22,8 @@ from apps.academico.calculos import (
 )
 from apps.academico.models import Disciplina, Justificativa, Matricula, Oferta, Turma
 from apps.academico.utilidades import saudacao
+from apps.analytics.dados import frequencia_mensal_por_turma
+from apps.analytics.graficos import evolucao_da_frequencia
 from apps.contas.decorators import perfil_requerido
 from apps.contas.models import Usuario
 
@@ -199,6 +201,7 @@ def painel(request):
                 status=Justificativa.Status.PENDENTE
             ).count(),
             "turmas": turmas,
+            "grafico_frequencia": evolucao_da_frequencia(frequencia_mensal_por_turma(turmas)),
             "em_risco": em_risco[:8],
         },
     )

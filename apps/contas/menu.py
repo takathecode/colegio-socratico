@@ -42,8 +42,7 @@ AREAS = {
                 "rota": "professor:justificativas",
                 "tambem_ativo": ("professor:avaliar_justificativa",),
             },
-            # Os gráficos de desempenho da turma são feitos na etapa 7.
-            {"nome": "Desempenho", "icone": "chart-no-axes-column", "rota": None},
+            {"nome": "Desempenho", "icone": "chart-no-axes-column", "rota": "professor:desempenho"},
             MENSAGENS,
         ],
     },

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block titulo %}Desempenho{% endblock %}
+{% block breadcrumb %}Desempenho{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Desempenho</h1>
+      <p class="mt-1 text-sm text-slate-500">Como as médias da turma se distribuem nesta disciplina.</p>
+    </div>
+    <a href="{% url 'professor:turma' oferta.pk %}"
+       class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+      <i data-lucide="users" class="size-4"></i> Ver alunos da turma
+    </a>
+  </div>
+
+  <form method="get" class="mt-4">
+    {% include "professor/_seletor_disciplina.html" %}
+  </form>
+
+  <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% include "componentes/card_kpi.html" with rotulo="Alunos" valor=indicadores.alunos detalhe="Matrículas ativas" icone="users" %}
+    {% include "componentes/card_kpi.html" with rotulo="Média da turma" valor=indicadores.media|floatformat:1|default:"—" detalhe="Mínimo recomendado: 7,0" icone="chart-no-axes-column" %}
+    {% if indicadores.frequencia is None %}
+      {% include "componentes/card_kpi.html" with rotulo="Frequência média" valor="—" detalhe="Nenhuma chamada registrada" icone="calendar-check" %}
+    {% else %}
+      {% include "componentes/card_kpi.html" with rotulo="Frequência média" valor=indicadores.frequencia|floatformat:0|add:"%" detalhe="Mínimo exigido: 75%" icone="calendar-check" %}
+    {% endif %}
+    {% include "componentes/card_kpi.html" with rotulo="Em risco" valor=indicadores.risco detalhe="Média abaixo de 6 ou frequência abaixo de 75%" icone="triangle-alert" %}
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5 xl:col-span-2">
+      <h2 class="font-semibold">Distribuição das médias</h2>
+      <p class="mt-1 text-sm text-slate-500">{{ oferta.disciplina.nome }} · Turma {{ oferta.turma.codigo }}</p>
+      <div class="mt-3">
+        {% include "componentes/grafico.html" with titulo="Nenhuma nota lançada" texto="O gráfico aparece quando houver notas lançadas nesta disciplina." %}
+      </div>
+    </section>
+
+    {# Os mesmos números do gráfico, em tabela: ajudam a ler valores exatos. #}
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Alunos por faixa</h2>
+      <table class="mt-3 w-full text-sm">
+        <thead>
+          <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+            <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
+            <th scope="col" class="px-3 py-2.5 text-right font-medium">Alunos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for faixa in faixas %}
+            <tr class="border-b border-[#E5E9F0]">
+              <td class="px-3 py-2.5">{{ faixa.rotulo }} <span class="text-xs text-slate-500">· {{ faixa.grupo|lower }}</span></td>
+              <td class="px-3 py-2.5 text-right font-semibold">{{ faixa.quantidade }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="mt-3 text-xs text-slate-500">
+        A média que fica no limite entra na faixa de cima (6,0 conta em "6 a 7").
+        {% if sem_nota %}{{ sem_nota }} aluno{{ sem_nota|pluralize }} ainda sem nota não entra{{ sem_nota|pluralize:"m" }} no gráfico.{% endif %}
+      </p>
+    </section>
+  </div>
+{% endblock %}

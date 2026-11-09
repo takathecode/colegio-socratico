@@ -17,6 +17,8 @@ from django.views.decorators.http import require_POST
 from apps.academico.calculos import EM_RISCO, FREQUENCIA_MINIMA, MEDIA_MINIMA
 from apps.academico.models import Frequencia, Justificativa
 from apps.academico.utilidades import baixar_anexo, data_valida, saudacao, texto_dias_ate
+from apps.analytics.dados import contar_por_faixa
+from apps.analytics.graficos import distribuicao_de_notas
 from apps.contas.decorators import perfil_requerido
 
 from . import servicos
@@ -276,6 +278,30 @@ def chamada(request):
             "linhas": linhas,
             "total_presentes": sum(1 for linha in linhas if linha["presente"] is True),
             "total_faltas": sum(1 for linha in linhas if linha["presente"] is False),
+        },
+    )
+
+
+@login_required
+@perfil_requerido("PROFESSOR")
+def desempenho(request):
+    """Gráfico com a distribuição das médias da turma em uma disciplina do professor."""
+    oferta, ofertas = servicos.escolher_oferta(request.user, request.GET.get("oferta"))
+    if oferta is None:
+        return render(request, "professor/sem_disciplinas.html", {"titulo_da_tela": "Desempenho"})
+
+    resumo = servicos.resumo_das_ofertas([oferta])[0]
+    faixas = contar_por_faixa(linha["media"] for linha in resumo["linhas"])
+    return render(
+        request,
+        "professor/desempenho.html",
+        {
+            "oferta": oferta,
+            "ofertas": ofertas,
+            "indicadores": resumo["indicadores"],
+            "faixas": faixas,
+            "sem_nota": sum(1 for linha in resumo["linhas"] if linha["media"] is None),
+            "grafico": distribuicao_de_notas(faixas),
         },
     )
 
