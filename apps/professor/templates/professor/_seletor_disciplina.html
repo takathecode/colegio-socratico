@@ -1,0 +1,9 @@
+{# Escolha da disciplina nas telas de notas e chamada. Recarrega a página ao mudar (portal.js). #}
+{# Parâmetros: ofertas e oferta (a escolhida). Outros campos podem vir no bloco do formulário que inclui este. #}
+<label class="sr-only" for="escolher-disciplina">Disciplina</label>
+<select id="escolher-disciplina" name="oferta" data-enviar-ao-mudar
+        class="h-10 max-w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm font-semibold text-[#1F4E8C]">
+  {% for item in ofertas %}
+    <option value="{{ item.pk }}" {% if item.pk == oferta.pk %}selected{% endif %}>{{ item.disciplina.nome }} · {{ item.turma.codigo }}</option>
+  {% endfor %}
+</select>

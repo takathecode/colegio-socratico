@@ -6,14 +6,13 @@ from datetime import date, datetime, time, timedelta
 from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.dateparse import parse_date
 
 from apps.academico.calculos import EM_ATENCAO, EM_RISCO, REGULAR, somar_meses
 from apps.academico.models import Avaliacao, Evento, Frequencia, Justificativa
+# saudacao e texto_dias_ate ficam em utilidades porque o painel do professor também usa.
+from apps.academico.utilidades import data_valida, saudacao, texto_dias_ate  # noqa: F401
 from apps.financeiro.models import Mensalidade
 
-# Datas fora deste intervalo vindas da URL são ignoradas, para evitar erros de cálculo.
-ANO_MINIMO, ANO_MAXIMO = 2000, 2100
 # Entregas aparecem como pendência quando faltam até 14 dias.
 DIAS_ENTREGA_PENDENTE = 14
 
@@ -25,21 +24,6 @@ ROTULOS_DE_EVENTO = {
 
 
 # --- Painel ---
-
-
-def saudacao():
-    hora = timezone.localtime().hour
-    if hora < 12:
-        return "Bom dia"
-    return "Boa tarde" if hora < 18 else "Boa noite"
-
-
-def texto_dias_ate(momento):
-    """Texto do indicador "Próxima prova": Hoje, Amanhã ou Em N dias."""
-    dias = (timezone.localtime(momento).date() - timezone.localdate()).days
-    if dias <= 0:
-        return "Hoje"
-    return "Amanhã" if dias == 1 else f"Em {dias} dias"
 
 
 def proximas_avaliacoes(turma):
@@ -130,20 +114,9 @@ def resumo_de_situacoes(linhas):
 # --- Calendário de frequência ---
 
 
-def _data_valida(texto):
-    """Converte o texto AAAA-MM-DD da URL em data, ou None se o valor não servir."""
-    try:
-        data = parse_date(texto)
-    except ValueError:  # formato certo com data impossível, como 2026-13-45
-        return None
-    if data is None or not ANO_MINIMO <= data.year <= ANO_MAXIMO:
-        return None
-    return data
-
-
 def ler_mes(texto, padrao):
     """Lê ?mes=2026-10 da URL. Valor ausente ou inválido volta ao mês padrão."""
-    return _data_valida(f"{texto}-01") or padrao
+    return data_valida(f"{texto}-01") or padrao
 
 
 def mes_do_ultimo_registro(matricula):
@@ -274,7 +247,7 @@ def proximos_itens(turma, quantidade=3):
 
 def ler_data(texto):
     """Lê ?data= da URL. Valor ausente ou inválido volta para hoje."""
-    return _data_valida(texto or "") or timezone.localdate()
+    return data_valida(texto or "") or timezone.localdate()
 
 
 def _semana_com_itens(dias, itens, mes=None):

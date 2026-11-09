@@ -3,6 +3,8 @@
 import os
 
 from django.http import FileResponse, Http404
+from django.utils import timezone
+from django.utils.dateparse import parse_date
 
 # Aparência dos campos de formulário. O Tailwind encontra estas classes porque também lê os .py.
 CLASSES_CAMPO = (
@@ -25,3 +27,34 @@ def baixar_anexo(arquivo):
         )
     except FileNotFoundError as erro:
         raise Http404("O arquivo não está disponível neste computador.") from erro
+
+
+# Datas fora deste intervalo vindas da URL são ignoradas, para evitar erros de cálculo.
+ANO_MINIMO, ANO_MAXIMO = 2000, 2100
+
+
+def data_valida(texto):
+    """Converte o texto AAAA-MM-DD da URL em data, ou None se o valor não servir."""
+    try:
+        data = parse_date(texto)
+    except ValueError:  # formato certo com data impossível, como 2026-13-45
+        return None
+    if data is None or not ANO_MINIMO <= data.year <= ANO_MAXIMO:
+        return None
+    return data
+
+
+def saudacao():
+    """Bom dia, Boa tarde ou Boa noite, conforme a hora atual."""
+    hora = timezone.localtime().hour
+    if hora < 12:
+        return "Bom dia"
+    return "Boa tarde" if hora < 18 else "Boa noite"
+
+
+def texto_dias_ate(momento):
+    """Texto do indicador "Próxima prova": Hoje, Amanhã ou Em N dias."""
+    dias = (timezone.localtime(momento).date() - timezone.localdate()).days
+    if dias <= 0:
+        return "Hoje"
+    return "Amanhã" if dias == 1 else f"Em {dias} dias"

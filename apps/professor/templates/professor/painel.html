@@ -4,5 +4,166 @@
 {% block breadcrumb %}Painel{% endblock %}
 
 {% block conteudo %}
-  {% include "componentes/em_construcao.html" with etapa="5" %}
+  <div class="flex flex-wrap items-end justify-between gap-2">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">{{ saudacao }}, {{ user.nome_com_tratamento|default:user.matricula }}</h1>
+      <p class="mt-1 text-sm text-slate-500">Acompanhe suas turmas e o que precisa da sua atenção.</p>
+    </div>
+    <p class="text-sm text-slate-500">{{ hoje|date:"l, d/m/Y"|capfirst }}</p>
+  </div>
+
+  {# Indicadores #}
+  <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% include "componentes/card_kpi.html" with rotulo="Disciplinas" valor=resumos|length detalhe=detalhe_turmas icone="book-open" %}
+    {% include "componentes/card_kpi.html" with rotulo="Alunos" valor=total_alunos detalhe="Matrículas ativas nas suas turmas" icone="users" %}
+    {% include "componentes/card_kpi.html" with rotulo="Justificativas pendentes" valor=total_pendentes detalhe="Aguardando a sua análise" icone="file-check" %}
+    {% if proximas %}
+      {% include "componentes/card_kpi.html" with rotulo="Próxima avaliação" valor=dias_ate_a_proxima detalhe=detalhe_proxima icone="calendar-clock" %}
+    {% else %}
+      {% include "componentes/card_kpi.html" with rotulo="Próxima avaliação" valor="—" detalhe="Nenhuma avaliação marcada" icone="calendar-clock" %}
+    {% endif %}
+  </div>
+
+  <div class="mt-4 grid gap-4 xl:grid-cols-[2.2fr_1fr]">
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <h2 class="font-semibold">Minhas disciplinas</h2>
+        <a href="{% url 'professor:turmas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+          Ver turmas <i data-lucide="arrow-right" class="size-4"></i>
+        </a>
+      </div>
+      {% if resumos %}
+        <div class="hidden md:block">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+                <th scope="col" class="px-3 py-2.5 font-medium">Disciplina</th>
+                <th scope="col" class="px-3 py-2.5 font-medium">Alunos</th>
+                <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
+                <th scope="col" class="px-3 py-2.5 font-medium">Frequência</th>
+                <th scope="col" class="px-3 py-2.5 font-medium">Situação</th>
+                <th scope="col" class="px-3 py-2.5 font-medium"><span class="sr-only">Ações</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for resumo in resumos %}
+                <tr class="border-b border-[#E5E9F0]">
+                  <td class="px-3 py-3">
+                    <a href="{% url 'professor:turma' resumo.oferta.pk %}" class="font-medium hover:text-[#1F4E8C] hover:underline">{{ resumo.oferta.disciplina.nome }}</a>
+                    <p class="mt-0.5 text-xs text-slate-500">Turma {{ resumo.oferta.turma.codigo }} · {{ resumo.oferta.turma.semestre }}</p>
+                  </td>
+                  <td class="px-3">{{ resumo.indicadores.alunos }}</td>
+                  <td class="px-3 font-semibold">{{ resumo.indicadores.media|floatformat:1|default:"—" }}</td>
+                  <td class="px-3">{% if resumo.indicadores.frequencia is None %}—{% else %}{{ resumo.indicadores.frequencia|floatformat:0 }}%{% endif %}</td>
+                  <td class="px-3">
+                    {% if resumo.indicadores.risco %}
+                      {% include "componentes/selo.html" with situacao="Em risco" %}
+                      <span class="ml-1 text-xs text-slate-500">{{ resumo.indicadores.risco }} aluno{{ resumo.indicadores.risco|pluralize }}</span>
+                    {% elif resumo.indicadores.atencao %}
+                      {% include "componentes/selo.html" with situacao="Em atenção" %}
+                      <span class="ml-1 text-xs text-slate-500">{{ resumo.indicadores.atencao }} aluno{{ resumo.indicadores.atencao|pluralize }}</span>
+                    {% elif resumo.indicadores.alunos %}
+                      {% include "componentes/selo.html" with situacao="Regular" %}
+                    {% else %}
+                      {% include "componentes/selo.html" with situacao=None %}
+                    {% endif %}
+                  </td>
+                  <td class="px-3 text-right whitespace-nowrap">
+                    <a href="{% url 'professor:notas' %}?oferta={{ resumo.oferta.pk }}" title="Lançar notas" aria-label="Lançar notas de {{ resumo.oferta.disciplina.nome }} da turma {{ resumo.oferta.turma.codigo }}"
+                       class="inline-flex size-9 items-center justify-center rounded-lg text-[#1F4E8C] hover:bg-[#EAF0F8]"><i data-lucide="square-pen" class="size-4"></i></a>
+                    <a href="{% url 'professor:chamada' %}?oferta={{ resumo.oferta.pk }}" title="Fazer chamada" aria-label="Fazer chamada de {{ resumo.oferta.disciplina.nome }} da turma {{ resumo.oferta.turma.codigo }}"
+                       class="inline-flex size-9 items-center justify-center rounded-lg text-[#1F4E8C] hover:bg-[#EAF0F8]"><i data-lucide="fingerprint" class="size-4"></i></a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <ul class="divide-y divide-[#E5E9F0] md:hidden">
+          {% for resumo in resumos %}
+            <li class="py-3">
+              <a href="{% url 'professor:turma' resumo.oferta.pk %}" class="text-sm font-medium hover:underline">{{ resumo.oferta.disciplina.nome }} · {{ resumo.oferta.turma.codigo }}</a>
+              <p class="mt-0.5 text-xs text-slate-500">
+                {{ resumo.indicadores.alunos }} alunos · Média {{ resumo.indicadores.media|floatformat:1|default:"—" }} ·
+                Freq. {% if resumo.indicadores.frequencia is None %}—{% else %}{{ resumo.indicadores.frequencia|floatformat:0 }}%{% endif %}
+                {% if resumo.indicadores.risco %}· <span class="font-medium text-red-800">{{ resumo.indicadores.risco }} em risco</span>{% endif %}
+              </p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Você ainda não leciona nenhuma disciplina" texto="Quando a coordenação ligar você a uma turma, ela aparecerá aqui." icone="book-open" %}
+      {% endif %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <div class="mb-1 flex items-center justify-between gap-3">
+        <h2 class="font-semibold">Justificativas pendentes</h2>
+        {% if total_pendentes %}
+          <a href="{% url 'professor:justificativas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+            Avaliar <i data-lucide="arrow-right" class="size-4"></i>
+          </a>
+        {% endif %}
+      </div>
+      <ul class="divide-y divide-[#E5E9F0]">
+        {% for justificativa in pendentes %}
+          <li>
+            <a href="{% url 'professor:justificativas' %}#justificativa-{{ justificativa.pk }}" class="flex items-center justify-between gap-3 py-3 hover:text-[#1F4E8C]">
+              <span class="min-w-0">
+                <span class="block truncate text-sm font-medium">{{ justificativa.frequencia.matricula.aluno.get_full_name }}</span>
+                <span class="block truncate text-xs text-slate-500">{{ justificativa.frequencia.aula.oferta.disciplina.nome }} · falta em {{ justificativa.frequencia.aula.data|date:"d/m" }}</span>
+              </span>
+              {% include "componentes/selo.html" with situacao="Pendente" %}
+            </a>
+          </li>
+        {% empty %}
+          <li>{% include "componentes/vazio.html" with titulo="Nenhuma justificativa aguardando" texto="Quando um aluno enviar um pedido, ele aparecerá aqui." icone="circle-check" %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+
+  <div class="mt-4 grid gap-4 xl:grid-cols-[2.2fr_1fr]">
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Alunos em risco</h2>
+      <p class="mb-3 mt-1 text-sm text-slate-500">
+        {% if total_em_risco %}{{ total_em_risco }} registro{{ total_em_risco|pluralize }} com média abaixo de 6 ou frequência abaixo de 75%, começando pela menor frequência.{% else %}Média abaixo de 6 ou frequência abaixo de 75%.{% endif %}
+      </p>
+      <ul class="divide-y divide-[#E5E9F0]">
+        {% for linha in em_risco %}
+          <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+            <div class="min-w-0">
+              <p class="text-sm font-medium">{{ linha.matricula.aluno.get_full_name|default:linha.matricula.aluno.matricula }}</p>
+              <p class="mt-0.5 text-xs text-slate-500">
+                <a href="{% url 'professor:turma' linha.oferta.pk %}" class="hover:underline">{{ linha.oferta.disciplina.nome }} · {{ linha.oferta.turma.codigo }}</a>
+                · Média {{ linha.media|floatformat:1|default:"—" }}
+                · Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
+              </p>
+            </div>
+            {% include "componentes/selo.html" with situacao=linha.situacao %}
+          </li>
+        {% empty %}
+          <li>{% include "componentes/vazio.html" with titulo="Nenhum aluno em risco" texto="Ótimo sinal: todas as turmas estão dentro dos limites." icone="circle-check" %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Próximas avaliações</h2>
+      <ul class="mt-2 divide-y divide-[#E5E9F0]">
+        {% for avaliacao in proximas %}
+          <li class="py-3">
+            <a href="{% url 'professor:notas' %}?oferta={{ avaliacao.oferta_id }}&avaliacao={{ avaliacao.pk }}" class="block hover:text-[#1F4E8C]">
+              <span class="block text-sm font-medium">{{ avaliacao.nome }} · {{ avaliacao.oferta.disciplina.nome }}</span>
+              <span class="block text-xs text-slate-500">
+                {{ avaliacao.get_tipo_display }} · Turma {{ avaliacao.oferta.turma.codigo }} · {{ avaliacao.data_hora|date:"d/m/Y, H\hi" }}{% if avaliacao.local %} · {{ avaliacao.local }}{% endif %}
+              </span>
+            </a>
+          </li>
+        {% empty %}
+          <li>{% include "componentes/vazio.html" with titulo="Nenhuma avaliação marcada" texto="Crie provas e entregas na tela Lançar notas." icone="calendar-clock" %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
 {% endblock %}

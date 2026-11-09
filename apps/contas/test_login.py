@@ -188,7 +188,9 @@ class LayoutTests(TestCase):
         resposta = self.client.get("/professor/")
         self.assertContains(resposta, "Área do professor")
         self.assertContains(resposta, "Lançar notas")
-        self.assertNotContains(resposta, "Alunos em risco")
+        # "Relatórios" só existe no menu do coordenador. ("Alunos em risco" não serve mais:
+        # desde a etapa 5 o painel do professor tem um card com esse título.)
+        self.assertNotContains(resposta, "Relatórios")
         self.assertContains(resposta, 'aria-current="page"', count=1)
 
     def test_menu_nao_tem_links_para_telas_que_nao_existem(self):

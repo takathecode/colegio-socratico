@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ oferta.disciplina.nome }} · {{ oferta.turma.codigo }}{% endblock %}
+{% block breadcrumb %}<a href="{% url 'professor:turmas' %}" class="hover:underline">Minhas turmas</a> / {{ oferta.disciplina.nome }} · {{ oferta.turma.codigo }}{% endblock %}
+
+{% block conteudo %}
+  <a href="{% url 'professor:turmas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+    <i data-lucide="arrow-left" class="size-4"></i> Minhas turmas
+  </a>
+
+  <div class="mt-3 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">{{ oferta.disciplina.nome }}</h1>
+      <p class="mt-1 text-sm text-slate-500">{{ oferta.disciplina.codigo }} · Turma {{ oferta.turma.codigo }} · {{ oferta.turma.periodo }}º período · {{ oferta.turma.semestre }}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'professor:notas' %}?oferta={{ oferta.pk }}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="square-pen" class="size-4"></i> Lançar notas
+      </a>
+      <a href="{% url 'professor:chamada' %}?oferta={{ oferta.pk }}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+        <i data-lucide="fingerprint" class="size-4"></i> Fazer chamada
+      </a>
+    </div>
+  </div>
+
+  <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% include "componentes/card_kpi.html" with rotulo="Alunos" valor=indicadores.alunos detalhe="Matrículas ativas" icone="users" %}
+    {% include "componentes/card_kpi.html" with rotulo="Média da turma" valor=indicadores.media|floatformat:1|default:"—" detalhe="Mínimo recomendado: 7,0" icone="chart-no-axes-column" %}
+    {% if indicadores.frequencia is None %}
+      {% include "componentes/card_kpi.html" with rotulo="Frequência média" valor="—" detalhe="Nenhuma chamada registrada" icone="calendar-check" %}
+    {% else %}
+      {% include "componentes/card_kpi.html" with rotulo="Frequência média" valor=indicadores.frequencia|floatformat:0|add:"%" detalhe="Mínimo exigido: 75%" icone="calendar-check" %}
+    {% endif %}
+    {% include "componentes/card_kpi.html" with rotulo="Em risco" valor=indicadores.risco detalhe="Média abaixo de 6 ou frequência abaixo de 75%" icone="triangle-alert" %}
+  </div>
+
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="font-semibold">Alunos</h2>
+        <p class="mt-1 text-sm text-slate-500">Notas, média e frequência nesta disciplina.</p>
+      </div>
+      <form method="get" class="relative w-full sm:w-72" role="search">
+        <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
+        <label class="sr-only" for="busca-aluno">Buscar aluno por nome ou matrícula</label>
+        <input id="busca-aluno" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou matrícula"
+               class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C]">
+      </form>
+    </div>
+
+    {% if linhas %}
+      <div class="hidden overflow-x-auto md:block">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+              <th scope="col" class="px-3 py-2.5 font-medium">Aluno</th>
+              {% for avaliacao in avaliacoes %}
+                <th scope="col" class="px-3 py-2.5 font-medium whitespace-nowrap">{{ avaliacao.nome }}</th>
+              {% endfor %}
+              <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Frequência</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for linha in linhas %}
+              <tr class="border-b border-[#E5E9F0]">
+                <td class="px-3 py-3">
+                  <p class="font-medium">{{ linha.matricula.aluno.get_full_name|default:linha.matricula.aluno.matricula }}</p>
+                  <p class="mt-0.5 text-xs text-slate-500">RA {{ linha.matricula.aluno.matricula }}</p>
+                </td>
+                {% for nota in linha.notas %}
+                  <td class="px-3 text-slate-600">{{ nota|floatformat:1|default:"—" }}</td>
+                {% endfor %}
+                <td class="px-3 text-base font-semibold">{{ linha.media|floatformat:1|default:"—" }}</td>
+                <td class="px-3 whitespace-nowrap">
+                  {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
+                  <span class="block text-xs text-slate-500">{{ linha.horas_faltas }} h de falta</span>
+                </td>
+                <td class="px-3">{% include "componentes/selo.html" with situacao=linha.situacao %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="divide-y divide-[#E5E9F0] md:hidden">
+        {% for linha in linhas %}
+          <li class="flex items-center justify-between gap-3 py-3">
+            <div class="min-w-0">
+              <p class="text-sm font-medium">{{ linha.matricula.aluno.get_full_name|default:linha.matricula.aluno.matricula }}</p>
+              <p class="mt-0.5 text-xs text-slate-500">
+                Média {{ linha.media|floatformat:1|default:"—" }} ·
+                Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
+              </p>
+              {% if linha.notas_nomeadas %}
+                <p class="mt-0.5 text-xs text-slate-500">
+                  {% for avaliacao, nota in linha.notas_nomeadas %}{{ avaliacao.nome }}: {{ nota|floatformat:1|default:"—" }}{% if not forloop.last %} · {% endif %}{% endfor %}
+                </p>
+              {% endif %}
+            </div>
+            {% include "componentes/selo.html" with situacao=linha.situacao %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% elif busca %}
+      {% include "componentes/vazio.html" with titulo="Nenhum aluno encontrado" texto="Confira o nome ou a matrícula digitados." icone="search" %}
+    {% else %}
+      {% include "componentes/vazio.html" with titulo="Nenhum aluno matriculado" texto="Os alunos aparecerão aqui quando forem matriculados na turma." icone="users" %}
+    {% endif %}
+  </section>
+{% endblock %}

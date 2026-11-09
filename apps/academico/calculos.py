@@ -8,7 +8,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from django.db.models import Q, Sum
 
-from .models import Frequencia, Nota, Oferta
+from .models import Avaliacao, Frequencia, Matricula, Nota, Oferta
 
 # Limites do selo de situação.
 FREQUENCIA_MINIMA = Decimal("75")  # abaixo disso: Em risco
@@ -128,3 +128,71 @@ def resumo_por_disciplina(matricula):
             }
         )
     return linhas
+
+
+def resumo_da_oferta(oferta):
+    """Monta a visão do professor: uma linha por aluno ativo da turma, nesta disciplina.
+
+    Usa as mesmas regras do boletim do aluno, então os dois veem os mesmos números.
+    São quatro consultas ao todo, qualquer que seja o tamanho da turma.
+    Retorna (avaliacoes, linhas). Em cada linha, "notas" segue a ordem de "avaliacoes"
+    e tem None onde a nota ainda não foi lançada.
+    """
+    avaliacoes = list(Avaliacao.objects.filter(oferta=oferta).order_by("data_hora", "nome"))
+    matriculas = list(
+        Matricula.objects.filter(turma_id=oferta.turma_id, situacao=Matricula.Situacao.ATIVA)
+        .select_related("aluno")
+        .order_by("aluno__first_name", "aluno__last_name")
+    )
+
+    notas = {
+        (matricula_id, avaliacao_id): valor
+        for matricula_id, avaliacao_id, valor in Nota.objects.filter(
+            avaliacao__oferta=oferta
+        ).values_list("matricula_id", "avaliacao_id", "valor")
+    }
+    horas = {
+        linha["matricula_id"]: linha
+        for linha in Frequencia.objects.filter(aula__oferta=oferta)
+        .order_by()
+        .values("matricula_id")
+        .annotate(
+            dadas=Sum("aula__horas_aula"),
+            faltas=Sum("aula__horas_aula", filter=Q(presente=False)),
+        )
+    }
+
+    linhas = []
+    for matricula in matriculas:
+        notas_do_aluno = [notas.get((matricula.pk, avaliacao.pk)) for avaliacao in avaliacoes]
+        media = calcular_media(valor for valor in notas_do_aluno if valor is not None)
+        horas_do_aluno = horas.get(matricula.pk, {})
+        horas_dadas = horas_do_aluno.get("dadas") or 0
+        horas_faltas = horas_do_aluno.get("faltas") or 0
+        frequencia = calcular_frequencia(horas_dadas, horas_faltas)
+        linhas.append(
+            {
+                "matricula": matricula,
+                "notas": notas_do_aluno,
+                "media": media,
+                "horas_dadas": horas_dadas,
+                "horas_faltas": horas_faltas,
+                "frequencia": frequencia,
+                "situacao": calcular_situacao(media, frequencia),
+            }
+        )
+    return avaliacoes, linhas
+
+
+def indicadores_da_turma(linhas):
+    """Médias da turma e quantos alunos há em cada situação, a partir das linhas acima."""
+    medias = [linha["media"] for linha in linhas if linha["media"] is not None]
+    frequencias = [linha["frequencia"] for linha in linhas if linha["frequencia"] is not None]
+    return {
+        "alunos": len(linhas),
+        "media": calcular_media(medias),
+        "frequencia": calcular_media(frequencias),  # média simples dos percentuais
+        "regulares": sum(1 for linha in linhas if linha["situacao"] == REGULAR),
+        "atencao": sum(1 for linha in linhas if linha["situacao"] == EM_ATENCAO),
+        "risco": sum(1 for linha in linhas if linha["situacao"] == EM_RISCO),
+    }

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block titulo %}Lançar notas{% endblock %}
+{% block breadcrumb %}Lançar notas{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Lançar notas</h1>
+      <p class="mt-1 text-sm text-slate-500">Escolha a disciplina e a avaliação. As notas aparecem no boletim do aluno assim que forem salvas.</p>
+    </div>
+    <button type="button" data-abrir-modal="modal-nova-avaliacao"
+            class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+      <i data-lucide="plus" class="size-4"></i> Nova avaliação
+    </button>
+  </div>
+
+  <form method="get" class="mt-4">
+    {% include "professor/_seletor_disciplina.html" %}
+  </form>
+
+  {% if avaliacoes %}
+    {# Abas: uma para cada avaliação da disciplina. #}
+    <nav aria-label="Avaliações" class="mt-4 flex gap-2 overflow-x-auto pb-1">
+      {% for item in avaliacoes %}
+        <a href="?oferta={{ oferta.pk }}&avaliacao={{ item.pk }}" {% if item.pk == avaliacao.pk %}aria-current="page"{% endif %}
+           class="inline-flex h-9 shrink-0 items-center rounded-lg border px-3 text-sm font-semibold {% if item.pk == avaliacao.pk %}border-[#1F4E8C] bg-[#EAF0F8] text-[#1F4E8C]{% else %}border-[#E5E9F0] bg-white text-slate-600 hover:border-[#1F4E8C]{% endif %}">
+          {{ item.nome }}
+        </a>
+      {% endfor %}
+    </nav>
+
+    <section class="mt-3 rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 class="font-semibold">{{ avaliacao.nome }} · {{ oferta.disciplina.nome }}</h2>
+          <p class="mt-1 text-sm text-slate-500">
+            {{ avaliacao.get_tipo_display }} · Turma {{ oferta.turma.codigo }} · {{ avaliacao.data_hora|date:"d/m/Y, H\hi" }}{% if avaliacao.local %} · {{ avaliacao.local }}{% endif %}
+          </p>
+        </div>
+        <a href="{% url 'professor:turma' oferta.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+          Ver médias da turma <i data-lucide="arrow-right" class="size-4"></i>
+        </a>
+      </div>
+
+      {% if linhas %}
+        <form method="post" action="?oferta={{ oferta.pk }}&avaliacao={{ avaliacao.pk }}" data-carregando class="mt-4" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="acao" value="salvar_notas">
+          <ul class="divide-y divide-[#E5E9F0] border-y border-[#E5E9F0]">
+            {% for linha in linhas %}
+              <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5">
+                <label for="{{ linha.campo.id_for_label }}" class="min-w-0 flex-1">
+                  <span class="block text-sm font-medium">{{ linha.matricula.aluno.get_full_name|default:linha.matricula.aluno.matricula }}</span>
+                  <span class="block text-xs text-slate-500">RA {{ linha.matricula.aluno.matricula }}</span>
+                </label>
+                <div class="text-right">
+                  {# Com erro, o Django marca o campo com aria-invalid e a borda fica vermelha. #}
+                  {{ linha.campo }}
+                  {% for erro in linha.campo.errors %}
+                    <p class="mt-1 text-xs text-[#C62828]">{{ erro }}</p>
+                  {% endfor %}
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <p class="flex items-start gap-2 text-xs text-slate-500">
+              <i data-lucide="info" class="size-4 shrink-0"></i>
+              Notas de 0 a 10, com vírgula (ex.: 7,5). Apagar uma nota deixa o aluno sem nota nesta avaliação.
+            </p>
+            {% include "componentes/botao_enviar.html" with texto="Salvar notas" texto_carregando="Salvando..." icone="save" compacto=True %}
+          </div>
+        </form>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhum aluno ativo nesta turma" texto="Os alunos aparecerão aqui quando forem matriculados." icone="users" %}
+      {% endif %}
+    </section>
+  {% else %}
+    <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+      {% include "componentes/vazio.html" with titulo="Nenhuma avaliação nesta disciplina" texto="Crie a primeira prova ou entrega no botão Nova avaliação." icone="clipboard-list" %}
+    </section>
+  {% endif %}
+
+  {% include "componentes/modal.html" with id="modal-nova-avaliacao" titulo="Nova avaliação" subtitulo="A avaliação também aparece no calendário dos alunos." conteudo="professor/_form_avaliacao.html" aberto=abrir_modal %}
+{% endblock %}

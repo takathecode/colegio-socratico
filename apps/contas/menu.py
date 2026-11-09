@@ -28,10 +28,21 @@ AREAS = {
         "titulo": "Área do professor",
         "itens": [
             {"nome": "Painel", "icone": "layout-dashboard", "rota": "professor:painel"},
-            {"nome": "Minhas turmas", "icone": "users", "rota": None},
-            {"nome": "Lançar notas", "icone": "square-pen", "rota": None},
-            {"nome": "Chamada", "icone": "fingerprint", "rota": None},
-            {"nome": "Justificativas", "icone": "file-check", "rota": None},
+            {
+                "nome": "Minhas turmas",
+                "icone": "users",
+                "rota": "professor:turmas",
+                "tambem_ativo": ("professor:turma",),
+            },
+            {"nome": "Lançar notas", "icone": "square-pen", "rota": "professor:notas"},
+            {"nome": "Chamada", "icone": "fingerprint", "rota": "professor:chamada"},
+            {
+                "nome": "Justificativas",
+                "icone": "file-check",
+                "rota": "professor:justificativas",
+                "tambem_ativo": ("professor:avaliar_justificativa",),
+            },
+            # Os gráficos de desempenho da turma são feitos na etapa 7.
             {"nome": "Desempenho", "icone": "chart-no-axes-column", "rota": None},
             MENSAGENS,
         ],

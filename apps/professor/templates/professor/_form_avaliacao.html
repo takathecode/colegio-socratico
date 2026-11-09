@@ -1,0 +1,19 @@
+{# Conteúdo do modal "Nova avaliação". #}
+<form method="post" action="?oferta={{ oferta.pk }}" data-carregando class="mt-5 space-y-4">
+  {% csrf_token %}
+  <input type="hidden" name="acao" value="nova_avaliacao">
+  <p class="rounded-lg bg-[#F5F7FA] px-3 py-2 text-sm">{{ oferta.disciplina.nome }} · Turma {{ oferta.turma.codigo }}</p>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    {% include "componentes/campo_form.html" with campo=form_avaliacao.nome %}
+    {% include "componentes/campo_form.html" with campo=form_avaliacao.tipo %}
+  </div>
+  {% include "componentes/campo_form.html" with campo=form_avaliacao.data_hora %}
+  {% include "componentes/campo_form.html" with campo=form_avaliacao.local %}
+
+  <div class="flex justify-end gap-3">
+    <button type="button" data-fechar-modal
+            class="h-10 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Cancelar</button>
+    {% include "componentes/botao_enviar.html" with texto="Criar avaliação" texto_carregando="Criando..." compacto=True %}
+  </div>
+</form>

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block titulo %}Minhas turmas{% endblock %}
+{% block breadcrumb %}Minhas turmas{% endblock %}
+
+{% block conteudo %}
+  <h1 class="text-2xl font-semibold text-[#0B2545]">Minhas turmas</h1>
+  <p class="mt-1 text-sm text-slate-500">As disciplinas que você leciona em cada turma.</p>
+
+  {% if resumos %}
+    <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {% for resumo in resumos %}
+        <article class="flex flex-col rounded-xl border border-[#E5E9F0] bg-white p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h2 class="font-semibold">{{ resumo.oferta.disciplina.nome }}</h2>
+              <p class="mt-0.5 text-xs text-slate-500">{{ resumo.oferta.disciplina.codigo }} · Turma {{ resumo.oferta.turma.codigo }} · {{ resumo.oferta.turma.semestre }}</p>
+            </div>
+            <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#EAF0F8] text-[#1F4E8C]"><i data-lucide="book-open" class="size-5"></i></span>
+          </div>
+
+          <dl class="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div class="rounded-lg bg-[#F5F7FA] p-2">
+              <dt class="text-xs text-slate-500">Alunos</dt>
+              <dd class="mt-0.5 text-lg font-semibold">{{ resumo.indicadores.alunos }}</dd>
+            </div>
+            <div class="rounded-lg bg-[#F5F7FA] p-2">
+              <dt class="text-xs text-slate-500">Média</dt>
+              <dd class="mt-0.5 text-lg font-semibold">{{ resumo.indicadores.media|floatformat:1|default:"—" }}</dd>
+            </div>
+            <div class="rounded-lg bg-[#F5F7FA] p-2">
+              <dt class="text-xs text-slate-500">Frequência</dt>
+              <dd class="mt-0.5 text-lg font-semibold">{% if resumo.indicadores.frequencia is None %}—{% else %}{{ resumo.indicadores.frequencia|floatformat:0 }}%{% endif %}</dd>
+            </div>
+          </dl>
+
+          <ul class="mt-4 space-y-1.5 text-xs">
+            <li class="flex items-center gap-1.5 font-medium text-[#1F4E8C]"><i data-lucide="circle-check" class="size-4"></i>{{ resumo.indicadores.regulares }} regular{{ resumo.indicadores.regulares|pluralize:"es" }}</li>
+            <li class="flex items-center gap-1.5 text-amber-900"><i data-lucide="triangle-alert" class="size-4 text-amber-600"></i>{{ resumo.indicadores.atencao }} em atenção</li>
+            <li class="flex items-center gap-1.5 text-red-800"><i data-lucide="circle-alert" class="size-4"></i>{{ resumo.indicadores.risco }} em risco</li>
+          </ul>
+
+          <div class="mt-5 flex flex-wrap gap-2 border-t border-[#E5E9F0] pt-4">
+            <a href="{% url 'professor:turma' resumo.oferta.pk %}"
+               class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#1F4E8C] px-3 text-sm font-semibold text-white hover:bg-[#0B2545]">
+              <i data-lucide="users" class="size-4"></i> Ver alunos
+            </a>
+            <a href="{% url 'professor:notas' %}?oferta={{ resumo.oferta.pk }}"
+               class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E5E9F0] px-3 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+              <i data-lucide="square-pen" class="size-4"></i> Notas
+            </a>
+            <a href="{% url 'professor:chamada' %}?oferta={{ resumo.oferta.pk }}"
+               class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E5E9F0] px-3 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+              <i data-lucide="fingerprint" class="size-4"></i> Chamada
+            </a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="mt-5 rounded-xl border border-[#E5E9F0] bg-white p-5">
+      {% include "componentes/vazio.html" with titulo="Você ainda não leciona nenhuma disciplina" texto="Quando a coordenação ligar você a uma turma, ela aparecerá aqui." icone="book-open" %}
+    </div>
+  {% endif %}
+{% endblock %}
