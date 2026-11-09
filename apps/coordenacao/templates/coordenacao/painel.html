@@ -4,5 +4,106 @@
 {% block breadcrumb %}Visão geral{% endblock %}
 
 {% block conteudo %}
-  {% include "componentes/em_construcao.html" with etapa="6" %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">{{ saudacao }}, {{ user.first_name|default:user.matricula }}</h1>
+      <p class="mt-1 text-sm text-slate-500">Situação acadêmica da instituição{% if semestre %} · semestre {{ semestre }}{% endif %}.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'coordenacao:aluno_novo' %}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="user-plus" class="size-4"></i> Novo aluno
+      </a>
+      <a href="{% url 'coordenacao:turma_nova' %}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+        <i data-lucide="plus" class="size-4"></i> Nova turma
+      </a>
+    </div>
+  </div>
+
+  <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% include "componentes/card_kpi.html" with rotulo="Alunos ativos" valor=indicadores.alunos detalhe="Matrículas ativas" icone="graduation-cap" %}
+    {% include "componentes/card_kpi.html" with rotulo="Professores" valor=total_professores detalhe="Contas ativas" icone="users" %}
+    {% include "componentes/card_kpi.html" with rotulo="Em risco" valor=indicadores.risco detalhe="Média abaixo de 6 ou frequência abaixo de 75% em alguma disciplina" icone="triangle-alert" %}
+    {% include "componentes/card_kpi.html" with rotulo="Justificativas pendentes" valor=total_pendentes detalhe="Aguardando os professores" icone="file-check" %}
+  </div>
+
+  <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5 xl:col-span-2">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 class="font-semibold">Turmas do semestre</h2>
+          <p class="mt-1 text-sm text-slate-500">Média e frequência dos alunos ativos.</p>
+        </div>
+        <a href="{% url 'coordenacao:turmas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+          Ver todas <i data-lucide="arrow-right" class="size-4"></i>
+        </a>
+      </div>
+
+      {% if turmas %}
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[560px] text-sm">
+            <thead>
+              <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+                <th scope="col" class="px-3 py-2.5 font-medium">Turma</th>
+                <th scope="col" class="px-3 py-2.5 font-medium">Alunos</th>
+                <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
+                <th scope="col" class="px-3 py-2.5 font-medium">Frequência</th>
+                <th scope="col" class="px-3 py-2.5 font-medium">Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for turma in turmas %}
+                <tr class="border-b border-[#E5E9F0]">
+                  <td class="px-3 py-3">
+                    <a href="{% url 'coordenacao:turma' turma.pk %}" class="font-medium text-[#1F4E8C] hover:underline">{{ turma.codigo }}</a>
+                    <p class="mt-0.5 text-xs text-slate-500">{{ turma.curso.nome }} · {{ turma.periodo }}º período</p>
+                  </td>
+                  <td class="px-3">{{ turma.total_alunos }}</td>
+                  <td class="px-3 font-semibold">{{ turma.indicadores.media|floatformat:1|default:"—" }}</td>
+                  <td class="px-3">{% if turma.indicadores.frequencia is None %}—{% else %}{{ turma.indicadores.frequencia|floatformat:0 }}%{% endif %}</td>
+                  <td class="px-3 text-xs">
+                    <span class="text-red-800">{{ turma.indicadores.risco }} em risco</span> ·
+                    <span class="text-amber-900">{{ turma.indicadores.atencao }} em atenção</span>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhuma turma cadastrada" texto="Crie a primeira turma para começar a matricular alunos." icone="school" %}
+      {% endif %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <h2 class="font-semibold">Alunos em risco</h2>
+        {% if indicadores.risco %}
+          <a href="{% url 'coordenacao:alunos' %}?situacao=Em+risco" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+            Ver todos <i data-lucide="arrow-right" class="size-4"></i>
+          </a>
+        {% endif %}
+      </div>
+      {% if em_risco %}
+        <ul class="divide-y divide-[#E5E9F0]">
+          {% for linha in em_risco %}
+            <li class="flex items-center justify-between gap-3 py-3">
+              <div class="min-w-0">
+                <a href="{% url 'coordenacao:aluno_editar' linha.matricula.aluno.pk %}" class="block truncate text-sm font-medium hover:underline">{{ linha.matricula.aluno.get_full_name|default:linha.matricula.aluno.matricula }}</a>
+                <p class="mt-0.5 text-xs text-slate-500">
+                  {{ linha.matricula.turma.codigo }} ·
+                  Média {{ linha.media|floatformat:1|default:"—" }} ·
+                  Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
+                </p>
+              </div>
+              <span class="shrink-0 text-xs font-medium text-red-800">{{ linha.disciplinas_em_risco }} disciplina{{ linha.disciplinas_em_risco|pluralize }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhum aluno em risco" texto="Todos os alunos ativos estão com média e frequência dentro do esperado." icone="circle-check" %}
+      {% endif %}
+    </section>
+  </div>
 {% endblock %}

@@ -1,0 +1,16 @@
+{# Conteúdo do modal "Adicionar disciplina" da tela da turma. #}
+<form method="post" data-carregando class="mt-5 space-y-4">
+  {% csrf_token %}
+  <p class="rounded-lg bg-[#F5F7FA] px-3 py-2 text-sm">Turma {{ turma.codigo }} · {{ turma.curso.nome }}</p>
+  {% for erro in form.non_field_errors %}
+    <p class="text-sm text-[#C62828]">{{ erro }}</p>
+  {% endfor %}
+  {% include "componentes/campo_form.html" with campo=form.disciplina %}
+  {% include "componentes/campo_form.html" with campo=form.professor %}
+
+  <div class="flex justify-end gap-3">
+    <button type="button" data-fechar-modal
+            class="h-10 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Cancelar</button>
+    {% include "componentes/botao_enviar.html" with texto="Adicionar" texto_carregando="Adicionando..." compacto=True %}
+  </div>
+</form>

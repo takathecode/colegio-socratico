@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block titulo %}Alunos{% endblock %}
+{% block breadcrumb %}Alunos{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Alunos</h1>
+      <p class="mt-1 text-sm text-slate-500">Contas, matrículas e situação acadêmica de cada aluno.</p>
+    </div>
+    <a href="{% url 'coordenacao:aluno_novo' %}"
+       class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+      <i data-lucide="user-plus" class="size-4"></i> Novo aluno
+    </a>
+  </div>
+
+  <section class="mt-5 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_auto]">
+      <div class="relative">
+        <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
+        <label class="sr-only" for="busca">Buscar por nome ou RA</label>
+        <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou RA"
+               class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C]">
+      </div>
+      <div>
+        <label class="sr-only" for="turma">Turma</label>
+        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+          <option value="">Todas as turmas</option>
+          {% for item in turmas %}
+            <option value="{{ item.pk }}" {% if turma == item.pk|stringformat:"d" %}selected{% endif %}>{{ item.codigo }} · {{ item.semestre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="sr-only" for="situacao">Situação</label>
+        <select id="situacao" name="situacao" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+          <option value="">Todas as situações</option>
+          {% for item in situacoes %}
+            <option value="{{ item }}" {% if situacao == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" class="h-10 rounded-lg border border-[#E5E9F0] px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Filtrar</button>
+        {% if filtrando %}
+          <a href="{% url 'coordenacao:alunos' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <p class="mt-4 text-sm text-slate-500">{{ total }} aluno{{ total|pluralize }}</p>
+
+    {% if pagina.object_list %}
+      <div class="mt-2 hidden overflow-x-auto md:block">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+              <th scope="col" class="px-3 py-2.5 font-medium">Aluno</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Turma</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Frequência</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Situação</th>
+              <th scope="col" class="px-3 py-2.5 font-medium"><span class="sr-only">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for linha in pagina %}
+              <tr class="border-b border-[#E5E9F0]">
+                <td class="px-3 py-3">
+                  <p class="font-medium">{{ linha.aluno.get_full_name|default:linha.aluno.matricula }}</p>
+                  <p class="mt-0.5 text-xs text-slate-500">RA {{ linha.aluno.matricula }}{% if not linha.aluno.is_active %} · <span class="font-medium text-red-800">conta desativada</span>{% endif %}</p>
+                </td>
+                <td class="px-3">{{ linha.matricula.turma.codigo|default:"—" }}</td>
+                <td class="px-3 font-semibold">{{ linha.media|floatformat:1|default:"—" }}</td>
+                <td class="px-3">{% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}</td>
+                <td class="px-3">
+                  {% if linha.ativa %}
+                    {% include "componentes/selo.html" with situacao=linha.situacao %}
+                  {% elif linha.matricula %}
+                    {% include "componentes/selo.html" with situacao=linha.matricula.get_situacao_display %}
+                  {% else %}
+                    <span class="text-xs text-slate-500">Sem matrícula</span>
+                  {% endif %}
+                </td>
+                <td class="px-3 text-right">
+                  <a href="{% url 'coordenacao:aluno_editar' linha.aluno.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+                    <i data-lucide="pencil" class="size-4"></i> Editar
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="mt-2 divide-y divide-[#E5E9F0] md:hidden">
+        {% for linha in pagina %}
+          <li class="flex items-center justify-between gap-3 py-3">
+            <a href="{% url 'coordenacao:aluno_editar' linha.aluno.pk %}" class="min-w-0">
+              <p class="truncate text-sm font-medium">{{ linha.aluno.get_full_name|default:linha.aluno.matricula }}</p>
+              <p class="mt-0.5 text-xs text-slate-500">
+                {{ linha.matricula.turma.codigo|default:"Sem turma" }} ·
+                Média {{ linha.media|floatformat:1|default:"—" }} ·
+                Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
+              </p>
+            </a>
+            {% if linha.ativa %}
+              {% include "componentes/selo.html" with situacao=linha.situacao %}
+            {% elif linha.matricula %}
+              {% include "componentes/selo.html" with situacao=linha.matricula.get_situacao_display %}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% include "componentes/paginacao.html" %}
+    {% elif filtrando %}
+      {% include "componentes/vazio.html" with titulo="Nenhum aluno encontrado" texto="Confira a busca ou mude os filtros." icone="search" %}
+    {% else %}
+      {% include "componentes/vazio.html" with titulo="Nenhum aluno cadastrado" texto="Use o botão Novo aluno para criar a primeira conta." icone="graduation-cap" %}
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block titulo %}Turmas{% endblock %}
+{% block breadcrumb %}Turmas{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Turmas</h1>
+      <p class="mt-1 text-sm text-slate-500">Abra uma turma para definir as disciplinas e os professores.</p>
+    </div>
+    <a href="{% url 'coordenacao:turma_nova' %}"
+       class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+      <i data-lucide="plus" class="size-4"></i> Nova turma
+    </a>
+  </div>
+
+  {% if turmas %}
+    <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {% for turma in turmas %}
+        <a href="{% url 'coordenacao:turma' turma.pk %}" class="flex flex-col rounded-xl border border-[#E5E9F0] bg-white p-5 hover:border-[#1F4E8C]">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h2 class="font-semibold">{{ turma.codigo }}</h2>
+              <p class="mt-0.5 text-xs text-slate-500">{{ turma.curso.nome }} · {{ turma.periodo }}º período</p>
+            </div>
+            <span class="rounded-md bg-[#EAF0F8] px-2 py-1 text-xs font-medium text-[#1F4E8C]">{{ turma.semestre }}</span>
+          </div>
+          <dl class="mt-4 grid grid-cols-2 gap-2 text-center">
+            <div class="rounded-lg bg-[#F5F7FA] p-2">
+              <dt class="text-xs text-slate-500">Alunos ativos</dt>
+              <dd class="mt-0.5 text-lg font-semibold">{{ turma.total_alunos }}</dd>
+            </div>
+            <div class="rounded-lg bg-[#F5F7FA] p-2">
+              <dt class="text-xs text-slate-500">Disciplinas</dt>
+              <dd class="mt-0.5 text-lg font-semibold">{{ turma.total_disciplinas }}</dd>
+            </div>
+          </dl>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="mt-5 rounded-xl border border-[#E5E9F0] bg-white p-5">
+      {% include "componentes/vazio.html" with titulo="Nenhuma turma cadastrada" texto="Use o botão Nova turma para criar a primeira." icone="school" %}
+    </div>
+  {% endif %}
+{% endblock %}

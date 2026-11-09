@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block titulo %}Contas{% endblock %}
+{% block breadcrumb %}Contas{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Contas de acesso</h1>
+      <p class="mt-1 text-sm text-slate-500">Só a coordenação cria contas. Uma conta desativada não entra no portal, mas o histórico é mantido.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'coordenacao:aluno_novo' %}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="graduation-cap" class="size-4"></i> Aluno
+      </a>
+      <a href="{% url 'coordenacao:professor_novo' %}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="users" class="size-4"></i> Professor
+      </a>
+      <a href="{% url 'coordenacao:coordenador_novo' %}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+        <i data-lucide="user-plus" class="size-4"></i> Coordenação
+      </a>
+    </div>
+  </div>
+
+  <section class="mt-5 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_auto]">
+      <div class="relative">
+        <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
+        <label class="sr-only" for="busca">Buscar por nome ou matrícula</label>
+        <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou matrícula"
+               class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C]">
+      </div>
+      <div>
+        <label class="sr-only" for="perfil">Perfil</label>
+        <select id="perfil" name="perfil" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+          <option value="">Todos os perfis</option>
+          {% for valor, rotulo in perfis %}
+            <option value="{{ valor }}" {% if perfil == valor %}selected{% endif %}>{{ rotulo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="sr-only" for="estado">Situação da conta</label>
+        <select id="estado" name="estado" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+          <option value="">Ativas e desativadas</option>
+          <option value="ativas" {% if estado == "ativas" %}selected{% endif %}>Só ativas</option>
+          <option value="inativas" {% if estado == "inativas" %}selected{% endif %}>Só desativadas</option>
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" class="h-10 rounded-lg border border-[#E5E9F0] px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Filtrar</button>
+        {% if filtrando %}
+          <a href="{% url 'coordenacao:contas' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <p class="mt-4 text-sm text-slate-500">{{ total }} conta{{ total|pluralize }}</p>
+
+    {% if pagina.object_list %}
+      <ul class="mt-2 divide-y divide-[#E5E9F0]">
+        {% for conta in pagina %}
+          <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+            <div class="flex min-w-0 items-center gap-3">
+              <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C]" aria-hidden="true">{{ conta.iniciais }}</span>
+              <div class="min-w-0">
+                <p class="truncate text-sm font-medium">
+                  {{ conta.get_full_name|default:conta.matricula }}
+                  {% if conta == user %}<span class="text-xs font-normal text-slate-500">(você)</span>{% endif %}
+                </p>
+                <p class="mt-0.5 truncate text-xs text-slate-500">
+                  {{ conta.get_perfil_display }} · matrícula {{ conta.matricula }} ·
+                  {% if conta.last_login %}último acesso em {{ conta.last_login|date:"d/m/Y" }}{% else %}nunca entrou{% endif %}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              {% if conta.is_active %}
+                {% include "componentes/selo.html" with situacao="Ativa" %}
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-800">
+                  <i data-lucide="ban" class="size-3.5"></i>Desativada
+                </span>
+              {% endif %}
+
+              <a href="{{ conta.url_editar }}" class="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-[#1F4E8C] hover:bg-[#F5F7FA]">
+                <i data-lucide="pencil" class="size-4"></i> Editar
+              </a>
+
+              {% if conta != user %}
+                <form method="post" action="{% url 'coordenacao:conta_nova_senha' conta.pk %}"
+                      data-confirmar="Gerar uma nova senha para {{ conta.get_full_name|default:conta.matricula }}? A senha atual deixa de funcionar.">
+                  {% csrf_token %}
+                  <button type="submit" class="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-[#1F4E8C] hover:bg-[#F5F7FA]">
+                    <i data-lucide="key-round" class="size-4"></i> Nova senha
+                  </button>
+                </form>
+                <form method="post" action="{% url 'coordenacao:conta_alternar_ativa' conta.pk %}"
+                      {% if conta.is_active %}data-confirmar="Desativar a conta de {{ conta.get_full_name|default:conta.matricula }}? A pessoa não vai mais conseguir entrar."{% endif %}>
+                  {% csrf_token %}
+                  <input type="hidden" name="proxima" value="{{ request.get_full_path }}">
+                  {% if conta.is_active %}
+                    <button type="submit" class="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-red-800 hover:bg-red-50">
+                      <i data-lucide="user-x" class="size-4"></i> Desativar
+                    </button>
+                  {% else %}
+                    <button type="submit" class="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-green-800 hover:bg-green-50">
+                      <i data-lucide="user-check" class="size-4"></i> Reativar
+                    </button>
+                  {% endif %}
+                </form>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      {% include "componentes/paginacao.html" %}
+    {% elif filtrando %}
+      {% include "componentes/vazio.html" with titulo="Nenhuma conta encontrada" texto="Confira a busca ou mude os filtros." icone="search" %}
+    {% else %}
+      {% include "componentes/vazio.html" with titulo="Nenhuma conta cadastrada" icone="key-round" %}
+    {% endif %}
+  </section>
+{% endblock %}

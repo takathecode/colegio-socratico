@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block titulo %}Senha provisória{% endblock %}
+{% block breadcrumb %}Contas / Senha provisória{% endblock %}
+
+{% block conteudo %}
+  <section class="mx-auto mt-6 max-w-lg rounded-xl border border-[#E5E9F0] bg-white p-6">
+    <span class="flex size-12 items-center justify-center rounded-full bg-green-50 text-green-800">
+      <i data-lucide="circle-check" class="size-6"></i>
+    </span>
+    <h1 class="mt-4 text-xl font-semibold text-[#0B2545]">
+      {% if dados.acao == "criada" %}Conta criada{% else %}Nova senha gerada{% endif %}
+    </h1>
+    <p class="mt-1 text-sm text-slate-500">{{ dados.perfil }} · {{ dados.nome }}</p>
+
+    <dl class="mt-5 space-y-3 rounded-lg bg-[#F5F7FA] p-4">
+      <div>
+        <dt class="text-xs text-slate-500">Matrícula (usada no login)</dt>
+        <dd class="mt-0.5 font-mono text-lg font-semibold">{{ dados.matricula }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-slate-500">Senha provisória</dt>
+        <dd class="mt-0.5 flex items-center justify-between gap-3">
+          <span id="senha-provisoria" class="font-mono text-lg font-semibold tracking-wider">{{ dados.senha }}</span>
+          <button type="button" data-copiar="senha-provisoria"
+                  class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+            <i data-lucide="copy" class="size-4"></i> <span data-rotulo>Copiar</span>
+          </button>
+        </dd>
+      </div>
+    </dl>
+
+    <p class="mt-4 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      <i data-lucide="triangle-alert" class="size-4 shrink-0 translate-y-0.5 text-amber-600"></i>
+      Esta senha aparece só agora. Entregue-a à pessoa, que pode trocá-la depois pelo "Esqueci minha senha" na tela de login.
+    </p>
+
+    <div class="mt-6 flex justify-end">
+      <a href="{{ dados.voltar }}" class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+        Concluir <i data-lucide="arrow-right" class="size-4"></i>
+      </a>
+    </div>
+  </section>
+{% endblock %}

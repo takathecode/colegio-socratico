@@ -257,3 +257,26 @@ document.querySelectorAll("[data-chamada]").forEach((area) => {
 
   atualizarContadores();
 });
+
+// --- Coordenação ---
+// Pede confirmação antes de ações sensíveis, como gerar nova senha ou desativar uma conta.
+document.querySelectorAll("form[data-confirmar]").forEach((formulario) => {
+  formulario.addEventListener("submit", (evento) => {
+    if (!window.confirm(formulario.dataset.confirmar)) evento.preventDefault();
+  });
+});
+
+// Botão "Copiar" da senha provisória. data-copiar tem o id do elemento com o texto.
+document.querySelectorAll("[data-copiar]").forEach((botao) => {
+  const rotulo = botao.querySelector("[data-rotulo]");
+  botao.addEventListener("click", async () => {
+    const texto = document.getElementById(botao.dataset.copiar).textContent.trim();
+    try {
+      await navigator.clipboard.writeText(texto);
+      rotulo.textContent = "Copiada!";
+    } catch (erro) {
+      rotulo.textContent = "Copie manualmente"; // navegador sem permissão de copiar
+    }
+    setTimeout(() => (rotulo.textContent = "Copiar"), 2500);
+  });
+});

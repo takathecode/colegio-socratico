@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block titulo %}Turma {{ turma.codigo }}{% endblock %}
+{% block breadcrumb %}<a href="{% url 'coordenacao:turmas' %}" class="hover:underline">Turmas</a> / {{ turma.codigo }}{% endblock %}
+
+{% block conteudo %}
+  <a href="{% url 'coordenacao:turmas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+    <i data-lucide="arrow-left" class="size-4"></i> Turmas
+  </a>
+
+  <div class="mt-3 flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Turma {{ turma.codigo }}</h1>
+      <p class="mt-1 text-sm text-slate-500">{{ turma.curso.nome }} · {{ turma.periodo }}º período · semestre {{ turma.semestre }}</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'coordenacao:turma_editar' turma.pk %}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="pencil" class="size-4"></i> Editar
+      </a>
+      {% if not linhas and not ofertas %}
+        <a href="{% url 'coordenacao:turma_excluir' turma.pk %}"
+           class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-red-800 hover:border-red-800">
+          <i data-lucide="trash-2" class="size-4"></i> Excluir
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% include "componentes/card_kpi.html" with rotulo="Alunos ativos" valor=indicadores.alunos detalhe="Matrículas ativas" icone="users" %}
+    {% include "componentes/card_kpi.html" with rotulo="Média da turma" valor=indicadores.media|floatformat:1|default:"—" detalhe="Média geral dos alunos ativos" icone="chart-no-axes-column" %}
+    {% if indicadores.frequencia is None %}
+      {% include "componentes/card_kpi.html" with rotulo="Frequência média" valor="—" detalhe="Nenhuma chamada registrada" icone="calendar-check" %}
+    {% else %}
+      {% include "componentes/card_kpi.html" with rotulo="Frequência média" valor=indicadores.frequencia|floatformat:0|add:"%" detalhe="Mínimo exigido: 75%" icone="calendar-check" %}
+    {% endif %}
+    {% include "componentes/card_kpi.html" with rotulo="Em risco" valor=indicadores.risco detalhe="Em pelo menos uma disciplina" icone="triangle-alert" %}
+  </div>
+
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="font-semibold">Disciplinas e professores</h2>
+        <p class="mt-1 text-sm text-slate-500">Cada professor só acessa as disciplinas ligadas a ele aqui.</p>
+      </div>
+      {% if pode_adicionar %}
+        <button type="button" data-abrir-modal="modal-oferta"
+                class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+          <i data-lucide="plus" class="size-4"></i> Adicionar disciplina
+        </button>
+      {% endif %}
+    </div>
+
+    {% if ofertas %}
+      <ul class="divide-y divide-[#E5E9F0]">
+        {% for oferta in ofertas %}
+          <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+            <div class="min-w-0">
+              <p class="text-sm font-medium">{{ oferta.disciplina.nome }}</p>
+              <p class="mt-0.5 text-xs text-slate-500">
+                {{ oferta.disciplina.codigo }} · {{ oferta.professor.nome_com_tratamento|default:oferta.professor.matricula }}
+                {% if not oferta.professor.is_active %} · <span class="font-medium text-red-800">conta do professor desativada</span>{% endif %}
+              </p>
+            </div>
+            <div class="flex items-center gap-4">
+              <a href="{% url 'coordenacao:oferta_editar' oferta.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+                <i data-lucide="user-round-pen" class="size-4"></i> Trocar professor
+              </a>
+              {% if not oferta.total_avaliacoes %}
+                <a href="{% url 'coordenacao:oferta_excluir' oferta.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-red-800 hover:underline">
+                  <i data-lucide="trash-2" class="size-4"></i> Remover
+                </a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% include "componentes/vazio.html" with titulo="Nenhuma disciplina nesta turma" texto="Adicione as disciplinas do curso e escolha o professor de cada uma." icone="book-open" %}
+    {% endif %}
+    {% if not pode_adicionar and not form.is_bound %}
+      <p class="mt-3 text-xs text-slate-500">Todas as disciplinas do curso já estão nesta turma. Para oferecer outra, cadastre-a em <a href="{% url 'coordenacao:disciplinas' %}" class="font-semibold text-[#1F4E8C] hover:underline">Disciplinas</a>.</p>
+    {% endif %}
+  </section>
+
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="font-semibold">Alunos matriculados</h2>
+        <p class="mt-1 text-sm text-slate-500">Quem precisa de mais atenção aparece primeiro.</p>
+      </div>
+      <a href="{% url 'coordenacao:aluno_novo' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+        <i data-lucide="user-plus" class="size-4"></i> Novo aluno
+      </a>
+    </div>
+
+    {% if linhas %}
+      <ul class="divide-y divide-[#E5E9F0]">
+        {% for linha in linhas %}
+          <li class="flex items-center justify-between gap-3 py-3">
+            <a href="{% url 'coordenacao:aluno_editar' linha.matricula.aluno.pk %}" class="min-w-0 hover:underline">
+              <p class="truncate text-sm font-medium">{{ linha.matricula.aluno.get_full_name|default:linha.matricula.aluno.matricula }}</p>
+              <p class="mt-0.5 text-xs text-slate-500">
+                RA {{ linha.matricula.aluno.matricula }} ·
+                Média {{ linha.media|floatformat:1|default:"—" }} ·
+                Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
+              </p>
+            </a>
+            {% if linha.matricula.situacao == "ATIVA" %}
+              {% include "componentes/selo.html" with situacao=linha.situacao %}
+            {% else %}
+              {% include "componentes/selo.html" with situacao=linha.matricula.get_situacao_display %}
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% include "componentes/vazio.html" with titulo="Nenhum aluno matriculado" texto="Os alunos aparecem aqui quando são cadastrados nesta turma." icone="users" %}
+    {% endif %}
+  </section>
+
+  {% if pode_adicionar or form.is_bound %}
+    {% include "componentes/modal.html" with id="modal-oferta" titulo="Adicionar disciplina" subtitulo="Escolha a disciplina e o professor que vai lecioná-la." conteudo="coordenacao/_form_oferta.html" aberto=abrir_modal %}
+  {% endif %}
+{% endblock %}

@@ -51,12 +51,54 @@ AREAS = {
         "titulo": "Área da coordenação",
         "itens": [
             {"nome": "Visão geral", "icone": "layout-dashboard", "rota": "coordenacao:painel"},
+            # A lista com a probabilidade de evasão é feita na etapa 8.
             {"nome": "Alunos em risco", "icone": "triangle-alert", "rota": None},
-            {"nome": "Alunos", "icone": "graduation-cap", "rota": None},
-            {"nome": "Professores", "icone": "users", "rota": None},
-            {"nome": "Turmas", "icone": "school", "rota": None},
-            {"nome": "Disciplinas", "icone": "book-open", "rota": None},
-            {"nome": "Contas", "icone": "key-round", "rota": None},
+            {
+                "nome": "Alunos",
+                "icone": "graduation-cap",
+                "rota": "coordenacao:alunos",
+                "tambem_ativo": ("coordenacao:aluno_novo", "coordenacao:aluno_editar"),
+            },
+            {
+                "nome": "Professores",
+                "icone": "users",
+                "rota": "coordenacao:professores",
+                "tambem_ativo": ("coordenacao:professor_novo", "coordenacao:professor_editar"),
+            },
+            {
+                "nome": "Turmas",
+                "icone": "school",
+                "rota": "coordenacao:turmas",
+                "tambem_ativo": (
+                    "coordenacao:turma_nova",
+                    "coordenacao:turma",
+                    "coordenacao:turma_editar",
+                    "coordenacao:turma_excluir",
+                    "coordenacao:oferta_editar",
+                    "coordenacao:oferta_excluir",
+                ),
+            },
+            {
+                "nome": "Disciplinas",
+                "icone": "book-open",
+                "rota": "coordenacao:disciplinas",
+                "tambem_ativo": (
+                    "coordenacao:disciplina_nova",
+                    "coordenacao:disciplina_editar",
+                    "coordenacao:disciplina_excluir",
+                ),
+            },
+            {
+                "nome": "Contas",
+                "icone": "key-round",
+                "rota": "coordenacao:contas",
+                "tambem_ativo": (
+                    "coordenacao:coordenador_novo",
+                    "coordenacao:coordenador_editar",
+                    "coordenacao:senha_provisoria",
+                ),
+            },
+            # Relatórios: etapa 10. Central de alertas: etapa 9.
             {"nome": "Relatórios", "icone": "file-text", "rota": None},
             {"nome": "Alertas", "icone": "bell-ring", "rota": None},
             MENSAGENS,  # os coordenadores respondem como "Secretaria acadêmica"

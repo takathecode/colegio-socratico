@@ -1,0 +1,20 @@
+{# Paginação de listas. Parâmetro: pagina (objeto Page do Paginator). Mantém os filtros da URL. #}
+{% if pagina.paginator.num_pages > 1 %}
+  <nav aria-label="Paginação" class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+    <p class="text-slate-500">Página {{ pagina.number }} de {{ pagina.paginator.num_pages }}</p>
+    <div class="flex gap-2">
+      {% if pagina.has_previous %}
+        <a href="{% querystring pagina=pagina.previous_page_number %}"
+           class="inline-flex h-9 items-center gap-1 rounded-lg border border-[#E5E9F0] bg-white px-3 font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+          <i data-lucide="chevron-left" class="size-4"></i> Anterior
+        </a>
+      {% endif %}
+      {% if pagina.has_next %}
+        <a href="{% querystring pagina=pagina.next_page_number %}"
+           class="inline-flex h-9 items-center gap-1 rounded-lg border border-[#E5E9F0] bg-white px-3 font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+          Próxima <i data-lucide="chevron-right" class="size-4"></i>
+        </a>
+      {% endif %}
+    </div>
+  </nav>
+{% endif %}

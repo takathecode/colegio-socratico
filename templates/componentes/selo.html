@@ -1,5 +1,5 @@
 {# Selo de situação. Parâmetro: situacao. A cor sempre vem com ícone e texto, nunca sozinha. #}
-{% if situacao == "Regular" or situacao == "Aprovada" or situacao == "Pago" or situacao == "Acima do mínimo" %}
+{% if situacao == "Regular" or situacao == "Ativa" or situacao == "Aprovada" or situacao == "Pago" or situacao == "Acima do mínimo" %}
   <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-800">
     <i data-lucide="circle-check" class="size-3.5"></i>{{ situacao }}
   </span>

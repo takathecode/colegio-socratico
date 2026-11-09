@@ -196,3 +196,70 @@ def indicadores_da_turma(linhas):
         "atencao": sum(1 for linha in linhas if linha["situacao"] == EM_ATENCAO),
         "risco": sum(1 for linha in linhas if linha["situacao"] == EM_RISCO),
     }
+
+
+# Ordem de gravidade dos selos, usada para achar a "pior" situação de um aluno.
+GRAVIDADE = {None: 0, REGULAR: 1, EM_ATENCAO: 2, EM_RISCO: 3}
+
+
+def resumo_das_matriculas(matriculas):
+    """Situação geral de vários alunos de uma vez, para as telas da coordenação.
+
+    Para cada matrícula calcula:
+    - media: média das médias das disciplinas que já têm nota;
+    - frequencia: frequência global, somando as horas de todas as disciplinas;
+    - situacao: a pior situação entre as disciplinas. Assim, quem está "Em risco" para
+      algum professor também aparece "Em risco" para a coordenação;
+    - disciplinas_em_risco: em quantas disciplinas o aluno está "Em risco".
+
+    São só duas consultas agrupadas, qualquer que seja o número de alunos.
+    Retorna {matricula_id: dados}.
+    """
+    ids = [matricula.pk for matricula in matriculas]
+
+    # (matrícula, oferta) -> notas lançadas
+    notas = {}
+    for matricula_id, oferta_id, valor in Nota.objects.filter(matricula_id__in=ids).values_list(
+        "matricula_id", "avaliacao__oferta_id", "valor"
+    ):
+        notas.setdefault((matricula_id, oferta_id), []).append(valor)
+
+    # (matrícula, oferta) -> (horas dadas, horas de falta)
+    horas = {
+        (linha["matricula_id"], linha["aula__oferta_id"]): (
+            linha["dadas"] or 0,
+            linha["faltas"] or 0,
+        )
+        for linha in Frequencia.objects.filter(matricula_id__in=ids)
+        .order_by()
+        .values("matricula_id", "aula__oferta_id")
+        .annotate(
+            dadas=Sum("aula__horas_aula"),
+            faltas=Sum("aula__horas_aula", filter=Q(presente=False)),
+        )
+    }
+
+    # matrícula -> disciplinas em que ela já tem nota ou chamada registrada
+    ofertas_por_matricula = {}
+    for matricula_id, oferta_id in (*notas, *horas):
+        ofertas_por_matricula.setdefault(matricula_id, set()).add(oferta_id)
+
+    resumo = {}
+    for matricula_id in ids:
+        medias, situacoes = [], []
+        total_dadas = total_faltas = 0
+        for oferta_id in ofertas_por_matricula.get(matricula_id, ()):
+            media = calcular_media(notas.get((matricula_id, oferta_id), []))
+            dadas, faltas = horas.get((matricula_id, oferta_id), (0, 0))
+            total_dadas += dadas
+            total_faltas += faltas
+            if media is not None:
+                medias.append(media)
+            situacoes.append(calcular_situacao(media, calcular_frequencia(dadas, faltas)))
+        resumo[matricula_id] = {
+            "media": calcular_media(medias),
+            "frequencia": calcular_frequencia(total_dadas, total_faltas),
+            "situacao": max(situacoes, key=GRAVIDADE.get, default=None),
+            "disciplinas_em_risco": situacoes.count(EM_RISCO),
+        }
+    return resumo

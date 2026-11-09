@@ -2,6 +2,7 @@
 <div>
   <label for="{{ campo.id_for_label }}" class="text-sm font-medium">{{ campo.label }}</label>
   <div class="mt-2">{{ campo }}</div>
+  {% if campo.help_text %}<p class="mt-1 text-xs text-slate-500">{{ campo.help_text }}</p>{% endif %}
   {% for erro in campo.errors %}
     <p class="mt-1 text-sm text-[#C62828]">{{ erro }}</p>
   {% endfor %}

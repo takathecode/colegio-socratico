@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{# Confirmação de exclusão usada por turmas, disciplinas e ofertas. #}
+
+{% block titulo %}Confirmar exclusão{% endblock %}
+{% block breadcrumb %}Confirmar exclusão{% endblock %}
+
+{% block conteudo %}
+  <section class="mx-auto mt-6 max-w-lg rounded-xl border border-[#E5E9F0] bg-white p-6 text-center">
+    <span class="mx-auto flex size-12 items-center justify-center rounded-full bg-red-50 text-red-800">
+      <i data-lucide="trash-2" class="size-6"></i>
+    </span>
+    <h1 class="mt-4 text-xl font-semibold text-[#0B2545]">Excluir {{ descricao }}?</h1>
+    <p class="mt-2 text-sm text-slate-500">Esta ação não pode ser desfeita.</p>
+
+    <form method="post" data-carregando class="mt-6 flex flex-wrap justify-center gap-3">
+      {% csrf_token %}
+      <a href="{{ voltar }}" class="inline-flex h-10 items-center rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Cancelar</a>
+      <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#C62828] px-4 text-sm font-semibold text-white hover:bg-red-800">
+        <span data-estado="normal" class="flex items-center gap-2"><i data-lucide="trash-2" class="size-4"></i> Sim, excluir</span>
+        <span data-estado="carregando" class="hidden items-center gap-2"><i data-lucide="loader-circle" class="size-4 animate-spin"></i> Excluindo...</span>
+      </button>
+    </form>
+  </section>
+{% endblock %}
