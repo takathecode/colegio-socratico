@@ -148,4 +148,7 @@ DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL", "Instituto Socrático <nao-responda@institutosocratico.example>"
 )
 
+# Modelo de evasão treinado pelo comando treinar_modelo. A pasta ml/ fica fora do Git.
+MODELO_EVASAO = BASE_DIR / "ml" / "modelo_evasao.joblib"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

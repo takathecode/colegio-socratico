@@ -194,10 +194,11 @@ class LayoutTests(TestCase):
         self.assertContains(resposta, 'aria-current="page"', count=1)
 
     def test_menu_nao_tem_links_para_telas_que_nao_existem(self):
-        # Só o painel tem rota nesta etapa; os demais itens não viram link.
+        # Item de tela ainda não feita aparece desativado, nunca como link quebrado.
         self.client.force_login(self.usuarios["COORDENADOR"])
         resposta = self.client.get("/coordenacao/")
-        self.assertContains(resposta, "Alunos em risco: em breve")
+        self.assertContains(resposta, "Relatórios: em breve")
+        self.assertNotContains(resposta, "Alunos em risco: em breve")
         self.assertNotContains(resposta, 'href="#"')
 
     def test_topo_mostra_iniciais_e_matricula(self):

@@ -8,22 +8,19 @@ Turmas, disciplinas e ofertas só podem ser excluídas enquanto não têm regist
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Count, ProtectedError, Q
+from django.db.models import Count, Max, ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from apps.academico.calculos import (
-    EM_RISCO,
-    GRAVIDADE,
-    indicadores_da_turma,
-    resumo_das_matriculas,
-)
+from apps.academico.calculos import GRAVIDADE, indicadores_da_turma, resumo_das_matriculas
 from apps.academico.models import Disciplina, Justificativa, Matricula, Oferta, Turma
 from apps.academico.utilidades import saudacao
+from apps.analytics import evasao
 from apps.analytics.dados import frequencia_mensal_por_turma
 from apps.analytics.graficos import evolucao_da_frequencia
+from apps.analytics.models import RiscoEvasao
 from apps.contas.decorators import perfil_requerido
 from apps.contas.models import Usuario
 
@@ -174,13 +171,9 @@ def painel(request):
 
     # Linhas por turma, no formato que indicadores_da_turma() espera.
     linhas_por_turma = {}
-    em_risco = []
     for matricula in matriculas:
         linha = {"matricula": matricula, **resumo[matricula.pk]}
         linhas_por_turma.setdefault(matricula.turma_id, []).append(linha)
-        if linha["situacao"] == EM_RISCO:
-            em_risco.append(linha)
-    em_risco.sort(key=lambda linha: (-linha["disciplinas_em_risco"], linha["frequencia"] or 0))
 
     turmas = list(servicos.turmas_com_contagens().filter(semestre=servicos.semestre_atual()))
     for turma in turmas:
@@ -202,9 +195,88 @@ def painel(request):
             ).count(),
             "turmas": turmas,
             "grafico_frequencia": evolucao_da_frequencia(frequencia_mensal_por_turma(turmas)),
-            "em_risco": em_risco[:8],
+            # Os alunos com maior probabilidade de evasão, calculada pelo modelo preditivo.
+            "maiores_riscos": list(
+                riscos_com_aluno().exclude(nivel=RiscoEvasao.Nivel.BAIXO)[:8]
+            ),
+            "risco_calculado": RiscoEvasao.objects.exists(),
         },
     )
+
+
+# --- Alunos em risco (módulo preditivo, apps/analytics/evasao.py) ---
+
+
+def riscos_com_aluno():
+    return RiscoEvasao.objects.select_related(
+        "matricula__aluno", "matricula__turma"
+    ).order_by("-probabilidade")
+
+
+@login_required
+@perfil_requerido("COORDENADOR")
+def risco(request):
+    riscos = riscos_com_aluno()
+    # Quantos alunos há em cada nível, antes dos filtros, para os cards do topo.
+    por_nivel = dict(
+        RiscoEvasao.objects.order_by().values_list("nivel").annotate(total=Count("id"))
+    )
+    total_calculado = sum(por_nivel.values())
+
+    busca = request.GET.get("busca", "").strip()
+    turma = request.GET.get("turma", "")
+    nivel = request.GET.get("nivel", "")
+    if turma.isdecimal():
+        riscos = riscos.filter(matricula__turma_id=int(turma))
+    if nivel in RiscoEvasao.Nivel.values:
+        riscos = riscos.filter(nivel=nivel)
+    riscos = servicos.filtrar_por_busca(list(riscos), busca, lambda item: item.matricula.aluno)
+
+    return render(
+        request,
+        "coordenacao/risco.html",
+        {
+            "pagina": paginar(request, riscos),
+            "total": len(riscos),
+            "modelo_treinado": evasao.modelo_treinado(),
+            "alto": por_nivel.get(RiscoEvasao.Nivel.ALTO, 0),
+            "medio": por_nivel.get(RiscoEvasao.Nivel.MEDIO, 0),
+            "baixo": por_nivel.get(RiscoEvasao.Nivel.BAIXO, 0),
+            "total_calculado": total_calculado,
+            "calculado_em": RiscoEvasao.objects.aggregate(ultimo=Max("calculado_em"))["ultimo"],
+            # Alunos ativos sem nota ou sem chamada ficam fora do cálculo.
+            "sem_dados": Matricula.objects.filter(situacao=Matricula.Situacao.ATIVA).count()
+            - total_calculado,
+            "turmas": Turma.objects.filter(matriculas__risco__isnull=False)
+            .distinct()
+            .order_by("-semestre", "codigo"),
+            "niveis": RiscoEvasao.Nivel.choices,
+            "limite_medio": evasao.LIMITE_MEDIO,
+            "limite_alto": evasao.LIMITE_ALTO,
+            "busca": busca,
+            "turma": turma,
+            "nivel": nivel,
+            "filtrando": bool(busca or turma or nivel),
+        },
+    )
+
+
+@login_required
+@perfil_requerido("COORDENADOR")
+@require_POST
+def risco_recalcular(request):
+    """Roda o modelo de novo para todos os alunos ativos (o mesmo que calcular_riscos)."""
+    try:
+        total = evasao.calcular_riscos()
+    except evasao.ModeloNaoTreinado:
+        messages.error(
+            request,
+            "O modelo de evasão ainda não foi treinado. "
+            "Rode python manage.py treinar_modelo no servidor.",
+        )
+    else:
+        messages.success(request, f"Risco de evasão recalculado para {total} aluno(s).")
+    return redirect("coordenacao:risco")
 
 
 # --- Alunos ---

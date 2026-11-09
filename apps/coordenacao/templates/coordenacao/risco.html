@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block titulo %}Alunos em risco{% endblock %}
+{% block breadcrumb %}Alunos em risco{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Alunos em risco</h1>
+      <p class="mt-1 text-sm text-slate-500">
+        Probabilidade de evasão estimada pelo modelo preditivo{% if calculado_em %} · atualizada em {{ calculado_em|date:"d/m/Y \à\s H:i" }}{% endif %}.
+      </p>
+    </div>
+    {% if modelo_treinado %}
+      <form method="post" action="{% url 'coordenacao:risco_recalcular' %}" data-carregando>
+        {% csrf_token %}
+        {% include "componentes/botao_enviar.html" with texto="Recalcular agora" texto_carregando="Calculando..." icone="refresh-cw" compacto=True %}
+      </form>
+    {% endif %}
+  </div>
+
+  {% if not modelo_treinado %}
+    <section class="mt-5 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+      <i data-lucide="triangle-alert" class="mt-0.5 size-5 shrink-0 text-amber-600"></i>
+      <div>
+        <p class="font-semibold">O modelo de evasão ainda não foi treinado</p>
+        <p class="mt-1">No servidor, rode <code class="rounded bg-white px-1.5 py-0.5 font-mono text-xs">python manage.py treinar_modelo</code>. O comando treina o modelo e já calcula o risco de todos os alunos ativos.</p>
+      </div>
+    </section>
+  {% endif %}
+
+  <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% include "componentes/card_kpi.html" with rotulo="Risco alto" valor=alto detalhe="Probabilidade de 60% ou mais" icone="circle-alert" %}
+    {% include "componentes/card_kpi.html" with rotulo="Risco médio" valor=medio detalhe="Probabilidade entre 30% e 60%" icone="triangle-alert" %}
+    {% include "componentes/card_kpi.html" with rotulo="Risco baixo" valor=baixo detalhe="Probabilidade abaixo de 30%" icone="circle-check" %}
+    {% include "componentes/card_kpi.html" with rotulo="Sem dados suficientes" valor=sem_dados detalhe="Alunos ativos ainda sem notas ou chamadas" icone="circle-help" %}
+  </div>
+
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_auto]">
+      <div class="relative">
+        <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
+        <label class="sr-only" for="busca">Buscar por nome ou RA</label>
+        <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou RA"
+               class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C]">
+      </div>
+      <div>
+        <label class="sr-only" for="turma">Turma</label>
+        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+          <option value="">Todas as turmas</option>
+          {% for item in turmas %}
+            <option value="{{ item.pk }}" {% if turma == item.pk|stringformat:"d" %}selected{% endif %}>{{ item.codigo }} · {{ item.semestre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="sr-only" for="nivel">Nível de risco</label>
+        <select id="nivel" name="nivel" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+          <option value="">Todos os níveis</option>
+          {% for valor, rotulo in niveis %}
+            <option value="{{ valor }}" {% if nivel == valor %}selected{% endif %}>{{ rotulo }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button type="submit" class="h-10 rounded-lg border border-[#E5E9F0] px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Filtrar</button>
+        {% if filtrando %}
+          <a href="{% url 'coordenacao:risco' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <p class="mt-4 text-sm text-slate-500">{{ total }} aluno{{ total|pluralize }} · do maior para o menor risco</p>
+
+    {% if pagina.object_list %}
+      <div class="mt-2 hidden overflow-x-auto md:block">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+              <th scope="col" class="px-3 py-2.5 font-medium">Aluno</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Turma</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Probabilidade</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Nível</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Principais motivos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for risco in pagina %}
+              <tr class="border-b border-[#E5E9F0] align-top">
+                <td class="px-3 py-3">
+                  <a href="{% url 'coordenacao:aluno_editar' risco.matricula.aluno.pk %}" class="font-medium hover:underline">{{ risco.matricula.aluno.get_full_name|default:risco.matricula.aluno.matricula }}</a>
+                  <p class="mt-0.5 text-xs text-slate-500">RA {{ risco.matricula.aluno.matricula }} · média {{ risco.media|floatformat:1 }} · freq. {{ risco.frequencia|floatformat:0 }}%</p>
+                </td>
+                <td class="px-3 py-3">{{ risco.matricula.turma.codigo }}</td>
+                <td class="px-3 py-3">
+                  {% include "coordenacao/_barra_risco.html" %}
+                </td>
+                <td class="px-3 py-3">{% include "componentes/selo.html" with situacao=risco.get_nivel_display %}</td>
+                <td class="px-3 py-3 text-xs text-slate-600">
+                  {% if risco.motivos %}
+                    <ul class="list-disc space-y-0.5 pl-4">
+                      {% for motivo in risco.motivos %}<li>{{ motivo }}</li>{% endfor %}
+                    </ul>
+                  {% else %}
+                    <span class="text-slate-500">Nenhum sinal de alerta</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="mt-2 divide-y divide-[#E5E9F0] md:hidden">
+        {% for risco in pagina %}
+          <li class="py-3">
+            <div class="flex items-start justify-between gap-3">
+              <a href="{% url 'coordenacao:aluno_editar' risco.matricula.aluno.pk %}" class="min-w-0">
+                <p class="truncate text-sm font-medium">{{ risco.matricula.aluno.get_full_name|default:risco.matricula.aluno.matricula }}</p>
+                <p class="mt-0.5 text-xs text-slate-500">{{ risco.matricula.turma.codigo }} · média {{ risco.media|floatformat:1 }} · freq. {{ risco.frequencia|floatformat:0 }}%</p>
+              </a>
+              {% include "componentes/selo.html" with situacao=risco.get_nivel_display %}
+            </div>
+            <div class="mt-2">{% include "coordenacao/_barra_risco.html" %}</div>
+            {% if risco.motivos %}
+              <ul class="mt-2 list-disc space-y-0.5 pl-4 text-xs text-slate-600">
+                {% for motivo in risco.motivos %}<li>{{ motivo }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% include "componentes/paginacao.html" %}
+    {% elif filtrando %}
+      {% include "componentes/vazio.html" with titulo="Nenhum aluno encontrado" texto="Confira a busca ou mude os filtros." icone="search" %}
+    {% elif modelo_treinado %}
+      {% include "componentes/vazio.html" with titulo="Risco ainda não calculado" texto="Use o botão Recalcular agora. Só entram no cálculo alunos ativos com notas e chamadas registradas." icone="triangle-alert" %}
+    {% else %}
+      {% include "componentes/vazio.html" with titulo="Risco ainda não calculado" texto="A lista aparece depois que o modelo for treinado." icone="triangle-alert" %}
+    {% endif %}
+  </section>
+
+  {# Explicação para a coordenação (e para a apresentação). Detalhes em docs/MODELO_EVASAO.md. #}
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <h2 class="flex items-center gap-2 font-semibold"><i data-lucide="brain" class="size-5 text-[#1F4E8C]"></i> Como o modelo funciona</h2>
+    <div class="mt-3 grid gap-4 text-sm text-slate-600 md:grid-cols-2 xl:grid-cols-4">
+      <div>
+        <p class="font-semibold text-slate-800">1. O que ele olha</p>
+        <p class="mt-1">Frequência, média, se as notas estão subindo ou caindo e justificativas de falta ainda sem resposta.</p>
+      </div>
+      <div>
+        <p class="font-semibold text-slate-800">2. Como aprendeu</p>
+        <p class="mt-1">Com 2.000 alunos simulados. Um Random Forest (200 árvores de decisão que votam) aprendeu a separar quem desistiu de quem continuou.</p>
+      </div>
+      <div>
+        <p class="font-semibold text-slate-800">3. O que ele entrega</p>
+        <p class="mt-1">A chance de evasão: baixo abaixo de {{ limite_medio }}%, médio de {{ limite_medio }}% a {{ limite_alto }}% e alto a partir de {{ limite_alto }}%, com os motivos em frases simples.</p>
+      </div>
+      <div>
+        <p class="font-semibold text-slate-800">4. Como usar</p>
+        <p class="mt-1">É um sinal para conversar com o aluno a tempo, não uma sentença. A decisão continua sendo da coordenação.</p>
+      </div>
+    </div>
+  </section>
+{% endblock %}

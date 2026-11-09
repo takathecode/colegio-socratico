@@ -1,0 +1,8 @@
+{# Barra da probabilidade de evasão. Parâmetro: risco (RiscoEvasao). O número fica sempre ao lado, a cor só reforça. #}
+<div class="flex items-center gap-2">
+  <div class="h-2 w-24 shrink-0 overflow-hidden rounded-full bg-[#E5E9F0]" aria-hidden="true">
+    <div class="h-full rounded-full {% if risco.nivel == 'ALTO' %}bg-red-600{% elif risco.nivel == 'MEDIO' %}bg-amber-500{% else %}bg-green-600{% endif %}"
+         style="width: {{ risco.probabilidade|stringformat:'.0f' }}%"></div>
+  </div>
+  <span class="font-semibold">{{ risco.probabilidade|floatformat:0 }}%</span>
+</div>

@@ -85,33 +85,35 @@
       {% endif %}
     </section>
 
+    {# Alunos com risco médio ou alto, segundo o modelo preditivo (apps/analytics/evasao.py). #}
     <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
       <div class="mb-2 flex items-center justify-between gap-3">
-        <h2 class="font-semibold">Alunos em risco</h2>
-        {% if indicadores.risco %}
-          <a href="{% url 'coordenacao:alunos' %}?situacao=Em+risco" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
-            Ver todos <i data-lucide="arrow-right" class="size-4"></i>
-          </a>
-        {% endif %}
+        <div>
+          <h2 class="font-semibold">Risco de evasão</h2>
+          <p class="mt-1 text-sm text-slate-500">Maiores probabilidades do modelo preditivo.</p>
+        </div>
+        <a href="{% url 'coordenacao:risco' %}" class="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+          Ver todos <i data-lucide="arrow-right" class="size-4"></i>
+        </a>
       </div>
-      {% if em_risco %}
+      {% if maiores_riscos %}
         <ul class="divide-y divide-[#E5E9F0]">
-          {% for linha in em_risco %}
+          {% for risco in maiores_riscos %}
             <li class="flex items-center justify-between gap-3 py-3">
               <div class="min-w-0">
-                <a href="{% url 'coordenacao:aluno_editar' linha.matricula.aluno.pk %}" class="block truncate text-sm font-medium hover:underline">{{ linha.matricula.aluno.get_full_name|default:linha.matricula.aluno.matricula }}</a>
-                <p class="mt-0.5 text-xs text-slate-500">
-                  {{ linha.matricula.turma.codigo }} ·
-                  Média {{ linha.media|floatformat:1|default:"—" }} ·
-                  Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
+                <a href="{% url 'coordenacao:aluno_editar' risco.matricula.aluno.pk %}" class="block truncate text-sm font-medium hover:underline">{{ risco.matricula.aluno.get_full_name|default:risco.matricula.aluno.matricula }}</a>
+                <p class="mt-0.5 truncate text-xs text-slate-500" title="{{ risco.motivos|first|default:'' }}">
+                  {{ risco.matricula.turma.codigo }}{% if risco.motivos %} · {{ risco.motivos|first }}{% endif %}
                 </p>
               </div>
-              <span class="shrink-0 text-xs font-medium text-red-800">{{ linha.disciplinas_em_risco }} disciplina{{ linha.disciplinas_em_risco|pluralize }}</span>
+              <span class="shrink-0 text-sm font-semibold {% if risco.nivel == 'ALTO' %}text-red-800{% else %}text-amber-900{% endif %}">{{ risco.probabilidade|floatformat:0 }}%</span>
             </li>
           {% endfor %}
         </ul>
+      {% elif risco_calculado %}
+        {% include "componentes/vazio.html" with titulo="Nenhum aluno com risco médio ou alto" texto="Pelo último cálculo, todos os alunos ativos têm risco baixo de evasão." icone="circle-check" %}
       {% else %}
-        {% include "componentes/vazio.html" with titulo="Nenhum aluno em risco" texto="Todos os alunos ativos estão com média e frequência dentro do esperado." icone="circle-check" %}
+        {% include "componentes/vazio.html" with titulo="Risco ainda não calculado" texto="Abra Alunos em risco para ver como calcular." icone="triangle-alert" %}
       {% endif %}
     </section>
   </div>

@@ -33,7 +33,8 @@ python manage.py makemigrations; python manage.py migrate
 python manage.py check                            # validar o projeto
 python manage.py test                             # testes
 python manage.py popular_demo                     # dados fictícios para demonstração
-python manage.py treinar_modelo                   # treina o modelo de evasão
+python manage.py treinar_modelo                   # treina o modelo de evasão e recalcula os riscos
+python manage.py calcular_riscos                  # recalcula os riscos com o modelo já treinado
 celery -A config worker --pool=solo -l info       # worker (terminal separado)
 celery -A config beat -l info                     # agendador (terminal separado)
 npm install                                       # instala o Tailwind (uma vez, em cada computador)
@@ -134,7 +135,8 @@ ml/                modelo treinado (.joblib) — não versionar
   - Decisões: o protótipo não tem telas da coordenação, então elas seguem o visual das outras áreas; contas nunca são apagadas pela coordenação, só desativadas (ADMIN fica só no Django Admin, e ninguém desativa a própria conta); conta nova recebe senha provisória aleatória (`secrets`), guardada na sessão e mostrada uma única vez; e-mail obrigatório e único; aluno é criado junto com a matrícula na turma, que só muda enquanto não há notas nem presenças; disciplinas e professores entram na turma pela tela da turma (oferta), e na edição da oferta só o professor muda; turma, disciplina e oferta só são excluídas sem registros ligados (PROTECT + mensagem); turma e disciplina com ofertas não trocam de curso; a situação do aluno na coordenação é a pior entre as disciplinas (`resumo_das_matriculas` em `calculos.py`, 2 consultas para todos os alunos); "Alunos em risco" (etapa 8), "Relatórios" (etapa 10) e "Alertas" (etapa 9) continuam desativados no menu.
 - [x] 7. Gráficos com matplotlib
   - Decisões: app novo `analytics` (sem models); cada gráfico devolve `{"png", "descricao"}` ou `None` (estado vazio), e a descrição com os números vai no `alt` (componente `componentes/grafico.html`); usa `matplotlib.figure.Figure` (sem pyplot), fonte padrão do matplotlib (DejaVu Sans) e nenhum cache; aluno: barras no Painel no lugar da lista; professor: tela nova "Desempenho" com a distribuição das médias por faixa (o limite fica na faixa de cima) e a mesma contagem em tabela; coordenação: frequência mensal por turma na Visão geral, só com alunos ativos (no máximo 8 turmas no gráfico); cores testadas para daltonismo, e "7 ou mais" fica azul, porque verde e vermelho se confundem.
-- [ ] 8. Módulo preditivo de evasão
+- [x] 8. Módulo preditivo de evasão
+  - Decisões: risco salvo no model `analytics.RiscoEvasao` (um por matrícula ativa, com probabilidade, nível, motivos e as 4 variáveis usadas), regravado inteiro a cada cálculo em uma transação; `treinar_modelo` gera 2.000 alunos simulados (semente 42) com uma regra logística escondida e treina um RandomForest (200 árvores, profundidade 6), com acurácia de cerca de 81% contra 66% do chute; o caminho do modelo vem de `settings.MODELO_EVASAO` (`ml/modelo_evasao.joblib`); tendência = última nota menos a primeira por disciplina (média entre as disciplinas, 0 sem duas notas); aluno sem nota ou sem chamada fica fora do cálculo; níveis: baixo abaixo de 30%, médio de 30% a 60%, alto a partir de 60%; os motivos são frases montadas com os limites do selo (no máximo 3, números cortados em uma casa para 74,96% não virar "75%"), não vêm do modelo; tela `coordenacao:risco` com botão "Recalcular agora" (POST); o card da Visão geral passou a mostrar as maiores probabilidades (o KPI "Em risco" continua sendo o selo); explicação para a apresentação em `docs/MODELO_EVASAO.md`.
 - [ ] 9. Alertas automáticos (Celery + Redis)
 - [ ] 10. Relatórios PDF e Excel
 - [ ] 11. API REST documentada

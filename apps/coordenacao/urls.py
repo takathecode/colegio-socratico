@@ -6,6 +6,9 @@ app_name = "coordenacao"
 
 urlpatterns = [
     path("", views.painel, name="painel"),
+    # Alunos em risco de evasão (módulo preditivo)
+    path("risco/", views.risco, name="risco"),
+    path("risco/recalcular/", views.risco_recalcular, name="risco_recalcular"),
     # Alunos
     path("alunos/", views.alunos, name="alunos"),
     path("alunos/novo/", views.aluno_novo, name="aluno_novo"),

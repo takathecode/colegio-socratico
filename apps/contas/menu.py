@@ -50,8 +50,7 @@ AREAS = {
         "titulo": "Área da coordenação",
         "itens": [
             {"nome": "Visão geral", "icone": "layout-dashboard", "rota": "coordenacao:painel"},
-            # A lista com a probabilidade de evasão é feita na etapa 8.
-            {"nome": "Alunos em risco", "icone": "triangle-alert", "rota": None},
+            {"nome": "Alunos em risco", "icone": "triangle-alert", "rota": "coordenacao:risco"},
             {
                 "nome": "Alunos",
                 "icone": "graduation-cap",
