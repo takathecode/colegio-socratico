@@ -16,6 +16,7 @@ urlpatterns = [
     path("mensagens/", include("apps.mensagens.urls")),
     path("alertas/", include("apps.alertas.urls")),
     path("relatorios/", include("apps.relatorios.urls")),
+    path("api/", include("apps.api.urls")),  # API REST; documentação em /api/docs/
     # Login, saída, redefinição de senha e o redirecionamento de "/" por perfil.
     path("", include("apps.contas.urls")),
 ]

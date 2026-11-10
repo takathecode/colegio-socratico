@@ -49,7 +49,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Bibliotecas
-    "django_filters",  # filtros dos relatórios (e, na etapa 11, da API)
+    "django_filters",  # filtros dos relatórios e da API
+    "rest_framework",  # API REST (apps/api)
+    "rest_framework.authtoken",  # tabela dos tokens de acesso à API
+    "drf_spectacular",  # documentação da API em /api/docs/
     # Apps do projeto
     "apps.contas",
     "apps.academico",
@@ -61,6 +64,7 @@ INSTALLED_APPS = [
     "apps.analytics",
     "apps.alertas",
     "apps.relatorios",
+    "apps.api",
 ]
 
 MIDDLEWARE = [
@@ -194,6 +198,53 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.alertas.tasks.rotina_diaria",
         "schedule": crontab(hour=6, minute=0),
     },
+}
+
+
+# API REST (Django REST Framework). Explicação em docs/API.md.
+REST_FRAMEWORK = {
+    # Login por token (outros sistemas) ou pela sessão do navegador (quem já entrou no portal).
+    # O token vem primeiro para quem chega sem login receber 401 (e não 403), com o aviso
+    # "WWW-Authenticate: Token" dizendo como se identificar.
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+    ],
+    # Toda a API exige login, e só os perfis do portal entram (ADMIN usa o Django Admin).
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+        "apps.api.permissoes.PerfilDoPortal",
+    ],
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_PAGINATION_CLASS": "apps.api.paginacao.Paginacao",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Notas e percentuais saem como número no JSON (6.75), e não como texto ("6.75").
+    "COERCE_DECIMAL_TO_STRING": False,
+    # Limite de pedidos de token, contra quem tenta adivinhar senhas.
+    "DEFAULT_THROTTLE_RATES": {"token": "10/minute"},
+}
+
+# Documentação gerada pelo drf-spectacular (/api/schema/ e a tela /api/docs/).
+SPECTACULAR_SETTINGS = {
+    "TITLE": "API do Instituto Socrático",
+    "DESCRIPTION": (
+        "Consulta de alunos, turmas, desempenho, risco de evasão e relatórios, para a "
+        "integração com outros sistemas da escola. A API só consulta (GET); as gravações "
+        "ficam nas telas do portal.\n\n"
+        "**Como entrar:** quem já fez login no portal usa a API direto pelo navegador. "
+        "Outros sistemas pedem um token em `POST /api/token/` (matrícula e senha) e o "
+        "enviam no cabeçalho `Authorization: Token <token>` (botão **Authorize**).\n\n"
+        "**O que cada perfil vê:** aluno, os próprios dados; professor, as disciplinas que "
+        "leciona; coordenação, a instituição inteira. Perfil sem acesso ao endpoint recebe "
+        "403, e registro fora do que a pessoa pode ver responde 404."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,  # não lista o próprio /api/schema/ na documentação
+    "SWAGGER_UI_SETTINGS": {"persistAuthorization": True},  # guarda o token ao recarregar
+    # A tela do Swagger vem do CDN. A versão fica fixa para ela não mudar sozinha
+    # (o padrão é "latest", que acompanha cada lançamento novo).
+    "SWAGGER_UI_DIST": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14",
+    "SWAGGER_UI_FAVICON_HREF": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/favicon-32x32.png",
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

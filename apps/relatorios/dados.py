@@ -18,6 +18,7 @@ from apps.academico.calculos import (
     frequencia_das_linhas,
     indicadores_da_turma,
     resumo_da_oferta,
+    resumo_da_turma,
     resumo_das_matriculas,
     resumo_por_disciplina,
 )
@@ -234,13 +235,7 @@ def desempenho_da_disciplina(oferta):
 
 def desempenho_da_turma(turma):
     """Relatório da coordenação: um resumo por aluno e uma tabela por disciplina da turma."""
-    matriculas = list(
-        Matricula.objects.filter(turma=turma, situacao=Matricula.Situacao.ATIVA)
-        .select_related("aluno")
-        .order_by("aluno__first_name", "aluno__last_name")
-    )
-    resumo = resumo_das_matriculas(matriculas)
-    linhas = [{"matricula": matricula, **resumo[matricula.pk]} for matricula in matriculas]
+    linhas = resumo_da_turma(turma)
 
     tabela_resumo = Tabela(
         titulo="Resumo por aluno",

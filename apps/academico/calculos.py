@@ -266,3 +266,18 @@ def resumo_das_matriculas(matriculas):
             "disciplinas_em_risco": situacoes.count(EM_RISCO),
         }
     return resumo
+
+
+def resumo_da_turma(turma):
+    """Uma linha por aluno ativo da turma, com o resumo acima e a matrícula em "matricula".
+
+    Usada no relatório de desempenho da turma e na API. As linhas servem também para
+    indicadores_da_turma, que lê "media", "frequencia" e "situacao".
+    """
+    matriculas = list(
+        Matricula.objects.filter(turma=turma, situacao=Matricula.Situacao.ATIVA)
+        .select_related("aluno")
+        .order_by("aluno__first_name", "aluno__last_name")
+    )
+    resumo = resumo_das_matriculas(matriculas)
+    return [{"matricula": matricula, **resumo[matricula.pk]} for matricula in matriculas]
