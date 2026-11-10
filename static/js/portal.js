@@ -280,3 +280,18 @@ document.querySelectorAll("[data-copiar]").forEach((botao) => {
     setTimeout(() => (rotulo.textContent = "Copiar"), 2500);
   });
 });
+
+// --- Sino de notificações ---
+// O <details> já abre e fecha sozinho; aqui ele também fecha ao clicar fora ou apertar Esc.
+const sino = document.querySelector("details[data-sino]");
+if (sino) {
+  document.addEventListener("click", (evento) => {
+    if (sino.open && !sino.contains(evento.target)) sino.open = false;
+  });
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape" && sino.open) {
+      sino.open = false;
+      sino.querySelector("summary").focus();
+    }
+  });
+}

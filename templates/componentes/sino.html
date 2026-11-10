@@ -1,0 +1,51 @@
+{# Sino de notificações do topo. Os dados vêm de apps/alertas/context_processors.py. #}
+{# <details> abre e fecha sem JavaScript; o portal.js só fecha ao clicar fora ou apertar Esc. #}
+<details data-sino class="relative">
+  <summary class="relative flex size-10 cursor-pointer list-none items-center justify-center rounded-lg text-slate-600 hover:bg-[#F5F7FA] [&::-webkit-details-marker]:hidden"
+           aria-label="Notificações{% if sino_nao_lidos %}: {{ sino_nao_lidos }} não lida{{ sino_nao_lidos|pluralize }}{% endif %}">
+    <i data-lucide="bell" class="size-5"></i>
+    {% if sino_nao_lidos %}
+      <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white" aria-hidden="true">{% if sino_nao_lidos > 9 %}9+{% else %}{{ sino_nao_lidos }}{% endif %}</span>
+    {% endif %}
+  </summary>
+
+  <div class="fixed inset-x-4 top-[66px] z-30 overflow-hidden rounded-xl border border-[#E5E9F0] bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
+    <div class="flex items-center justify-between gap-2 border-b border-[#E5E9F0] px-4 py-3">
+      <p class="font-semibold">Notificações</p>
+      {% if sino_nao_lidos %}
+        <form method="post" action="{% url 'alertas:marcar_todos' %}">
+          {% csrf_token %}
+          <input type="hidden" name="proxima" value="{{ request.get_full_path }}">
+          <button type="submit" class="text-xs font-semibold text-[#1F4E8C] hover:underline">Marcar todas como lidas</button>
+        </form>
+      {% endif %}
+    </div>
+
+    {% if sino_recentes %}
+      <ul class="max-h-[60vh] divide-y divide-[#E5E9F0] overflow-y-auto">
+        {% for alerta in sino_recentes %}
+          <li>
+            <form method="post" action="{% url 'alertas:abrir' alerta.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="flex w-full gap-3 px-4 py-3 text-left hover:bg-[#F5F7FA] {% if not alerta.lido %}bg-[#F5F7FA]{% endif %}">
+                {% include "componentes/icone_alerta.html" %}
+                <span class="min-w-0 flex-1">
+                  <span class="flex items-start justify-between gap-2">
+                    <span class="text-sm {% if not alerta.lido %}font-semibold{% else %}font-medium{% endif %}">{{ alerta.titulo }}</span>
+                    {% if not alerta.lido %}<span class="mt-1.5 size-2 shrink-0 rounded-full bg-[#1F4E8C]"><span class="sr-only">Não lida</span></span>{% endif %}
+                  </span>
+                  <span class="mt-0.5 line-clamp-2 block text-xs text-slate-500">{{ alerta.texto }}</span>
+                  <span class="mt-1 block text-[11px] text-slate-500">há {{ alerta.criado_em|timesince }}</span>
+                </span>
+              </button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      {% include "componentes/vazio.html" with titulo="Nenhuma notificação" texto="Os avisos do sistema aparecem aqui." icone="bell" %}
+    {% endif %}
+
+    <a href="{% url 'alertas:lista' %}" class="block border-t border-[#E5E9F0] px-4 py-3 text-center text-sm font-semibold text-[#1F4E8C] hover:bg-[#F5F7FA]">Ver todas as notificações</a>
+  </div>
+</details>

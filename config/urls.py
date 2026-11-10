@@ -14,6 +14,7 @@ urlpatterns = [
     path("professor/", include("apps.professor.urls")),
     path("coordenacao/", include("apps.coordenacao.urls")),
     path("mensagens/", include("apps.mensagens.urls")),
+    path("alertas/", include("apps.alertas.urls")),
     # Login, saída, redefinição de senha e o redirecionamento de "/" por perfil.
     path("", include("apps.contas.urls")),
 ]

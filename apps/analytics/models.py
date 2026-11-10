@@ -1,7 +1,7 @@
 """Risco de evasão calculado pelo modelo preditivo (apps/analytics/evasao.py).
 
-É um dado calculado, não digitado: o comando calcular_riscos (e, na etapa 9, a tarefa
-agendada do Celery) apaga os registros e grava tudo de novo. Por isso o vínculo com a
+É um dado calculado, não digitado: o comando calcular_riscos (e a rotina diária do
+Celery, em apps/alertas/tasks.py) apaga os registros e grava tudo de novo. Por isso o vínculo com a
 matrícula usa CASCADE: perder um risco não perde histórico, ele é refeito no próximo cálculo.
 """
 

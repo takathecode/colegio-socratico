@@ -96,9 +96,9 @@ AREAS = {
                     "coordenacao:senha_provisoria",
                 ),
             },
-            # Relatórios: etapa 10. Central de alertas: etapa 9.
+            # Relatórios: etapa 10.
             {"nome": "Relatórios", "icone": "file-text", "rota": None},
-            {"nome": "Alertas", "icone": "bell-ring", "rota": None},
+            {"nome": "Alertas", "icone": "bell-ring", "rota": "coordenacao:alertas"},
             MENSAGENS,  # os coordenadores respondem como "Secretaria acadêmica"
         ],
     },

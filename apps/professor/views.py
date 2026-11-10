@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -17,6 +18,8 @@ from django.views.decorators.http import require_POST
 from apps.academico.calculos import EM_RISCO, FREQUENCIA_MINIMA, MEDIA_MINIMA
 from apps.academico.models import Frequencia, Justificativa
 from apps.academico.utilidades import baixar_anexo, data_valida, saudacao, texto_dias_ate
+from apps.alertas import tasks
+from apps.alertas.fila import enfileirar
 from apps.analytics.dados import contar_por_faixa
 from apps.analytics.graficos import distribuicao_de_notas
 from apps.contas.decorators import perfil_requerido
@@ -170,6 +173,11 @@ def notas(request):
         if form.is_valid():
             alteradas = servicos.salvar_notas(avaliacao, form.valores())
             if alteradas:
+                # Avisa os alunos pela fila do Celery, depois que as notas estão gravadas.
+                avaliacao_id = avaliacao.pk
+                transaction.on_commit(
+                    lambda: enfileirar(tasks.avisar_notas_publicadas, avaliacao_id)
+                )
                 plural = "ões" if alteradas > 1 else "ão"
                 messages.success(
                     request, f"Notas da {avaliacao.nome} salvas: {alteradas} alteraç{plural}."
@@ -392,6 +400,8 @@ def avaliar_justificativa(request, pk):
     justificativa.avaliada_por = request.user
     justificativa.avaliada_em = timezone.now()
     justificativa.save(update_fields=["status", "resposta", "avaliada_por", "avaliada_em"])
+    # O aluno é avisado da decisão pela fila do Celery.
+    transaction.on_commit(lambda: enfileirar(tasks.avisar_justificativa_avaliada, pk))
 
     aluno = justificativa.frequencia.matricula.aluno
     nome = aluno.get_full_name() or aluno.matricula

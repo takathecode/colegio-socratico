@@ -9,6 +9,9 @@ urlpatterns = [
     # Alunos em risco de evasão (módulo preditivo)
     path("risco/", views.risco, name="risco"),
     path("risco/recalcular/", views.risco_recalcular, name="risco_recalcular"),
+    # Central de alertas automáticos
+    path("alertas/", views.alertas, name="alertas"),
+    path("alertas/rotina/", views.alertas_rotina, name="alertas_rotina"),
     # Alunos
     path("alunos/", views.alunos, name="alunos"),
     path("alunos/novo/", views.aluno_novo, name="aluno_novo"),

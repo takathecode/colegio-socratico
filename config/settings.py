@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import dj_database_url
+from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
     "apps.mensagens",
     "apps.financeiro",
     "apps.analytics",
+    "apps.alertas",
 ]
 
 MIDDLEWARE = [
@@ -81,6 +83,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.contas.context_processors.menu_lateral",
+                "apps.alertas.context_processors.sino",
             ],
         },
     },
@@ -150,5 +153,44 @@ DEFAULT_FROM_EMAIL = os.getenv(
 
 # Modelo de evasão treinado pelo comando treinar_modelo. A pasta ml/ fica fora do Git.
 MODELO_EVASAO = BASE_DIR / "ml" / "modelo_evasao.joblib"
+
+# Endereço do sistema, usado para montar os links dos e-mails de alerta.
+ENDERECO_DO_SITE = os.getenv("ENDERECO_DO_SITE", "http://127.0.0.1:8000").rstrip("/")
+
+
+# Celery + Redis (config/celery.py e apps/alertas/tasks.py)
+def endereco_do_redis():
+    """Lê o REDIS_URL. O Upstash usa rediss:// (com S, criptografado), e o Celery exige que
+    esse endereço diga se confere o certificado: sem o parâmetro, acrescentamos "required"."""
+    url = os.getenv("REDIS_URL", "redis://localhost:6379/0").strip()
+    if url.startswith("rediss://") and "ssl_cert_reqs" not in url:
+        url += ("&" if "?" in url else "?") + "ssl_cert_reqs=required"
+    return url
+
+
+CELERY_BROKER_URL = endereco_do_redis()
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_IGNORE_RESULT = True  # as tarefas gravam o resultado no banco, não no Redis
+# Sem Redis, a view não pode ficar travada esperando: desiste da fila em cerca de 2 segundos
+# e apps/alertas/fila.py roda a tarefa na hora. socket_connect_timeout: 1 segundo basta para
+# abrir a conexão com o Redis local ou com o Upstash. max_retries: 0 faz a tela não insistir
+# na conexão. Sem esses dois limites, o Windows levava de 4 a 6 segundos para desistir.
+CELERY_BROKER_TRANSPORT_OPTIONS = {"socket_connect_timeout": 1, "max_retries": 0}
+CELERY_TASK_PUBLISH_RETRY = False
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+# CELERY_SEM_REDIS=True no .env: as tarefas rodam na hora, dentro do próprio Django, sem fila.
+# Serve para usar o sistema em um computador sem Redis. Os testes também rodam assim.
+CELERY_TASK_ALWAYS_EAGER = (
+    os.getenv("CELERY_SEM_REDIS", "False").strip().lower() == "true" or "test" in sys.argv
+)
+
+# Rotina diária: recalcula o risco de evasão e gera os alertas, todo dia às 6h.
+CELERY_BEAT_SCHEDULE = {
+    "rotina-diaria-de-alertas": {
+        "task": "apps.alertas.tasks.rotina_diaria",
+        "schedule": crontab(hour=6, minute=0),
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

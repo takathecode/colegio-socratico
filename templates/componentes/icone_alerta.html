@@ -1,0 +1,8 @@
+{# Ícone redondo da gravidade de um alerta. Parâmetro: alerta. A cor sempre vem com um ícone diferente. #}
+{% if alerta.gravidade == "RISCO" %}
+  <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-700" aria-hidden="true"><i data-lucide="circle-alert" class="size-4"></i></span>
+{% elif alerta.gravidade == "ATENCAO" %}
+  <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600" aria-hidden="true"><i data-lucide="triangle-alert" class="size-4"></i></span>
+{% else %}
+  <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8] text-[#1F4E8C]" aria-hidden="true"><i data-lucide="info" class="size-4"></i></span>
+{% endif %}

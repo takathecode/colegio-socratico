@@ -57,7 +57,8 @@ Os números saem sempre iguais porque o sorteio usa uma semente fixa (`SEMENTE =
 - `python manage.py treinar_modelo`: treina de novo e recalcula todos os alunos.
 - `python manage.py calcular_riscos`: recalcula com o modelo que já existe.
 - Botão **Recalcular agora**, na tela da coordenação.
-- Na etapa 9, uma tarefa do Celery vai rodar o mesmo cálculo toda noite.
+- A rotina diária do Celery roda o mesmo cálculo todo dia às 6h e, em seguida, gera os alertas
+  (veja `docs/ALERTAS.md`).
 
 O resultado fica salvo na tabela `RiscoEvasao` (um registro por matrícula ativa), com os números
 usados no cálculo. O arquivo do modelo fica em `ml/modelo_evasao.joblib`. Ele fica fora do Git,

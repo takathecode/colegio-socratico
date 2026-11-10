@@ -1,7 +1,8 @@
 """Recalcula o risco de evasão dos alunos ativos com o modelo já treinado.
 
 Uso: python manage.py calcular_riscos
-Na etapa 9, a tarefa agendada do Celery chama a mesma função, evasao.calcular_riscos().
+A rotina diária do Celery (apps/alertas/tasks.py, às 6h) chama a mesma função,
+evasao.calcular_riscos().
 """
 
 from django.core.management.base import BaseCommand, CommandError

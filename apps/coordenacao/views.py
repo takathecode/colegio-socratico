@@ -5,18 +5,25 @@ Contas nunca são apagadas por aqui, só desativadas, para não perder o histór
 Turmas, disciplinas e ofertas só podem ser excluídas enquanto não têm registros ligados.
 """
 
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Max, ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from apps.academico.calculos import GRAVIDADE, indicadores_da_turma, resumo_das_matriculas
 from apps.academico.models import Disciplina, Justificativa, Matricula, Oferta, Turma
 from apps.academico.utilidades import saudacao
+from apps.alertas import tasks as alertas_tasks
+from apps.alertas.fila import enfileirar
+from apps.alertas.models import Alerta
 from apps.analytics import evasao
 from apps.analytics.dados import frequencia_mensal_por_turma
 from apps.analytics.graficos import evolucao_da_frequencia
@@ -277,6 +284,70 @@ def risco_recalcular(request):
     else:
         messages.success(request, f"Risco de evasão recalculado para {total} aluno(s).")
     return redirect("coordenacao:risco")
+
+
+# --- Central de alertas (apps/alertas) ---
+
+
+@login_required
+@perfil_requerido("COORDENADOR")
+def alertas(request):
+    """Todos os alertas enviados pelo sistema, para a coordenação acompanhar quem foi avisado."""
+    todos = Alerta.objects.select_related("destinatario")
+    semana = todos.filter(criado_em__gte=timezone.now() - timedelta(days=7))
+    indicadores = semana.aggregate(
+        total=Count("id"),
+        em_risco=Count("id", filter=Q(gravidade=Alerta.Gravidade.RISCO)),
+        emails=Count("id", filter=Q(email_enviado_em__isnull=False)),
+        nao_lidos=Count("id", filter=Q(lido_em__isnull=True)),
+    )
+
+    busca = request.GET.get("busca", "").strip()
+    tipo = request.GET.get("tipo", "")
+    leitura = request.GET.get("leitura", "")
+    lista = todos
+    if tipo in Alerta.Tipo.values:
+        lista = lista.filter(tipo=tipo)
+    if leitura == "nao_lidos":
+        lista = lista.filter(lido_em__isnull=True)
+    elif leitura == "lidos":
+        lista = lista.filter(lido_em__isnull=False)
+    if busca:
+        lista = lista.filter(
+            Q(destinatario__first_name__icontains=busca)
+            | Q(destinatario__last_name__icontains=busca)
+            | Q(destinatario__matricula__icontains=busca)
+            | Q(titulo__icontains=busca)
+        )
+
+    return render(
+        request,
+        "coordenacao/alertas.html",
+        {
+            "pagina": paginar(request, lista),
+            "indicadores": indicadores,
+            "tipos": Alerta.Tipo.choices,
+            "busca": busca,
+            "tipo": tipo,
+            "leitura": leitura,
+            "filtrando": bool(busca or tipo or leitura),
+            "sem_redis": settings.CELERY_TASK_ALWAYS_EAGER,
+        },
+    )
+
+
+@login_required
+@perfil_requerido("COORDENADOR")
+@require_POST
+def alertas_rotina(request):
+    """Coloca na fila a mesma rotina que o Celery agenda para as 6h."""
+    enfileirar(alertas_tasks.rotina_diaria)
+    messages.success(
+        request,
+        "Rotina de alertas iniciada: o risco de evasão é recalculado e os alertas novos "
+        "aparecem nesta lista em instantes. Atualize a página para ver.",
+    )
+    return redirect("coordenacao:alertas")
 
 
 # --- Alunos ---
