@@ -8,6 +8,7 @@ from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
 
+import pandas as pd
 from django.contrib.auth import get_user_model
 from django.core.management import CommandError, call_command
 from django.test import SimpleTestCase, TestCase, override_settings
@@ -260,6 +261,28 @@ class TreinoTests(ModeloTreinadoMixin, SimpleTestCase):
         self.assertAlmostEqual(sum(self.resultado["importancias"].values()), 1, places=5)
         modelo = evasao.carregar_modelo()
         self.assertEqual(list(modelo.feature_names_in_), evasao.VARIAVEIS)
+
+    def test_piorar_uma_variavel_nunca_diminui_o_risco(self):
+        """O modelo aprendeu o sentido certo de cada variável, como a regra escondida.
+
+        Parte de um aluno mediano e piora uma variável por vez, mantendo as outras.
+        Ordem das colunas: frequência, média, tendência, justificativas pendentes.
+        """
+        modelo = evasao.carregar_modelo()
+        base = {"frequencia": 80, "media": 6, "tendencia": 0, "justificativas_pendentes": 0}
+        pioras = {
+            "frequencia": [95, 80, 65, 50],  # menos presença
+            "media": [9, 6, 4, 2],  # nota mais baixa
+            "tendencia": [2, 0, -2, -4],  # notas caindo
+            "justificativas_pendentes": [0, 1, 3, 5],  # mais pendências
+        }
+        for variavel, valores in pioras.items():
+            with self.subTest(variavel=variavel):
+                linhas = [{**base, variavel: valor} for valor in valores]
+                tabela = pd.DataFrame(linhas, columns=evasao.VARIAVEIS)
+                chances = list(modelo.predict_proba(tabela)[:, 1])
+                self.assertEqual(chances, sorted(chances))  # nunca diminui
+                self.assertGreater(chances[-1], chances[0])  # e o pior caso é mais arriscado
 
     @SEM_MODELO
     def test_sem_arquivo_avisa_que_falta_treinar(self):

@@ -64,6 +64,24 @@ class Usuario(AbstractUser):
         nome = self.get_full_name()
         return f"{self.matricula} - {nome}" if nome else self.matricula
 
+    def save(self, *args, **kwargs):
+        """Salva o usuário. Se a senha mudou, o token da API deixa de valer.
+
+        O set_password() do Django guarda a senha nova em self._password até o save().
+        Trocar a senha já encerra as sessões do portal; sem isto, quem tivesse copiado o
+        token antigo continuaria entrando pela API. Vale para a senha provisória da
+        coordenação, o "Esqueci minha senha" e o Django Admin.
+        """
+        senha_mudou = self._password is not None
+        super().save(*args, **kwargs)
+        if senha_mudou:
+            # Importado aqui para o app de contas não depender do DRF ao carregar.
+            from rest_framework.authtoken.models import Token
+
+            Token.objects.filter(user=self).delete()
+            # Senha nova (pela coordenação ou por "Esqueci minha senha") desbloqueia o login.
+            BloqueioDeLogin.objects.filter(matricula=self.matricula).delete()
+
     @property
     def nome_com_tratamento(self):
         """Nome usado nas telas, como "Prof. Ricardo Almeida"."""
@@ -78,3 +96,25 @@ class Usuario(AbstractUser):
         if len(partes) == 1:
             return partes[0][0].upper()
         return (partes[0][0] + partes[-1][0]).upper()
+
+
+class BloqueioDeLogin(models.Model):
+    """Erros de senha seguidos de uma matrícula digitada no login.
+
+    Conta pela matrícula digitada, exista ela ou não: assim o bloqueio e a mensagem são
+    iguais para todas, e ninguém descobre pelo login quais matrículas existem.
+    As regras (5 erros, 15 minutos) ficam em apps/contas/bloqueio.py.
+    """
+
+    matricula = models.CharField("matrícula digitada", max_length=150, unique=True)
+    erros = models.PositiveSmallIntegerField("erros seguidos", default=0)
+    ultimo_erro_em = models.DateTimeField("último erro em", null=True, blank=True)
+    bloqueado_ate = models.DateTimeField("bloqueado até", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "bloqueio de login"
+        verbose_name_plural = "bloqueios de login"
+        ordering = ["-ultimo_erro_em"]
+
+    def __str__(self):
+        return self.matricula

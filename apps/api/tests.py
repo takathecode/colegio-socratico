@@ -65,6 +65,26 @@ class TokenTests(BaseApiMixin, TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
         self.assertEqual(self.get("eu").status_code, 401)
 
+    def test_trocar_a_senha_apaga_o_token(self):
+        token = Token.objects.create(user=self.aluno)
+        self.aluno.set_password("senha-nova")
+        self.aluno.save()
+        self.assertFalse(Token.objects.filter(key=token.key).exists())
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
+        self.assertEqual(self.get("eu").status_code, 401)
+
+    def test_senha_provisoria_da_coordenacao_apaga_o_token(self):
+        Token.objects.create(user=self.aluno)
+        self.client.force_login(self.coordenador)
+        self.client.post(reverse("coordenacao:conta_nova_senha", args=[self.aluno.pk]))
+        self.assertFalse(Token.objects.filter(user=self.aluno).exists())
+
+    def test_salvar_sem_trocar_a_senha_mantem_o_token(self):
+        token = Token.objects.create(user=self.aluno)
+        self.aluno.first_name = "Beatriz"
+        self.aluno.save()
+        self.assertTrue(Token.objects.filter(key=token.key).exists())
+
     def test_admin_nao_usa_a_api(self):
         Usuario.objects.create_superuser("admin", "senha", email="admin@exemplo.com")
         self.assertEqual(self.pedir_token("admin", "senha").status_code, 403)

@@ -1,11 +1,16 @@
 """Testes do login, do redirecionamento por perfil, das permissões e da redefinição de senha."""
 
 import re
+from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core import mail
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import NoReverseMatch, reverse
+from django.utils import timezone
+
+from .models import BloqueioDeLogin
 
 Usuario = get_user_model()
 SENHA = "senha-de-teste-123"
@@ -128,6 +133,77 @@ class LoginTests(TestCase):
         resposta = self.client.post(reverse("contas:sair"))
         self.assertRedirects(resposta, reverse("contas:entrar"))
         self.assertNotIn("_auth_user_id", self.client.session)
+
+
+class BloqueioTests(TestCase):
+    """5 senhas erradas seguidas bloqueiam a matrícula por 15 minutos (apps/contas/bloqueio.py)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.usuarios = criar_usuarios()
+
+    def setUp(self):
+        cache.clear()  # zera o limite de pedidos da API entre um teste e outro
+
+    def entrar(self, matricula="aluno", senha=SENHA):
+        return self.client.post(
+            reverse("contas:entrar"), {"username": matricula, "password": senha}
+        )
+
+    def errar(self, vezes, matricula="aluno"):
+        for _ in range(vezes):
+            resposta = self.entrar(matricula, "senha-errada")
+        return resposta
+
+    def entrou(self):
+        return "_auth_user_id" in self.client.session
+
+    def test_quatro_erros_nao_bloqueiam_e_o_acerto_zera_a_contagem(self):
+        self.errar(4)
+        self.entrar()
+        self.assertTrue(self.entrou())
+        self.assertFalse(BloqueioDeLogin.objects.exists())
+
+    def test_quinto_erro_bloqueia_mesmo_com_a_senha_certa(self):
+        self.assertContains(self.errar(5), "Acesso bloqueado temporariamente")
+        resposta = self.entrar()
+        self.assertContains(resposta, "Acesso bloqueado temporariamente")
+        self.assertContains(resposta, "daqui a 15 minutos")
+        self.assertFalse(self.entrou())
+
+    def test_outras_matriculas_continuam_entrando(self):
+        self.errar(5)
+        self.entrar("professor")
+        self.assertTrue(self.entrou())
+
+    def test_matricula_inexistente_tem_o_mesmo_bloqueio(self):
+        # A mesma mensagem para quem existe e quem não existe: o login não revela matrículas.
+        self.assertContains(self.errar(5, "nao-existe"), "Acesso bloqueado temporariamente")
+
+    def test_bloqueio_acaba_depois_de_15_minutos(self):
+        self.errar(5)
+        BloqueioDeLogin.objects.update(bloqueado_ate=timezone.now() - timedelta(seconds=1))
+        self.entrar()
+        self.assertTrue(self.entrou())
+
+    def test_erros_antigos_nao_contam(self):
+        self.errar(4)
+        BloqueioDeLogin.objects.update(ultimo_erro_em=timezone.now() - timedelta(minutes=16))
+        self.assertContains(self.errar(1), "Matrícula ou senha incorreta")
+        self.assertEqual(BloqueioDeLogin.objects.get().erros, 1)
+
+    def test_senha_nova_desbloqueia(self):
+        self.errar(5)
+        aluno = self.usuarios["ALUNO"]
+        aluno.set_password("senha-nova-456")
+        aluno.save()
+        self.entrar(senha="senha-nova-456")
+        self.assertTrue(self.entrou())
+
+    def test_token_da_api_tambem_respeita_o_bloqueio(self):
+        self.errar(5)
+        resposta = self.client.post(reverse("api:token"), {"matricula": "aluno", "senha": SENHA})
+        self.assertEqual(resposta.status_code, 400)
 
 
 class RedirecionamentoTests(TestCase):

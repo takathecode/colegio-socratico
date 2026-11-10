@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import AdminUserCreationForm
 
-from .models import Usuario
+from .models import BloqueioDeLogin, Usuario
 
 
 class UsuarioCriacaoForm(AdminUserCreationForm):
@@ -56,3 +56,15 @@ class UsuarioAdmin(UserAdmin):
             },
         ),
     )
+
+
+@admin.register(BloqueioDeLogin)
+class BloqueioDeLoginAdmin(admin.ModelAdmin):
+    """Matrículas com senhas erradas. Apagar o registro libera o login na hora."""
+
+    list_display = ("matricula", "erros", "ultimo_erro_em", "bloqueado_ate")
+    search_fields = ("matricula",)
+    readonly_fields = ("matricula", "erros", "ultimo_erro_em", "bloqueado_ate")
+
+    def has_add_permission(self, request):
+        return False  # os registros são criados só pelo login

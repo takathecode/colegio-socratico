@@ -39,6 +39,23 @@ ALLOWED_HOSTS = [
     host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()
 ]
 
+# HTTPS: ligar só no servidor publicado (Vercel). No computador o site abre em http://,
+# e com isto ligado o navegador não guardaria o cookie do login.
+USAR_HTTPS = os.getenv("USAR_HTTPS", "False").strip().lower() == "true"
+if USAR_HTTPS:
+    # Na Vercel o HTTPS termina no proxy, que avisa o Django por este cabeçalho. Sem ele, o
+    # Django acharia que a conexão é http:// e recusaria os formulários (proteção CSRF).
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True  # quem abrir em http:// é levado para https://
+    SESSION_COOKIE_SECURE = True  # cookie do login só trafega por HTTPS
+    CSRF_COOKIE_SECURE = True
+    # HSTS: o navegador passa a usar só HTTPS neste endereço por 1 dia. Valor curto de
+    # propósito, sem subdomínios e sem "preload", para um erro de configuração ser reversível.
+    SECURE_HSTS_SECONDS = 60 * 60 * 24
+    # O "check --deploy" sugere ligar os dois; ficam desligados pela escolha acima
+    # (o domínio .vercel.app não é nosso, então não cabe pedir regras para os subdomínios).
+    SILENCED_SYSTEM_CHECKS = ["security.W005", "security.W021"]
+
 
 # Apps instalados
 INSTALLED_APPS = [
@@ -120,6 +137,10 @@ else:
 
 # Usuário customizado: o login é feito por matrícula (apps/contas/models.py).
 AUTH_USER_MODEL = "contas.Usuario"
+
+# Login padrão do Django com o bloqueio depois de 5 senhas erradas (apps/contas/bloqueio.py).
+# Vale para a tela de login, o token da API e o Django Admin.
+AUTHENTICATION_BACKENDS = ["apps.contas.backends.LoginComBloqueio"]
 
 # Rotas de login e saída. "/" (contas:inicio) manda cada perfil para a sua área.
 LOGIN_URL = "contas:entrar"

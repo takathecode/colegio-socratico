@@ -10,7 +10,10 @@
     <div role="alert" class="mt-6 flex gap-3 rounded-lg border border-[#C62828] bg-red-50 p-4 text-[#B71C1C]">
       <i data-lucide="circle-alert" class="mt-0.5 size-5 shrink-0"></i>
       <div>
-        {% if form.non_field_errors %}
+        {% if form.minutos_de_bloqueio %}
+          <p class="text-sm font-semibold">Acesso bloqueado temporariamente</p>
+          <p class="mt-1 text-xs leading-relaxed">Houve muitas tentativas com senha errada. Por segurança, esta matrícula só pode entrar daqui a {{ form.minutos_de_bloqueio }} minuto{{ form.minutos_de_bloqueio|pluralize }}. Se esqueceu a senha, recupere-a: a senha nova libera o acesso na hora.</p>
+        {% elif form.non_field_errors %}
           <p class="text-sm font-semibold">Matrícula ou senha incorreta</p>
           <p class="mt-1 text-xs leading-relaxed">Confira os dados e tente novamente. Se precisar, recupere sua senha.</p>
         {% else %}
