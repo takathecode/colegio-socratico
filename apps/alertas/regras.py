@@ -9,6 +9,7 @@ Rotina diária (tarefa rotina_diaria, agendada para as 6h):
 Avisos na hora, disparados por uma ação do professor:
 - Nota publicada                        -> aluno         (Informativo)
 - Justificativa aprovada ou rejeitada   -> aluno         (Informativo ou Em atenção)
+- Mensagem nova na caixa de mensagens   -> quem recebe   (Informativo, um aviso por conversa)
 
 Os limites são os mesmos do selo de situação (apps/academico/calculos.py), então o alerta
 concorda com o que as outras telas mostram. Só os alertas "Em risco" vão por e-mail.
@@ -28,6 +29,7 @@ from apps.academico.models import Justificativa, Matricula, Nota
 from apps.analytics.evasao import numero_br
 from apps.analytics.models import RiscoEvasao
 from apps.contas.models import Usuario
+from apps.mensagens.models import nome_de_exibicao
 
 from .models import Alerta
 
@@ -261,3 +263,36 @@ def aviso_de_justificativa(justificativa):
             )
         ]
     )
+
+
+def chave_da_conversa(conversa_id):
+    """Identifica os avisos de mensagem de uma conversa (usada também ao abrir a conversa)."""
+    return f"mensagem-{conversa_id}"
+
+
+def aviso_de_mensagem(mensagem):
+    """Avisa quem recebeu a mensagem. Devolve a lista com o alerta criado (ou vazia).
+
+    Só existe um aviso não lido por conversa: se a pessoa ainda não leu o anterior, a mensagem
+    nova entra na mesma conversa e o sino não enche. Depois que ela abre a conversa, o aviso é
+    marcado como lido (apps/mensagens/views.py) e a próxima mensagem avisa de novo. Por isso
+    esta regra não usa salvar_alertas, que bloquearia novos avisos por 7 dias.
+    """
+    conversa = mensagem.conversa
+    destinatario = conversa.outro_participante(mensagem.remetente)
+    if not destinatario.is_active:
+        return []
+    chave = chave_da_conversa(conversa.pk)
+    if Alerta.objects.filter(destinatario=destinatario, chave=chave, lido_em__isnull=True).exists():
+        return []
+    return [
+        Alerta.objects.create(
+            destinatario=destinatario,
+            tipo=Alerta.Tipo.MENSAGEM_NOVA,
+            gravidade=Alerta.Gravidade.INFORMATIVO,
+            titulo=f"Nova mensagem de {nome_de_exibicao(mensagem.remetente)}"[:120],
+            texto=f"Assunto: {conversa.assunto}",
+            link=f"{reverse('mensagens:caixa')}?{urlencode({'conversa': conversa.pk})}",
+            chave=chave,
+        )
+    ]

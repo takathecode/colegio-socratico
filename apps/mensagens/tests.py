@@ -11,8 +11,10 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps.academico.models import Curso, Disciplina, Matricula, Oferta, Turma
+from apps.alertas import tasks
+from apps.alertas.models import Alerta
 
-from .forms import contatos_do_aluno
+from .forms import alunos_da_secretaria, alunos_do_professor, contatos_do_aluno
 from .models import Conversa, Mensagem
 from .views import rotulo_de_tempo
 
@@ -164,11 +166,155 @@ class MensagensTests(TestCase):
         self.assertFalse(Conversa.objects.filter(assunto="Oi").exists())
         self.assertTrue(resposta.context["abrir_modal"])
 
-    def test_professor_nao_inicia_conversa(self):
+    def test_professor_ve_o_botao_de_nova_conversa(self):
         self.client.force_login(self.professor)
+        resposta = self.client.get(self.caixa)
+        self.assertTrue(resposta.context["pode_iniciar"])
+        self.assertContains(resposta, "Escreva para um aluno das suas turmas.")
+
+    def test_professor_so_escreve_para_alunos_das_proprias_turmas(self):
+        self.assertEqual(set(alunos_do_professor(self.professor)), {self.aluno})
+        self.assertEqual(set(alunos_do_professor(self.professor_de_fora)), {self.outro_aluno})
+
+    def test_aluno_com_matricula_trancada_nao_entra_na_lista_do_professor(self):
+        Matricula.objects.filter(aluno=self.aluno).update(situacao=Matricula.Situacao.TRANCADA)
+        self.assertEqual(set(alunos_do_professor(self.professor)), set())
+
+    def test_professor_inicia_conversa_com_aluno_da_turma(self):
+        self.client.force_login(self.professor)
+        resposta = self.client.post(
+            reverse("mensagens:nova"),
+            {"contato": self.aluno.pk, "assunto": "Trabalho final", "texto": "Entregue até sexta."},
+        )
+        conversa = Conversa.objects.get(assunto="Trabalho final")
+        self.assertRedirects(resposta, f"{self.caixa}?conversa={conversa.pk}")
+        self.assertEqual(conversa.aluno, self.aluno)
+        self.assertEqual(conversa.contato, self.professor)
+        self.assertEqual(conversa.oferta, self.oferta)
+        self.assertEqual(conversa.mensagens.get().remetente, self.professor)
+
+        # A Bia já tinha 1 conversa não lida do setUp; a nova é a segunda.
+        self.client.force_login(self.aluno)
+        caixa = self.client.get(self.caixa)
+        self.assertEqual(caixa.context["total_nao_lidas"], 2)
+        self.assertIn(conversa.pk, [item.pk for item in caixa.context["conversas"]])
+
+    def test_professor_nao_escreve_para_aluno_de_outra_turma(self):
+        self.client.force_login(self.professor)
+        resposta = self.client.post(
+            reverse("mensagens:nova"),
+            {"contato": self.outro_aluno.pk, "assunto": "Oi", "texto": "Oi"},
+        )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(Conversa.objects.filter(assunto="Oi").exists())
+        self.assertTrue(resposta.context["abrir_modal"])
+
+    def test_professor_nao_escreve_para_outro_professor(self):
+        self.client.force_login(self.professor)
+        resposta = self.client.post(
+            reverse("mensagens:nova"),
+            {"contato": self.professor_de_fora.pk, "assunto": "Oi", "texto": "Oi"},
+        )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(Conversa.objects.filter(assunto="Oi").exists())
+
+    def test_secretaria_ve_o_botao_e_escolhe_qualquer_aluno_ativo(self):
+        self.client.force_login(self.coordenador)
+        resposta = self.client.get(self.caixa)
+        self.assertTrue(resposta.context["pode_iniciar"])
+        self.assertContains(resposta, "Escreva para um aluno, como Secretaria acadêmica.")
+        self.assertEqual(set(alunos_da_secretaria()), {self.aluno, self.outro_aluno})
+
+        Matricula.objects.filter(aluno=self.outro_aluno).update(
+            situacao=Matricula.Situacao.TRANCADA
+        )
+        self.assertEqual(set(alunos_da_secretaria()), {self.aluno})
+
+    def test_secretaria_inicia_conversa_sem_disciplina(self):
+        self.client.force_login(self.coordenador)
+        resposta = self.client.post(
+            reverse("mensagens:nova"),
+            {"contato": self.outro_aluno.pk, "assunto": "Documentos", "texto": "Falta o RG."},
+        )
+        conversa = Conversa.objects.get(assunto="Documentos")
+        self.assertRedirects(resposta, f"{self.caixa}?conversa={conversa.pk}")
+        self.assertEqual(conversa.aluno, self.outro_aluno)
+        self.assertEqual(conversa.contato, self.coordenador)
+        self.assertIsNone(conversa.oferta)
+        self.assertEqual(conversa.mensagens.get().remetente, self.coordenador)
+
+    def test_secretaria_nao_escreve_para_professor(self):
+        self.client.force_login(self.coordenador)
+        resposta = self.client.post(
+            reverse("mensagens:nova"),
+            {"contato": self.professor.pk, "assunto": "Oi", "texto": "Oi"},
+        )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(Conversa.objects.filter(assunto="Oi").exists())
+
+    def test_admin_nao_inicia_conversa(self):
+        admin = Usuario.objects.create_superuser("admin2", "senha", email="b@exemplo.com")
+        self.client.force_login(admin)
         self.assertEqual(
             self.client.post(reverse("mensagens:nova"), {"assunto": "x"}).status_code, 403
         )
+
+    def test_enviar_mensagem_avisa_no_sino_e_abrir_a_conversa_limpa_o_aviso(self):
+        # A Bia escreve ao professor: o aviso vai para o professor.
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(
+                reverse("mensagens:nova"),
+                {"contato": self.professor.pk, "assunto": "Nova dúvida", "texto": "Oi, prof."},
+            )
+        conversa = Conversa.objects.get(assunto="Nova dúvida")
+        alerta = Alerta.objects.get(destinatario=self.professor)
+        self.assertEqual(alerta.tipo, Alerta.Tipo.MENSAGEM_NOVA)
+        self.assertEqual(alerta.titulo, "Nova mensagem de Bia Reis")
+        self.assertEqual(alerta.link, f"{self.caixa}?conversa={conversa.pk}")
+        self.assertFalse(Alerta.objects.filter(destinatario=self.aluno).exists())
+
+        # O professor abre a conversa pelo link do sino: o aviso passa a lido.
+        self.client.force_login(self.professor)
+        self.client.get(alerta.link)
+        alerta.refresh_from_db()
+        self.assertIsNotNone(alerta.lido_em)
+
+    def test_varias_mensagens_seguidas_geram_um_aviso_so(self):
+        self.client.force_login(self.professor)
+        url = reverse("mensagens:responder", args=[self.conversa.pk])
+        for texto in ("Primeira", "Segunda", "Terceira"):
+            with self.captureOnCommitCallbacks(execute=True):
+                self.client.post(url, {"texto": texto})
+        self.assertEqual(Alerta.objects.filter(destinatario=self.aluno).count(), 1)
+
+        # Depois que a Bia lê a conversa, a próxima mensagem avisa de novo.
+        self.client.force_login(self.aluno)
+        self.client.get(self.caixa, {"conversa": self.conversa.pk})
+        self.client.force_login(self.professor)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(url, {"texto": "Quarta"})
+        avisos = Alerta.objects.filter(destinatario=self.aluno)
+        self.assertEqual(avisos.count(), 2)
+        self.assertEqual(avisos.filter(lido_em__isnull=True).count(), 1)
+
+    def test_conversa_de_outra_pessoa_nao_limpa_o_aviso(self):
+        alerta = Alerta.objects.create(
+            destinatario=self.aluno,
+            tipo=Alerta.Tipo.MENSAGEM_NOVA,
+            gravidade=Alerta.Gravidade.INFORMATIVO,
+            titulo="x",
+            texto="y",
+            chave=f"mensagem-{self.conversa.pk}",
+        )
+        self.client.force_login(self.outro_aluno)
+        self.assertEqual(
+            self.client.get(self.caixa, {"conversa": self.conversa.pk}).status_code, 404
+        )
+        alerta.refresh_from_db()
+        self.assertIsNone(alerta.lido_em)
+
+    def test_mensagem_apagada_antes_da_tarefa(self):
+        self.assertEqual(tasks.avisar_mensagem_nova(999999), 0)
 
     def test_link_de_outra_tela_abre_o_modal_ja_preenchido(self):
         resposta = self.client.get(self.caixa, {"para": self.professor.pk, "assunto": "Física"})

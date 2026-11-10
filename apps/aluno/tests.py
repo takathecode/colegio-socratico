@@ -190,6 +190,23 @@ class PainelENotasTests(BaseAlunoMixin, TestCase):
         self.assertContains(resposta, "6,5")
         self.assertContains(resposta, f"para={self.professor.pk}")
 
+    def test_boletim_mostra_o_nome_de_cada_avaliacao_na_ordem_das_datas(self):
+        a2 = Avaliacao.objects.create(
+            oferta=self.oferta, nome="A2", data_hora=timezone.now() - timedelta(days=1)
+        )
+        Nota.objects.create(avaliacao=a2, matricula=self.matricula, valor=Decimal("5.00"))
+
+        resposta = self.client.get(reverse("aluno:notas"))
+        linha = resposta.context["linhas"][0]
+        self.assertEqual(
+            [(nome, str(valor)) for nome, valor in linha["notas_nomeadas"]],
+            [("A1", "6.50"), ("A2", "5.00")],
+        )
+        # As notas sem nome continuam iguais, pois outras telas usam essa lista.
+        self.assertEqual([str(v) for v in linha["notas"]], ["6.50", "5.00"])
+        self.assertContains(resposta, "A1&nbsp;6,5")
+        self.assertContains(resposta, "A2&nbsp;5,0")
+
     def test_situacoes_calculam_os_trechos_da_rosca(self):
         linhas = [{"situacao": s} for s in ("Regular", "Regular", "Em atenção", "Em risco", None)]
         resumo = servicos.resumo_de_situacoes(linhas)

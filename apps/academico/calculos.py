@@ -84,13 +84,15 @@ def resumo_por_disciplina(matricula):
     porque cada ida ao banco no Supabase leva tempo.
     """
     notas_por_oferta = {}
+    nomeadas_por_oferta = {}  # as mesmas notas, com o nome da avaliação: [("A1", 6.8), ...]
     notas = (
         Nota.objects.filter(matricula=matricula)
-        .order_by("avaliacao__data_hora")
-        .values_list("avaliacao__oferta_id", "valor")
+        .order_by("avaliacao__data_hora", "avaliacao_id")
+        .values_list("avaliacao__oferta_id", "valor", "avaliacao__nome")
     )
-    for oferta_id, valor in notas:
+    for oferta_id, valor, nome in notas:
         notas_por_oferta.setdefault(oferta_id, []).append(valor)
+        nomeadas_por_oferta.setdefault(oferta_id, []).append((nome, valor))
 
     horas_por_oferta = {
         linha["aula__oferta_id"]: linha
@@ -120,6 +122,7 @@ def resumo_por_disciplina(matricula):
             {
                 "oferta": oferta,
                 "notas": notas_da_oferta,
+                "notas_nomeadas": nomeadas_por_oferta.get(oferta.id, []),
                 "media": media,
                 "horas_dadas": horas_dadas,
                 "horas_faltas": horas_faltas,

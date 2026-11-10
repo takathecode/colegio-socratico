@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,12 +18,17 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from apps.academico.utilidades import baixar_anexo
+from apps.alertas import tasks as alertas_tasks
+from apps.alertas.fila import enfileirar
+from apps.alertas.models import Alerta
+from apps.alertas.regras import chave_da_conversa
 from apps.contas.decorators import perfil_requerido
 
 from .forms import NovaConversaForm, RespostaForm
 from .models import Conversa, Mensagem, nome_de_exibicao
 
 PERFIS = ("ALUNO", "PROFESSOR", "COORDENADOR")
+PERFIS_QUE_INICIAM = ("ALUNO", "PROFESSOR", "COORDENADOR")
 
 
 def rotulo_de_tempo(momento):
@@ -75,9 +81,14 @@ def abrir_conversa_pedida(request, conversas_do_usuario):
     if not pedida.isdecimal():
         return None
     conversa = get_object_or_404(conversas_do_usuario, pk=pedida)
+    agora = timezone.now()
     conversa.mensagens.filter(lida_em__isnull=True).exclude(remetente=request.user).update(
-        lida_em=timezone.now()
+        lida_em=agora
     )
+    # Quem abriu a conversa já viu a novidade: o aviso do sino deixa de contar como não lido.
+    Alerta.objects.filter(
+        destinatario=request.user, chave=chave_da_conversa(conversa.pk), lido_em__isnull=True
+    ).update(lido_em=agora)
     return conversa
 
 
@@ -110,11 +121,12 @@ def renderizar_caixa(request, conversa_aberta=None, form_resposta=None, form_nov
     if atual:
         mensagens_da_conversa = atual.mensagens.select_related("remetente")
 
-    pode_iniciar = usuario.perfil == "ALUNO"
+    # Aluno, professor e secretaria (coordenação) iniciam conversas.
+    pode_iniciar = usuario.perfil in PERFIS_QUE_INICIAM
     abrir_modal = False
     if pode_iniciar and form_nova is None:
         inicial = {"contato": request.GET.get("para"), "assunto": request.GET.get("assunto", "")}
-        form_nova = NovaConversaForm(aluno=usuario, initial=inicial)
+        form_nova = NovaConversaForm(usuario=usuario, initial=inicial)
         abrir_modal = "para" in request.GET
     elif form_nova is not None:
         abrir_modal = True
@@ -135,9 +147,18 @@ def renderizar_caixa(request, conversa_aberta=None, form_resposta=None, form_nov
             "form_resposta": form_resposta or RespostaForm(),
             "form_nova": form_nova,
             "pode_iniciar": pode_iniciar,
+            "subtitulo_do_modal": {
+                "PROFESSOR": "Escreva para um aluno das suas turmas.",
+                "COORDENADOR": "Escreva para um aluno, como Secretaria acadêmica.",
+            }.get(usuario.perfil, "Escreva para um professor da sua turma ou para a secretaria."),
             "abrir_modal": abrir_modal,
         },
     )
+
+
+def avisar_destinatario(mensagem):
+    """Coloca na fila o aviso do sino para quem recebeu a mensagem (depois de gravada)."""
+    transaction.on_commit(lambda: enfileirar(alertas_tasks.avisar_mensagem_nova, mensagem.pk))
 
 
 @login_required
@@ -160,20 +181,22 @@ def responder(request, pk):
     mensagem.conversa = conversa
     mensagem.remetente = request.user
     mensagem.save()
+    avisar_destinatario(mensagem)
     messages.success(request, "Mensagem enviada.")
     return redirect(f"{reverse('mensagens:caixa')}?conversa={conversa.pk}")
 
 
 @login_required
-@perfil_requerido("ALUNO")
+@perfil_requerido(*PERFIS_QUE_INICIAM)
 @require_POST
 def nova(request):
-    form = NovaConversaForm(request.POST, request.FILES, aluno=request.user)
+    form = NovaConversaForm(request.POST, request.FILES, usuario=request.user)
     if not form.is_valid():
         messages.error(request, "A conversa não foi criada. Confira os campos destacados.")
         return renderizar_caixa(request, form_nova=form)
 
     conversa = form.save()
+    avisar_destinatario(form.instance)
     messages.success(request, "Mensagem enviada.")
     return redirect(f"{reverse('mensagens:caixa')}?conversa={conversa.pk}")
 

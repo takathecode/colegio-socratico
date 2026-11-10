@@ -2,8 +2,9 @@
 
 - rotina_diaria: agendada pelo beat para as 6h (CELERY_BEAT_SCHEDULE em settings.py).
   Recalcula o risco de evasão e roda as regras de alerta do dia.
-- avisar_notas_publicadas e avisar_justificativa_avaliada: colocadas na fila pela tela do
-  professor, logo depois que ele salva. O professor não espera o aviso ser gerado.
+- avisar_notas_publicadas, avisar_justificativa_avaliada e avisar_mensagem_nova: colocadas
+  na fila pelas telas, logo depois que o professor salva ou que alguém envia uma mensagem.
+  Quem salvou ou enviou não espera o aviso ser gerado.
 - enviar_email: manda o e-mail de um alerta. Se o servidor de e-mail falhar, o Celery tenta
   de novo mais tarde, até 3 vezes.
 
@@ -21,6 +22,7 @@ from django.utils import timezone
 
 from apps.academico.models import Avaliacao, Justificativa
 from apps.analytics import evasao
+from apps.mensagens.models import Mensagem
 
 from . import regras
 from .fila import enfileirar
@@ -80,6 +82,20 @@ def avisar_justificativa_avaliada(justificativa_id):
     if justificativa is None:
         return 0
     novos = regras.aviso_de_justificativa(justificativa)
+    mandar_emails(novos)
+    return len(novos)
+
+
+@shared_task
+def avisar_mensagem_nova(mensagem_id):
+    mensagem = (
+        Mensagem.objects.select_related("conversa__aluno", "conversa__contato", "remetente")
+        .filter(pk=mensagem_id)
+        .first()
+    )
+    if mensagem is None:
+        return 0
+    novos = regras.aviso_de_mensagem(mensagem)
     mandar_emails(novos)
     return len(novos)
 

@@ -30,9 +30,14 @@ recalcular o risco de todos os alunos leva tempo. Com o Celery, a tela só deixa
 | Justificativa sem resposta há mais de 3 dias | professor da disciplina | Em atenção | não |
 | Professor publicou notas | aluno | Informativo | não |
 | Professor aprovou ou rejeitou a justificativa | aluno | Informativo / Em atenção | não |
+| Chegou uma mensagem nova | quem recebeu | Informativo | não |
 
-As quatro primeiras rodam na **rotina diária** (6h). As duas últimas são **avisos na hora**:
-a tela do professor põe a tarefa na fila logo depois de salvar (`transaction.on_commit`).
+As quatro primeiras rodam na **rotina diária** (6h). As três últimas são **avisos na hora**:
+a tela põe a tarefa na fila logo depois de salvar ou enviar (`transaction.on_commit`).
+
+**Mensagens:** há um aviso por conversa, e não um por mensagem. Se a pessoa ainda não leu o
+aviso anterior, as mensagens novas entram na mesma conversa e o sino não enche. Quando ela abre
+a conversa, o aviso é marcado como lido, e a próxima mensagem avisa de novo.
 
 Os limites são os mesmos do selo de situação (`apps/academico/calculos.py`), então o alerta
 concorda com o que as outras telas mostram.

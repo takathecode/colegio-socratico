@@ -29,6 +29,37 @@ def contatos_do_aluno(aluno):
     return Usuario.objects.filter(filtro, is_active=True).distinct().order_by("first_name")
 
 
+def alunos_do_professor(professor):
+    """O professor só pode escrever aos alunos ativos das turmas em que leciona.
+
+    As duas condições ficam no mesmo filter(): assim valem para a mesma matrícula, e um aluno
+    com matrícula trancada em uma turma do professor não entra na lista.
+    """
+    return (
+        Usuario.objects.filter(
+            perfil=Usuario.Perfil.ALUNO,
+            is_active=True,
+            matriculas__situacao=Matricula.Situacao.ATIVA,
+            matriculas__turma__ofertas__professor=professor,
+        )
+        .distinct()
+        .order_by("first_name", "last_name")
+    )
+
+
+def alunos_da_secretaria():
+    """A secretaria pode escrever a qualquer aluno ativo com matrícula ativa."""
+    return (
+        Usuario.objects.filter(
+            perfil=Usuario.Perfil.ALUNO,
+            is_active=True,
+            matriculas__situacao=Matricula.Situacao.ATIVA,
+        )
+        .distinct()
+        .order_by("first_name", "last_name")
+    )
+
+
 class CampoContato(forms.ModelChoiceField):
     def label_from_instance(self, usuario):
         return nome_de_exibicao(usuario)
@@ -58,7 +89,12 @@ class RespostaForm(forms.ModelForm):
 
 
 class NovaConversaForm(forms.ModelForm):
-    """Cria a conversa e a primeira mensagem de uma só vez."""
+    """Cria a conversa e a primeira mensagem de uma só vez.
+
+    Quem escreve é o aluno (escolhe um professor da turma ou a secretaria), o professor
+    (escolhe um aluno das suas turmas) ou a secretaria (escolhe qualquer aluno ativo).
+    O campo "contato" é sempre "a outra pessoa".
+    """
 
     contato = CampoContato(
         label="Para",
@@ -78,25 +114,40 @@ class NovaConversaForm(forms.ModelForm):
         fields = ["texto", "anexo"]
         widgets = {"anexo": widget_de_anexo()}
 
-    def __init__(self, *args, aluno, **kwargs):
+    def __init__(self, *args, usuario, **kwargs):
         super().__init__(*args, **kwargs)
-        self.aluno = aluno
-        self.fields["contato"].queryset = contatos_do_aluno(aluno)
+        self.usuario = usuario
+        if usuario.perfil == Usuario.Perfil.PROFESSOR:
+            self.fields["contato"].label = "Aluno"
+            self.fields["contato"].queryset = alunos_do_professor(usuario)
+        elif usuario.perfil == Usuario.Perfil.COORDENADOR:
+            self.fields["contato"].label = "Aluno"
+            self.fields["contato"].queryset = alunos_da_secretaria()
+        else:
+            self.fields["contato"].queryset = contatos_do_aluno(usuario)
 
     def save(self):
-        contato = self.cleaned_data["contato"]
-        matricula = Matricula.atual_de(self.aluno)
-        # Se o contato é professor da turma, a conversa já fica ligada à disciplina dele.
-        oferta = None
-        if matricula:
-            oferta = Oferta.objects.filter(turma=matricula.turma, professor=contato).first()
+        outro = self.cleaned_data["contato"]
+        if self.usuario.perfil != Usuario.Perfil.ALUNO:
+            aluno, contato = outro, self.usuario
+        else:
+            aluno, contato = self.usuario, outro
+
+        # Se o contato é professor da turma do aluno, a conversa já fica ligada à disciplina
+        # dele. A turma mais recente vem primeiro, caso o aluno tenha matrículas antigas.
+        oferta = (
+            Oferta.objects.filter(
+                professor=contato,
+                turma__matriculas__aluno=aluno,
+                turma__matriculas__situacao=Matricula.Situacao.ATIVA,
+            )
+            .order_by("-turma__semestre")
+            .first()
+        )
         conversa = Conversa.objects.create(
-            aluno=self.aluno,
-            contato=contato,
-            assunto=self.cleaned_data["assunto"],
-            oferta=oferta,
+            aluno=aluno, contato=contato, assunto=self.cleaned_data["assunto"], oferta=oferta
         )
         self.instance.conversa = conversa
-        self.instance.remetente = self.aluno
+        self.instance.remetente = self.usuario
         self.instance.save()
         return conversa

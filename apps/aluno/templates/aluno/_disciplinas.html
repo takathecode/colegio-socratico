@@ -23,8 +23,9 @@
               {% endif %}
             </td>
             {% if coluna == "avaliacoes" %}
-              <td class="px-3 py-3 whitespace-nowrap text-slate-500">
-                {% for nota in linha.notas %}{{ nota|floatformat:1 }}{% if not forloop.last %}&nbsp;/&nbsp;{% endif %}{% empty %}—{% endfor %}
+              <td class="px-3 py-3 text-slate-500">
+                {# A nota mais recente (a última) vai em destaque. #}
+                {% for nome, nota in linha.notas_nomeadas %}<span class="mr-3 inline-block whitespace-nowrap {% if forloop.last %}font-semibold text-[#0B2545]{% endif %}">{{ nome }}&nbsp;{{ nota|floatformat:1 }}</span>{% empty %}—{% endfor %}
               </td>
             {% endif %}
             {% if coluna == "aulas" %}
@@ -49,8 +50,8 @@
             Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
             {% if coluna == "aulas" %}· {{ linha.horas_dadas }} / {{ linha.horas_faltas }} h{% endif %}
           </p>
-          {% if coluna == "avaliacoes" and linha.notas %}
-            <p class="mt-0.5 text-xs text-slate-500">Avaliações: {% for nota in linha.notas %}{{ nota|floatformat:1 }}{% if not forloop.last %} / {% endif %}{% endfor %}</p>
+          {% if coluna == "avaliacoes" and linha.notas_nomeadas %}
+            <p class="mt-0.5 text-xs text-slate-500">{% for nome, nota in linha.notas_nomeadas %}<span class="mr-2 inline-block whitespace-nowrap {% if forloop.last %}font-semibold text-[#0B2545]{% endif %}">{{ nome }}&nbsp;{{ nota|floatformat:1 }}</span>{% endfor %}</p>
           {% endif %}
         </div>
         {% include "componentes/selo.html" with situacao=linha.situacao %}

@@ -142,6 +142,6 @@
   </div>
 
   {% if pode_iniciar %}
-    {% include "componentes/modal.html" with id="modal-nova-conversa" titulo="Nova conversa" subtitulo="Escreva para um professor da sua turma ou para a secretaria." conteudo="mensagens/_form_nova.html" aberto=abrir_modal %}
+    {% include "componentes/modal.html" with id="modal-nova-conversa" titulo="Nova conversa" subtitulo=subtitulo_do_modal conteudo="mensagens/_form_nova.html" aberto=abrir_modal %}
   {% endif %}
 {% endblock %}
