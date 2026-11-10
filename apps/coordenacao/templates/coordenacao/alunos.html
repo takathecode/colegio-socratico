@@ -9,10 +9,17 @@
       <h1 class="text-2xl font-semibold text-[#0B2545]">Alunos</h1>
       <p class="mt-1 text-sm text-slate-500">Contas, matrículas e situação acadêmica de cada aluno.</p>
     </div>
-    <a href="{% url 'coordenacao:aluno_novo' %}"
-       class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
-      <i data-lucide="user-plus" class="size-4"></i> Novo aluno
-    </a>
+    <div class="flex flex-wrap gap-2">
+      {# Exporta com a mesma busca e os mesmos filtros da lista (uma linha por matrícula). #}
+      <a href="{% url 'relatorios:alunos' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=xlsx"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
+      </a>
+      <a href="{% url 'coordenacao:aluno_novo' %}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+        <i data-lucide="user-plus" class="size-4"></i> Novo aluno
+      </a>
+    </div>
   </div>
 
   <section class="mt-5 rounded-xl border border-[#E5E9F0] bg-white p-5">
@@ -83,7 +90,12 @@
                     <span class="text-xs text-slate-500">Sem matrícula</span>
                   {% endif %}
                 </td>
-                <td class="px-3 text-right">
+                <td class="whitespace-nowrap px-3 text-right">
+                  {% if linha.matricula %}
+                    <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="mr-3 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+                      <i data-lucide="file-text" class="size-4"></i> Boletim
+                    </a>
+                  {% endif %}
                   <a href="{% url 'coordenacao:aluno_editar' linha.aluno.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
                     <i data-lucide="pencil" class="size-4"></i> Editar
                   </a>
@@ -105,11 +117,18 @@
                 Freq. {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
               </p>
             </a>
-            {% if linha.ativa %}
-              {% include "componentes/selo.html" with situacao=linha.situacao %}
-            {% elif linha.matricula %}
-              {% include "componentes/selo.html" with situacao=linha.matricula.get_situacao_display %}
-            {% endif %}
+            <div class="flex shrink-0 items-center gap-2">
+              {% if linha.ativa %}
+                {% include "componentes/selo.html" with situacao=linha.situacao %}
+              {% elif linha.matricula %}
+                {% include "componentes/selo.html" with situacao=linha.matricula.get_situacao_display %}
+              {% endif %}
+              {% if linha.matricula %}
+                <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="flex size-9 items-center justify-center rounded-lg border border-[#E5E9F0] text-[#1F4E8C] hover:border-[#1F4E8C]">
+                  <i data-lucide="file-text" class="size-4"></i><span class="sr-only">Boletim de {{ linha.aluno.get_full_name|default:linha.aluno.matricula }} (PDF)</span>
+                </a>
+              {% endif %}
+            </div>
           </li>
         {% endfor %}
       </ul>

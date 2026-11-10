@@ -6,6 +6,7 @@ Turmas, disciplinas e ofertas só podem ser excluídas enquanto não têm regist
 """
 
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
@@ -30,6 +31,7 @@ from apps.analytics.graficos import evolucao_da_frequencia
 from apps.analytics.models import RiscoEvasao
 from apps.contas.decorators import perfil_requerido
 from apps.contas.models import Usuario
+from apps.relatorios.filtros import RiscoFiltro
 
 from . import servicos
 from .forms import (
@@ -233,11 +235,9 @@ def risco(request):
     busca = request.GET.get("busca", "").strip()
     turma = request.GET.get("turma", "")
     nivel = request.GET.get("nivel", "")
-    if turma.isdecimal():
-        riscos = riscos.filter(matricula__turma_id=int(turma))
-    if nivel in RiscoEvasao.Nivel.values:
-        riscos = riscos.filter(nivel=nivel)
-    riscos = servicos.filtrar_por_busca(list(riscos), busca, lambda item: item.matricula.aluno)
+    # O mesmo filtro do relatório (apps/relatorios/filtros.py): o PDF traz a lista da tela.
+    riscos = list(RiscoFiltro(request.GET, queryset=riscos).qs)
+    filtros_usados = {"busca": busca, "turma": turma, "nivel": nivel}
 
     return render(
         request,
@@ -264,6 +264,8 @@ def risco(request):
             "turma": turma,
             "nivel": nivel,
             "filtrando": bool(busca or turma or nivel),
+            # Parâmetros dos botões PDF e Excel, como "turma=3&nivel=ALTO".
+            "consulta": urlencode({chave: valor for chave, valor in filtros_usados.items() if valor}),
         },
     )
 
@@ -384,6 +386,14 @@ def alunos(request):
             "turma": turma,
             "situacao": situacao,
             "filtrando": bool(busca or turma or situacao),
+            # Parâmetros do botão Excel (o relatório entende os mesmos nomes).
+            "consulta": urlencode(
+                {
+                    chave: valor
+                    for chave, valor in {"busca": busca, "turma": turma, "situacao": situacao}.items()
+                    if valor
+                }
+            ),
         },
     )
 

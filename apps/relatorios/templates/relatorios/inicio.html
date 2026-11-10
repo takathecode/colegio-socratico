@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block titulo %}Relatórios{% endblock %}
+{% block breadcrumb %}Relatórios{% endblock %}
+
+{% block conteudo %}
+  <div>
+    <h1 class="text-2xl font-semibold text-[#0B2545]">Relatórios</h1>
+    <p class="mt-1 text-sm text-slate-500">Baixe os dados da instituição em PDF, para imprimir e apresentar, ou em Excel, para analisar.</p>
+  </div>
+
+  {% if not turmas %}
+    <section class="mt-5 rounded-xl border border-[#E5E9F0] bg-white p-5">
+      {% include "componentes/vazio.html" with titulo="Nenhuma turma cadastrada" texto="Os relatórios aparecem depois que houver turmas com alunos." icone="file-text" %}
+    </section>
+  {% else %}
+    <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+      {# Os formulários usam GET: o arquivo é baixado e a tela continua aberta. #}
+      <section class="flex flex-col rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <div class="flex items-start gap-3">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#EAF0F8] text-[#1F4E8C]"><i data-lucide="school" class="size-5"></i></span>
+          <div>
+            <h2 class="font-semibold">Desempenho da turma</h2>
+            <p class="mt-1 text-sm text-slate-500">Resumo por aluno e uma tabela por disciplina, com as notas de cada avaliação, média, frequência e situação.</p>
+          </div>
+        </div>
+        <form method="get" action="{% url 'relatorios:turma' %}" class="mt-4 flex flex-1 flex-col justify-end gap-3">
+          <div>
+            <label for="turma-desempenho" class="text-sm font-medium">Turma</label>
+            <select id="turma-desempenho" name="turma" required class="mt-1 h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+              {% for item in turmas %}
+                <option value="{{ item.pk }}">{{ item.codigo }} · {{ item.semestre }} · {{ item.curso.nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          {% include "relatorios/_botoes.html" with excel=True pdf=True %}
+        </form>
+      </section>
+
+      <section class="flex flex-col rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <div class="flex items-start gap-3">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#EAF0F8] text-[#1F4E8C]"><i data-lucide="triangle-alert" class="size-5"></i></span>
+          <div>
+            <h2 class="font-semibold">Alunos em risco de evasão</h2>
+            <p class="mt-1 text-sm text-slate-500">Probabilidade calculada pelo modelo preditivo, com o nível de risco e os principais motivos de cada aluno.</p>
+          </div>
+        </div>
+        {% if risco_calculado %}
+          <form method="get" action="{% url 'relatorios:risco' %}" class="mt-4 flex flex-1 flex-col justify-end gap-3">
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label for="turma-risco" class="text-sm font-medium">Turma</label>
+                <select id="turma-risco" name="turma" class="mt-1 h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+                  <option value="">Todas as turmas</option>
+                  {% for item in turmas %}
+                    <option value="{{ item.pk }}">{{ item.codigo }} · {{ item.semestre }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div>
+                <label for="nivel-risco" class="text-sm font-medium">Nível</label>
+                <select id="nivel-risco" name="nivel" class="mt-1 h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+                  <option value="">Todos os níveis</option>
+                  {% for valor, rotulo in niveis %}
+                    <option value="{{ valor }}">{{ rotulo }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            {% include "relatorios/_botoes.html" with excel=True pdf=True %}
+          </form>
+        {% else %}
+          <div class="mt-4 flex flex-1 items-end">
+            <p class="flex w-full gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <i data-lucide="info" class="mt-0.5 size-4 shrink-0 text-amber-600"></i>
+              <span>O risco ainda não foi calculado. Abra <a href="{% url 'coordenacao:risco' %}" class="font-semibold underline">Alunos em risco</a> para ver como calcular.</span>
+            </p>
+          </div>
+        {% endif %}
+      </section>
+
+      <section class="flex flex-col rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <div class="flex items-start gap-3">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#EAF0F8] text-[#1F4E8C]"><i data-lucide="graduation-cap" class="size-5"></i></span>
+          <div>
+            <h2 class="font-semibold">Lista de alunos</h2>
+            <p class="mt-1 text-sm text-slate-500">Uma linha por matrícula, com contato, turma, média, frequência, situação, coeficiente e créditos.</p>
+          </div>
+        </div>
+        <form method="get" action="{% url 'relatorios:alunos' %}" class="mt-4 flex flex-1 flex-col justify-end gap-3">
+          <input type="hidden" name="formato" value="xlsx">
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label for="turma-alunos" class="text-sm font-medium">Turma</label>
+              <select id="turma-alunos" name="turma" class="mt-1 h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+                <option value="">Todas</option>
+                {% for item in turmas %}
+                  <option value="{{ item.pk }}">{{ item.codigo }} · {{ item.semestre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="matricula-alunos" class="text-sm font-medium">Matrícula</label>
+              <select id="matricula-alunos" name="situacao_matricula" class="mt-1 h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+                <option value="">Todas</option>
+                {% for valor, rotulo in situacoes_matricula %}
+                  <option value="{{ valor }}">{{ rotulo }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label for="situacao-alunos" class="text-sm font-medium">Situação</label>
+              <select id="situacao-alunos" name="situacao" class="mt-1 h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+                <option value="">Todas</option>
+                {% for item in selos %}
+                  <option value="{{ item }}">{{ item }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          {% include "relatorios/_botoes.html" with excel=True %}
+        </form>
+      </section>
+
+      <section class="flex flex-col rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <div class="flex items-start gap-3">
+          <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#EAF0F8] text-[#1F4E8C]"><i data-lucide="file-text" class="size-5"></i></span>
+          <div>
+            <h2 class="font-semibold">Boletim de um aluno</h2>
+            <p class="mt-1 text-sm text-slate-500">O mesmo boletim em PDF que o aluno baixa na área dele, com as notas, a frequência e o gráfico de cada disciplina.</p>
+          </div>
+        </div>
+        <div class="mt-4 flex flex-1 items-end">
+          <a href="{% url 'coordenacao:alunos' %}"
+             class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+            <i data-lucide="graduation-cap" class="size-4"></i> Escolher na lista de alunos
+          </a>
+        </div>
+      </section>
+    </div>
+  {% endif %}
+{% endblock %}

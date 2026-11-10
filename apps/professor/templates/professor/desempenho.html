@@ -9,10 +9,20 @@
       <h1 class="text-2xl font-semibold text-[#0B2545]">Desempenho</h1>
       <p class="mt-1 text-sm text-slate-500">Como as médias da turma se distribuem nesta disciplina.</p>
     </div>
-    <a href="{% url 'professor:turma' oferta.pk %}"
-       class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
-      <i data-lucide="users" class="size-4"></i> Ver alunos da turma
-    </a>
+    <div class="flex flex-wrap gap-2">
+      <a href="{% url 'professor:turma' oferta.pk %}"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="users" class="size-4"></i> Ver alunos da turma
+      </a>
+      <a href="{% url 'relatorios:disciplina' oferta.pk %}?formato=pdf"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="file-text" class="size-4"></i> PDF
+      </a>
+      <a href="{% url 'relatorios:disciplina' oferta.pk %}?formato=xlsx"
+         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+        <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
+      </a>
+    </div>
   </div>
 
   <form method="get" class="mt-4">

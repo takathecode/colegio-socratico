@@ -11,12 +11,25 @@
         Probabilidade de evasão estimada pelo modelo preditivo{% if calculado_em %} · atualizada em {{ calculado_em|date:"d/m/Y \à\s H:i" }}{% endif %}.
       </p>
     </div>
-    {% if modelo_treinado %}
-      <form method="post" action="{% url 'coordenacao:risco_recalcular' %}" data-carregando>
-        {% csrf_token %}
-        {% include "componentes/botao_enviar.html" with texto="Recalcular agora" texto_carregando="Calculando..." icone="refresh-cw" compacto=True %}
-      </form>
-    {% endif %}
+    <div class="flex flex-wrap gap-2">
+      {% if total_calculado %}
+        {# Os mesmos filtros da lista vão para o relatório: o arquivo traz os alunos que estão na tela. #}
+        <a href="{% url 'relatorios:risco' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=pdf"
+           class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+          <i data-lucide="file-text" class="size-4"></i> PDF
+        </a>
+        <a href="{% url 'relatorios:risco' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=xlsx"
+           class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+          <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
+        </a>
+      {% endif %}
+      {% if modelo_treinado %}
+        <form method="post" action="{% url 'coordenacao:risco_recalcular' %}" data-carregando>
+          {% csrf_token %}
+          {% include "componentes/botao_enviar.html" with texto="Recalcular agora" texto_carregando="Calculando..." icone="refresh-cw" compacto=True %}
+        </form>
+      {% endif %}
+    </div>
   </div>
 
   {% if not modelo_treinado %}

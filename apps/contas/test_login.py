@@ -197,8 +197,9 @@ class LayoutTests(TestCase):
         # Item de tela ainda não feita aparece desativado, nunca como link quebrado.
         self.client.force_login(self.usuarios["COORDENADOR"])
         resposta = self.client.get("/coordenacao/")
-        self.assertContains(resposta, "Relatórios: em breve")
-        self.assertNotContains(resposta, "Alunos em risco: em breve")
+        # Desde a etapa 10 todos os itens do coordenador têm tela, então nenhum fica "em breve".
+        self.assertNotContains(resposta, "Relatórios: em breve")
+        self.assertContains(resposta, 'href="/relatorios/"')
         self.assertNotContains(resposta, 'href="#"')
 
     def test_topo_mostra_iniciais_e_matricula(self):

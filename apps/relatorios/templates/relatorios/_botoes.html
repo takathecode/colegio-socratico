@@ -1,0 +1,16 @@
+{# Botões de download de um formulário GET. Parâmetros: pdf=True e/ou excel=True. #}
+{# Sem estado "carregando": o arquivo é baixado e a página não muda, então o botão ficaria travado. #}
+<div class="flex flex-wrap gap-2">
+  {% if pdf %}
+    <button type="submit" name="formato" value="pdf"
+            class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+      <i data-lucide="file-text" class="size-4"></i> Baixar PDF
+    </button>
+  {% endif %}
+  {% if excel %}
+    <button type="submit" {% if pdf %}name="formato" value="xlsx"{% endif %}
+            class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+      <i data-lucide="file-spreadsheet" class="size-4"></i> Baixar Excel
+    </button>
+  {% endif %}
+</div>

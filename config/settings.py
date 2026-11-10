@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Bibliotecas
+    "django_filters",  # filtros dos relatórios (e, na etapa 11, da API)
     # Apps do projeto
     "apps.contas",
     "apps.academico",
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
     "apps.financeiro",
     "apps.analytics",
     "apps.alertas",
+    "apps.relatorios",
 ]
 
 MIDDLEWARE = [
