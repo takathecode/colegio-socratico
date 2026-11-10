@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     "apps.alertas",
     "apps.relatorios",
     "apps.api",
+    "apps.videochamadas",
 ]
 
 MIDDLEWARE = [
@@ -184,6 +185,10 @@ MODELO_EVASAO = BASE_DIR / "ml" / "modelo_evasao.joblib"
 
 # Endereço do sistema, usado para montar os links dos e-mails de alerta.
 ENDERECO_DO_SITE = os.getenv("ENDERECO_DO_SITE", "http://127.0.0.1:8000").rstrip("/")
+
+# Servidor do Jitsi Meet usado nas videochamadas (apps/videochamadas). O padrão é o serviço
+# público e gratuito; uma escola com servidor próprio do Jitsi troca só esta linha no .env.
+JITSI_SERVIDOR = os.getenv("JITSI_SERVIDOR", "https://meet.jit.si").strip().rstrip("/")
 
 
 # Celery + Redis (config/celery.py e apps/alertas/tasks.py)

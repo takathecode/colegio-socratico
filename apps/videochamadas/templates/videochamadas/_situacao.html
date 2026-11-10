@@ -1,0 +1,10 @@
+{# Situação da chamada. Parâmetro: chamada. A cor sempre vem com ícone e texto. #}
+{% if chamada.em_andamento %}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-800">
+    <i data-lucide="video" class="size-3.5"></i>Em andamento
+  </span>
+{% else %}
+  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+    <i data-lucide="phone-off" class="size-3.5"></i>Encerrada
+  </span>
+{% endif %}

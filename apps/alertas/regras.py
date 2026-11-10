@@ -6,10 +6,11 @@ Rotina diária (tarefa rotina_diaria, agendada para as 6h):
 - Risco de evasão alto (modelo de ML)   -> coordenadores (Em risco, também por e-mail)
 - Justificativas sem resposta há 3 dias -> professor     (Em atenção, só no sistema)
 
-Avisos na hora, disparados por uma ação do professor:
+Avisos na hora, disparados por uma ação de alguém:
 - Nota publicada                        -> aluno         (Informativo)
 - Justificativa aprovada ou rejeitada   -> aluno         (Informativo ou Em atenção)
 - Mensagem nova na caixa de mensagens   -> quem recebe   (Informativo, um aviso por conversa)
+- Convite para videochamada            -> convidado     (Informativo, um aviso por chamada)
 
 Os limites são os mesmos do selo de situação (apps/academico/calculos.py), então o alerta
 concorda com o que as outras telas mostram. Só os alertas "Em risco" vão por e-mail.
@@ -30,6 +31,7 @@ from apps.analytics.evasao import numero_br
 from apps.analytics.models import RiscoEvasao
 from apps.contas.models import Usuario
 from apps.mensagens.models import nome_de_exibicao
+from apps.videochamadas.models import nome_na_chamada
 
 from .models import Alerta
 
@@ -296,3 +298,31 @@ def aviso_de_mensagem(mensagem):
             chave=chave,
         )
     ]
+
+
+def chave_da_chamada(chamada_id):
+    """Identifica o convite de uma videochamada (usada também ao abrir a sala)."""
+    return f"chamada-{chamada_id}"
+
+
+def aviso_de_chamada(chamada):
+    """Avisa o convidado de que alguém está chamando. Devolve o alerta criado.
+
+    Cada chamada é um assunto novo, então não há janela de 7 dias (salvar_alertas): duas
+    chamadas no mesmo dia geram dois convites. Quem abre a sala marca o convite como lido
+    (apps/videochamadas/views.py).
+    """
+    if chamada.assunto:
+        texto = f"Assunto: {chamada.assunto}"
+    else:
+        texto = "Abra o convite para entrar na sala."
+    titulo = f"{nome_na_chamada(chamada.criada_por)} chamou você para uma videochamada"
+    return Alerta.objects.create(
+        destinatario=chamada.convidado,
+        tipo=Alerta.Tipo.VIDEOCHAMADA,
+        gravidade=Alerta.Gravidade.INFORMATIVO,
+        titulo=titulo[:120],
+        texto=texto,
+        link=reverse("videochamadas:sala", args=[chamada.pk]),
+        chave=chave_da_chamada(chamada.pk),
+    )

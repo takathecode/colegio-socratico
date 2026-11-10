@@ -12,6 +12,14 @@ MENSAGENS = {
     "tambem_ativo": ("mensagens:responder", "mensagens:nova"),
 }
 
+# Só a coordenação e os professores fazem videochamadas (o aluno não participa).
+VIDEOCHAMADAS = {
+    "nome": "Videochamadas",
+    "icone": "video",
+    "rota": "videochamadas:inicio",
+    "tambem_ativo": ("videochamadas:sala", "videochamadas:nova"),
+}
+
 AREAS = {
     "ALUNO": {
         "titulo": "Área do aluno",
@@ -44,6 +52,7 @@ AREAS = {
             },
             {"nome": "Desempenho", "icone": "chart-no-axes-column", "rota": "professor:desempenho"},
             MENSAGENS,
+            VIDEOCHAMADAS,
         ],
     },
     "COORDENADOR": {
@@ -99,6 +108,7 @@ AREAS = {
             {"nome": "Relatórios", "icone": "file-text", "rota": "relatorios:inicio"},
             {"nome": "Alertas", "icone": "bell-ring", "rota": "coordenacao:alertas"},
             MENSAGENS,  # os coordenadores respondem como "Secretaria acadêmica"
+            VIDEOCHAMADAS,
         ],
     },
 }

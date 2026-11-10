@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block titulo %}Videochamadas{% endblock %}
+{% block breadcrumb %}Videochamadas{% endblock %}
+
+{% block conteudo %}
+  <div>
+    <h1 class="text-2xl font-semibold text-[#0B2545]">Videochamadas</h1>
+    <p class="mt-1 text-sm text-slate-500">
+      {% if user.perfil == "COORDENADOR" %}Converse por vídeo com um professor.{% else %}Converse por vídeo com a coordenação.{% endif %}
+      A chamada abre no Jitsi Meet, em outra aba.
+    </p>
+  </div>
+
+  <div class="mt-5 grid gap-5 lg:grid-cols-3">
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5" aria-labelledby="titulo-nova">
+      <h2 id="titulo-nova" class="text-base font-semibold text-[#0B2545]">Nova chamada</h2>
+      {% if tem_quem_chamar %}
+        <p class="mt-1 text-sm text-slate-500">A pessoa recebe o convite no sino de notificações.</p>
+        <form method="post" action="{% url 'videochamadas:nova' %}" class="mt-4 space-y-4" data-carregando>
+          {% csrf_token %}
+          {% include "componentes/campo_form.html" with campo=form.convidado %}
+          {% include "componentes/campo_form.html" with campo=form.assunto %}
+          {% for erro in form.non_field_errors %}<p class="text-sm text-[#C62828]">{{ erro }}</p>{% endfor %}
+          {% include "componentes/botao_enviar.html" with texto="Chamar agora" texto_carregando="Criando a sala..." icone="video" %}
+        </form>
+      {% elif user.perfil == "COORDENADOR" %}
+        {% include "componentes/vazio.html" with titulo="Nenhum professor ativo" texto="Crie ou reative a conta de um professor na tela Professores." icone="users" %}
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhum coordenador ativo" texto="No momento não há coordenadores disponíveis para chamar." icone="users" %}
+      {% endif %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5 lg:col-span-2" aria-labelledby="titulo-historico">
+      <h2 id="titulo-historico" class="text-base font-semibold text-[#0B2545]">Histórico</h2>
+      {% if pagina.object_list %}
+        <ul class="mt-3 divide-y divide-[#E5E9F0] border-t border-[#E5E9F0]">
+          {% for chamada in pagina %}
+            <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div class="flex min-w-0 items-center gap-3">
+                <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C]" aria-hidden="true">{{ chamada.outro.iniciais }}</span>
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium">{{ chamada.nome_do_outro }}</p>
+                  <p class="mt-0.5 truncate text-xs text-slate-500">
+                    {% if chamada.fui_eu_que_chamei %}Você chamou{% else %}Recebida{% endif %}
+                    · {{ chamada.criada_em|date:"d/m/Y \à\s H:i" }}
+                    · {{ chamada.assunto|default:"Sem assunto" }}
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                {% include "videochamadas/_situacao.html" %}
+                <a href="{% url 'videochamadas:sala' chamada.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+                  {% if chamada.em_andamento %}Abrir{% else %}Detalhes{% endif %} <i data-lucide="arrow-right" class="size-4"></i>
+                </a>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+        {% include "componentes/paginacao.html" %}
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhuma chamada ainda" texto="As chamadas que você fizer ou receber aparecem aqui." icone="video" %}
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

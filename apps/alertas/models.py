@@ -16,10 +16,11 @@ class Alerta(models.Model):
         FREQUENCIA_BAIXA = "FREQUENCIA_BAIXA", "Frequência abaixo do mínimo"
         MEDIA_BAIXA = "MEDIA_BAIXA", "Média abaixo de 6"
         JUSTIFICATIVA_ATRASADA = "JUSTIFICATIVA_ATRASADA", "Justificativas sem resposta"
-        # Avisos disparados na hora por uma ação (professor salvou, mensagem enviada)
+        # Avisos disparados na hora por uma ação (professor salvou, mensagem enviada, chamada)
         NOTA_LANCADA = "NOTA_LANCADA", "Nota publicada"
         JUSTIFICATIVA_AVALIADA = "JUSTIFICATIVA_AVALIADA", "Justificativa avaliada"
         MENSAGEM_NOVA = "MENSAGEM_NOVA", "Mensagem nova"
+        VIDEOCHAMADA = "VIDEOCHAMADA", "Convite para videochamada"
 
     class Gravidade(models.TextChoices):
         # Os rótulos são os mesmos do selo (componentes/selo.html), que escolhe a cor.

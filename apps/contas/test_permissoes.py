@@ -25,6 +25,7 @@ PERFIS_DA_AREA = {
     "coordenacao": {COORDENADOR},
     "mensagens": TODOS_DO_PORTAL,
     "alertas": TODOS_DO_PORTAL,
+    "videochamadas": {PROFESSOR, COORDENADOR},  # o aluno não participa das chamadas
 }
 
 # Em Relatórios cada rota tem o seu perfil.

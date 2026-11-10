@@ -7,10 +7,10 @@ Sistema acadêmico em Django, com banco PostgreSQL no Supabase e uma área para 
 - **Aluno:** painel com gráfico de notas, boletim (com PDF), frequência, justificativa de faltas
   com anexo, calendário, mensagens e financeiro (simulado).
 - **Professor:** turmas, lançamento de notas, chamada com simulação de biometria, avaliação de
-  justificativas, gráfico de desempenho e relatórios da disciplina.
+  justificativas, gráfico de desempenho, relatórios da disciplina e videochamada com a coordenação.
 - **Coordenação:** visão geral, alunos em risco de evasão (modelo de machine learning), cadastro
   de alunos, professores, turmas e disciplinas, criação de contas, relatórios em PDF e Excel e
-  central de alertas.
+  central de alertas e videochamada com os professores (Jitsi Meet).
 
 Também tem alertas automáticos (Celery + Redis), notificações no sino e uma API REST documentada
 em `/api/docs/`. Não existe tela de cadastro: as contas são criadas pela coordenação ou pelo
@@ -218,6 +218,7 @@ apps/aluno/        área do aluno           → /aluno/
 apps/professor/    área do professor       → /professor/
 apps/coordenacao/  área da coordenação     → /coordenacao/
 apps/mensagens/    caixa de mensagens      → /mensagens/
+apps/videochamadas/ videochamadas (Jitsi Meet) entre coordenação e professores → /videochamadas/
 apps/alertas/      alertas, sino de notificações e tarefas do Celery → /alertas/
 apps/analytics/    gráficos (matplotlib) e módulo preditivo (scikit-learn)
 apps/relatorios/   PDF (reportlab) e Excel (pandas) → /relatorios/
@@ -239,5 +240,6 @@ docs/              documentação para a apresentação
 | [docs/RELATORIOS.md](docs/RELATORIOS.md) | Relatórios em PDF e Excel |
 | [docs/API.md](docs/API.md) | API REST: token, endpoints e exemplos |
 | [docs/SEGURANCA.md](docs/SEGURANCA.md) | Login, perfis, permissões e proteção dos dados |
+| [docs/VIDEOCHAMADA.md](docs/VIDEOCHAMADA.md) | Videochamada entre coordenação e professores |
 
 A publicação na internet (Vercel) é a próxima etapa do projeto e terá um guia próprio.
