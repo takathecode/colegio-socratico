@@ -86,7 +86,8 @@ Detalhes em [API.md](API.md).
 ## Anexos (atestados e arquivos das mensagens)
 
 - Só PDF, JPG e PNG, com até 5 MB.
-- Não existe endereço público para a pasta `media/`. O arquivo só é entregue por uma view que
+- O conteúdo do anexo fica no banco (modelo `ArquivoAnexo`, `apps/academico/armazenamento.py`),
+  para chegar a quem usa outro computador. Não existe endereço público para ele: o arquivo só é entregue por uma view que
   confere o dono (ou o professor da disciplina).
 - O arquivo é sempre baixado, nunca aberto dentro do portal. Assim um arquivo malicioso não roda
   no navegador como se fosse parte do site.

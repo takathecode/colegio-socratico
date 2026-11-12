@@ -174,6 +174,14 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # atestados contêm dados pessoais e só serão entregues por uma view que confere a permissão.
 MEDIA_ROOT = BASE_DIR / "media"
 
+# Os anexos são gravados no banco (modelo academico.ArquivoAnexo), e não na pasta media/: o banco é
+# o mesmo para todos os computadores, então o anexo enviado em uma máquina chega a quem abre a
+# conversa em outra. A pasta media/ só é lida para anexos antigos (comando migrar_anexos).
+STORAGES = {
+    "default": {"BACKEND": "apps.academico.armazenamento.ArmazenamentoNoBanco"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
 # E-mail. Em desenvolvimento, o backend de console mostra a mensagem no terminal do runserver.
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 DEFAULT_FROM_EMAIL = os.getenv(

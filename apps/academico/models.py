@@ -406,3 +406,25 @@ class Evento(models.Model):
     def clean(self):
         if self.inicio and self.fim and self.fim < self.inicio:
             raise ValidationError({"fim": "O fim não pode ser antes do início."})
+
+
+class ArquivoAnexo(models.Model):
+    """Conteúdo de um anexo (atestado ou arquivo de mensagem), guardado no próprio banco.
+
+    O banco do Supabase é o mesmo para todos os computadores, mas a pasta media/ não: um arquivo
+    salvo em disco só existia na máquina que recebeu o envio, e quem estava em outra máquina via a
+    mensagem sem conseguir baixar o anexo. Com o conteúdo no banco, o anexo chega a qualquer lugar.
+    Quem usa este modelo é o armazenamento de apps/academico/armazenamento.py.
+    """
+
+    nome = models.CharField("nome", max_length=255, unique=True)
+    conteudo = models.BinaryField("conteúdo")
+    tamanho = models.PositiveIntegerField("tamanho (bytes)")
+    criado_em = models.DateTimeField("criado em", default=timezone.now, editable=False)
+
+    class Meta:
+        verbose_name = "arquivo anexo"
+        verbose_name_plural = "arquivos anexos"
+
+    def __str__(self):
+        return self.nome

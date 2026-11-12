@@ -10,7 +10,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.academico.models import Curso, Disciplina, Matricula, Oferta, Turma
+from apps.academico.models import ArquivoAnexo, Curso, Disciplina, Matricula, Oferta, Turma
 from apps.alertas import tasks
 from apps.alertas.models import Alerta
 
@@ -339,6 +339,23 @@ class MensagensTests(TestCase):
 
         self.client.force_login(self.outro_aluno)
         self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_anexo_fica_no_banco_e_chega_em_outro_computador(self):
+        """O arquivo vai para o banco: quem recebe em outra máquina (outra pasta media/) baixa."""
+        arquivo = SimpleUploadedFile("lista.pdf", b"%PDF-1.4 conteudo", content_type="application/pdf")
+        self.client.post(
+            reverse("mensagens:responder", args=[self.conversa.pk]),
+            {"texto": "Segue", "anexo": arquivo},
+        )
+        mensagem = self.conversa.mensagens.last()
+        self.assertTrue(ArquivoAnexo.objects.filter(nome=mensagem.anexo.name).exists())
+
+        # Simula o destinatário em outro computador: a pasta media/ dele está vazia.
+        with tempfile.TemporaryDirectory() as outra_pasta, self.settings(MEDIA_ROOT=outra_pasta):
+            self.client.force_login(self.professor)
+            resposta = self.client.get(reverse("mensagens:anexo", args=[mensagem.pk]))
+            self.assertEqual(resposta.status_code, 200)
+            self.assertEqual(b"".join(resposta.streaming_content), b"%PDF-1.4 conteudo")
 
     def test_mensagem_sem_anexo_responde_404(self):
         url = reverse("mensagens:anexo", args=[self.recebida.pk])

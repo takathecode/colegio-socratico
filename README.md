@@ -203,7 +203,7 @@ dados do Supabase. Entre eles:
 | O `migrate` ou o `runserver` fica parado, sem erro | Rede bloqueando a porta 5432 (rede do SENAI). Troque de rede |
 | `password authentication failed` | Senha errada no `DATABASE_URL`, ou com caractere especial sem codificar |
 | "Alunos em risco" pede para treinar o modelo | Rode `python manage.py treinar_modelo` |
-| Download de anexo responde "não encontrado" | Os anexos ficam na pasta `media/` do computador que recebeu o envio |
+| Download de anexo antigo responde "não encontrado" | O anexo foi enviado antes de os anexos irem para o banco e ficou na pasta `media/` de outro computador. Nessa máquina, rode `python manage.py migrar_anexos` |
 | O worker do Celery trava no Windows | Faltou `--pool=solo` |
 | O navegador troca para `https://127.0.0.1` e a página não abre | `USAR_HTTPS=True` no `.env`: no computador, use `False` |
 | Classe nova do Tailwind sem efeito | Rode `npm run css` |
