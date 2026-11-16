@@ -15,15 +15,15 @@
     </div>
     <div class="flex flex-wrap gap-2">
       <a href="{% url 'relatorios:turma' %}?turma={{ turma.pk }}&formato=pdf"
-         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
         <i data-lucide="file-text" class="size-4"></i> PDF
       </a>
       <a href="{% url 'relatorios:turma' %}?turma={{ turma.pk }}&formato=xlsx"
-         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
         <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
       </a>
       <a href="{% url 'coordenacao:turma_editar' turma.pk %}"
-         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
         <i data-lucide="pencil" class="size-4"></i> Editar
       </a>
       {% if not linhas and not ofertas %}
@@ -54,7 +54,7 @@
       </div>
       {% if pode_adicionar %}
         <button type="button" data-abrir-modal="modal-oferta"
-                class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+                class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
           <i data-lucide="plus" class="size-4"></i> Adicionar disciplina
         </button>
       {% endif %}

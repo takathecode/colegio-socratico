@@ -18,7 +18,9 @@ Siga estes passos sempre que for criar ou alterar uma tela.
    card de indicador (`card_kpi.html`), selo de situação (`selo.html`), tabela (`tabela.html`),
    modal (`modal.html`), estado vazio (`vazio.html`). Se criar um componente novo, coloque lá.
 5. **Visual (Tailwind):** fundo `#F5F7FA`, cards `bg-white border border-[#E5E9F0] rounded-xl p-5`,
-   títulos de página `text-2xl font-semibold text-[#0B2545]`, botão primário `bg-[#1F4E8C] text-white`.
+   títulos de página `text-2xl font-semibold text-[#0B2545]`, botão primário `botao-vidro rounded-lg text-white`,
+   botão secundário `botao-vidro-claro rounded-lg text-[#1F4E8C]` (classes de vidro em `assets/tailwind.css`).
+   O vidro é só para barras e botões: cards, tabelas e formulários continuam brancos e opacos.
    Selos: verde "Regular", âmbar "Em atenção", vermelho "Em risco".
    O nome é sempre Instituto Socrático e a logo é "S", mesmo que o protótipo mostre outro nome.
 6. **Responsivo:** pense em 375px de largura — grids viram uma coluna, tabelas largas ganham

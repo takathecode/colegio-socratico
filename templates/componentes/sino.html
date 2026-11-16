@@ -1,7 +1,7 @@
 {# Sino de notificações do topo. Os dados vêm de apps/alertas/context_processors.py. #}
 {# <details> abre e fecha sem JavaScript; o portal.js só fecha ao clicar fora ou apertar Esc. #}
 <details data-sino class="relative">
-  <summary class="relative flex size-10 cursor-pointer list-none items-center justify-center rounded-lg text-slate-600 hover:bg-[#F5F7FA] [&::-webkit-details-marker]:hidden"
+  <summary class="relative flex size-10 cursor-pointer list-none items-center justify-center rounded-lg text-slate-600 hover:bg-white/70 [&::-webkit-details-marker]:hidden"
            aria-label="Notificações{% if sino_nao_lidos %}: {{ sino_nao_lidos }} não lida{{ sino_nao_lidos|pluralize }}{% endif %}">
     <i data-lucide="bell" class="size-5"></i>
     {% if sino_nao_lidos %}
@@ -9,7 +9,8 @@
     {% endif %}
   </summary>
 
-  <div class="fixed inset-x-4 top-[66px] z-30 overflow-hidden rounded-xl border border-[#E5E9F0] bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
+  {# No celular, a lista abre logo abaixo do topo flutuante (12px de margem + 64px de altura + 8px). #}
+  <div class="fixed inset-x-4 top-[84px] z-30 overflow-hidden rounded-xl border border-[#E5E9F0] bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
     <div class="flex items-center justify-between gap-2 border-b border-[#E5E9F0] px-4 py-3">
       <p class="font-semibold">Notificações</p>
       {% if sino_nao_lidos %}

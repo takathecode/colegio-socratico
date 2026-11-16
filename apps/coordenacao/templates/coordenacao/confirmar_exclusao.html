@@ -14,7 +14,7 @@
 
     <form method="post" data-carregando class="mt-6 flex flex-wrap justify-center gap-3">
       {% csrf_token %}
-      <a href="{{ voltar }}" class="inline-flex h-10 items-center rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Cancelar</a>
+      <a href="{{ voltar }}" class="botao-vidro-claro inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Cancelar</a>
       <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#C62828] px-4 text-sm font-semibold text-white hover:bg-red-800">
         <span data-estado="normal" class="flex items-center gap-2"><i data-lucide="trash-2" class="size-4"></i> Sim, excluir</span>
         <span data-estado="carregando" class="hidden items-center gap-2"><i data-lucide="loader-circle" class="size-4 animate-spin"></i> Excluindo...</span>

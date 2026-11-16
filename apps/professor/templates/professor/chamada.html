@@ -13,7 +13,7 @@
     <label class="sr-only" for="data-da-aula">Data da aula</label>
     <input id="data-da-aula" type="date" name="data" value="{{ data|date:'Y-m-d' }}" max="{{ hoje|date:'Y-m-d' }}"
            class="h-10 rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm font-semibold text-[#1F4E8C]">
-    <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+    <button type="submit" class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
       <i data-lucide="calendar-search" class="size-4"></i> Abrir
     </button>
   </form>
@@ -58,11 +58,11 @@
 
         <div class="mt-4 space-y-2">
           <button type="button" data-iniciar-biometria
-                  class="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#1F4E8C] text-sm font-semibold text-white hover:bg-[#0B2545] disabled:cursor-wait disabled:bg-slate-300">
+                  class="botao-vidro flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white disabled:cursor-wait disabled:bg-slate-300">
             <i data-lucide="scan-line" class="size-4"></i> Iniciar leitura biométrica
           </button>
           <button type="button" data-todos-presentes
-                  class="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#E5E9F0] bg-white text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C] disabled:cursor-wait disabled:text-slate-400">
+                  class="botao-vidro-claro flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-[#1F4E8C] disabled:cursor-wait disabled:text-slate-400">
             <i data-lucide="check-check" class="size-4"></i> Marcar todos como presentes
           </button>
         </div>

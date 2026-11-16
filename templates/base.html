@@ -12,13 +12,18 @@
   </script>
 {% endblock %}
 
+{# Fundo com manchas suaves da marca, para o vidro das barras ter o que desfocar. #}
+{% block classes_body %}{{ block.super }} fundo-portal{% endblock %}
+
 {% block corpo %}
   {% include "componentes/sidebar.html" %}
 
-  <div class="lg:pl-[235px] lg:recolhida:pl-[86px] transition-[padding] duration-200">
-    <header class="sticky top-0 z-20 flex h-[73px] items-center gap-3 border-b border-[#E5E9F0] bg-white px-4 sm:px-6">
+  {# Espaço da barra lateral flutuante: 12px de margem + largura da barra + 12px de respiro (235 → 259; recolhida 86 → 110). #}
+  <div class="lg:pl-[259px] lg:recolhida:pl-[110px] transition-[padding] duration-200">
+    {# Topo flutuante: descolado 12px das bordas (mx-3, mt-3) e preso a 12px do alto ao rolar (top-3). #}
+    <header class="vidro-barra sticky top-3 z-20 mx-3 mt-3 flex h-16 items-center gap-3 rounded-2xl px-3 sm:px-5 lg:ml-0">
       <button type="button" data-alternar-menu aria-label="Abrir ou recolher o menu" aria-controls="barra-lateral"
-              class="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:bg-[#F5F7FA]">
+              class="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:bg-white/70">
         <i data-lucide="menu" class="size-5"></i>
       </button>
 
@@ -36,7 +41,7 @@
           <span class="sr-only">Buscar no portal</span>
           <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
           <input type="search" disabled placeholder="Buscar no portal"
-                 class="h-9 w-56 rounded-lg bg-[#F5F7FA] pl-9 pr-3 text-sm placeholder:text-slate-500 xl:w-72">
+                 class="h-9 w-56 rounded-lg bg-[#F5F7FA]/80 pl-9 pr-3 text-sm placeholder:text-slate-500 xl:w-72">
         </label>
         <button type="button" disabled aria-label="Buscar no portal (em breve)" title="A busca estará disponível em breve"
                 class="flex size-10 items-center justify-center text-slate-500 md:hidden">
@@ -54,7 +59,8 @@
       </div>
     </header>
 
-    <main class="px-4 py-6 sm:px-6">
+    {# Mesmas margens do topo, para os cards alinharem com as bordas da barra. #}
+    <main class="px-3 pb-6 pt-5 lg:pl-0">
       {% include "componentes/mensagens.html" %}
       {% block conteudo %}{% endblock %}
     </main>

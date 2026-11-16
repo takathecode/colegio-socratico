@@ -16,6 +16,6 @@
   {% else %}
     <h1 class="text-3xl font-semibold">Link inválido</h1>
     <p class="mt-2 text-sm text-slate-500">Este link já foi usado ou passou do prazo de 1 hora. Peça um novo para continuar.</p>
-    <a href="{% url 'contas:senha_esqueci' %}" class="mt-6 inline-flex h-12 w-full items-center justify-center rounded-lg bg-[#1F4E8C] text-sm font-semibold text-white hover:bg-[#0B2545]">Pedir novo link</a>
+    <a href="{% url 'contas:senha_esqueci' %}" class="botao-vidro mt-6 inline-flex h-12 w-full items-center justify-center rounded-lg text-sm font-semibold text-white">Pedir novo link</a>
   {% endif %}
 {% endblock %}

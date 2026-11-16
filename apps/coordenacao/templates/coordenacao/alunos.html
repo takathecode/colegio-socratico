@@ -12,11 +12,11 @@
     <div class="flex flex-wrap gap-2">
       {# Exporta com a mesma busca e os mesmos filtros da lista (uma linha por matrícula). #}
       <a href="{% url 'relatorios:alunos' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=xlsx"
-         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
         <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
       </a>
       <a href="{% url 'coordenacao:aluno_novo' %}"
-         class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
         <i data-lucide="user-plus" class="size-4"></i> Novo aluno
       </a>
     </div>
@@ -49,7 +49,7 @@
         </select>
       </div>
       <div class="flex gap-2">
-        <button type="submit" class="h-10 rounded-lg border border-[#E5E9F0] px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Filtrar</button>
+        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Filtrar</button>
         {% if filtrando %}
           <a href="{% url 'coordenacao:alunos' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
         {% endif %}
@@ -124,7 +124,7 @@
                 {% include "componentes/selo.html" with situacao=linha.matricula.get_situacao_display %}
               {% endif %}
               {% if linha.matricula %}
-                <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="flex size-9 items-center justify-center rounded-lg border border-[#E5E9F0] text-[#1F4E8C] hover:border-[#1F4E8C]">
+                <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="botao-vidro-claro flex size-9 items-center justify-center rounded-lg text-[#1F4E8C]">
                   <i data-lucide="file-text" class="size-4"></i><span class="sr-only">Boletim de {{ linha.aluno.get_full_name|default:linha.aluno.matricula }} (PDF)</span>
                 </a>
               {% endif %}

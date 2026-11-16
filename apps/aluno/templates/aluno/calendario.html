@@ -9,7 +9,7 @@
 
   <div class="mt-5 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-2">
-      <a href="?visao={{ visao }}&data={{ hoje|date:'Y-m-d' }}" class="inline-flex h-10 items-center rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Hoje</a>
+      <a href="?visao={{ visao }}&data={{ hoje|date:'Y-m-d' }}" class="botao-vidro-claro inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Hoje</a>
       <a href="?visao={{ visao }}&data={{ calendario.anterior }}" aria-label="Período anterior" class="flex size-10 items-center justify-center rounded-lg text-slate-500 hover:bg-white"><i data-lucide="chevron-left" class="size-5"></i></a>
       <h2 class="text-lg font-semibold sm:text-xl">{{ calendario.titulo }}</h2>
       <a href="?visao={{ visao }}&data={{ calendario.seguinte }}" aria-label="Próximo período" class="flex size-10 items-center justify-center rounded-lg text-slate-500 hover:bg-white"><i data-lucide="chevron-right" class="size-5"></i></a>
@@ -17,7 +17,7 @@
     <div class="flex items-center gap-2" role="group" aria-label="Forma de visualizar">
       {% for valor, nome in visoes %}
         <a href="?visao={{ valor }}&data={{ data_atual }}" {% if valor == visao %}aria-current="true"{% endif %}
-           class="inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold {% if valor == visao %}bg-[#1F4E8C] text-white{% else %}border border-[#E5E9F0] bg-white text-[#1F4E8C] hover:border-[#1F4E8C]{% endif %}">{{ nome }}</a>
+           class="inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold {% if valor == visao %}botao-vidro text-white{% else %}botao-vidro-claro text-[#1F4E8C]{% endif %}">{{ nome }}</a>
       {% endfor %}
     </div>
   </div>

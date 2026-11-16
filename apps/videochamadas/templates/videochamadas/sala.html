@@ -44,7 +44,7 @@
 
       <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
         <a href="{{ link_do_jitsi }}" target="_blank" rel="noopener noreferrer"
-           class="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#1F4E8C] px-5 text-sm font-semibold text-white hover:bg-[#0B2545]">
+           class="botao-vidro inline-flex h-12 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold text-white">
           <i data-lucide="video" class="size-4"></i> Entrar na chamada
           <span class="sr-only">(abre em outra aba)</span>
           <i data-lucide="external-link" class="size-4" aria-hidden="true"></i>
@@ -64,7 +64,7 @@
       </div>
       {% if outro.is_active %}
         <a href="{% url 'videochamadas:inicio' %}?para={{ outro.pk }}"
-           class="mt-5 inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#1F4E8C] px-5 text-sm font-semibold text-white hover:bg-[#0B2545]">
+           class="botao-vidro mt-5 inline-flex h-12 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold text-white">
           <i data-lucide="video" class="size-4"></i> Chamar de novo
         </a>
       {% endif %}

@@ -42,15 +42,15 @@
 
           <div class="mt-5 flex flex-wrap gap-2 border-t border-[#E5E9F0] pt-4">
             <a href="{% url 'professor:turma' resumo.oferta.pk %}"
-               class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#1F4E8C] px-3 text-sm font-semibold text-white hover:bg-[#0B2545]">
+               class="botao-vidro inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-white">
               <i data-lucide="users" class="size-4"></i> Ver alunos
             </a>
             <a href="{% url 'professor:notas' %}?oferta={{ resumo.oferta.pk }}"
-               class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E5E9F0] px-3 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+               class="botao-vidro-claro inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-[#1F4E8C]">
               <i data-lucide="square-pen" class="size-4"></i> Notas
             </a>
             <a href="{% url 'professor:chamada' %}?oferta={{ resumo.oferta.pk }}"
-               class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E5E9F0] px-3 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+               class="botao-vidro-claro inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-[#1F4E8C]">
               <i data-lucide="fingerprint" class="size-4"></i> Chamada
             </a>
           </div>

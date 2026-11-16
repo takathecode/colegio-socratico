@@ -11,15 +11,15 @@
     </div>
     <div class="flex flex-wrap gap-2">
       <a href="{% url 'coordenacao:aluno_novo' %}"
-         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
         <i data-lucide="graduation-cap" class="size-4"></i> Aluno
       </a>
       <a href="{% url 'coordenacao:professor_novo' %}"
-         class="inline-flex h-10 items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
         <i data-lucide="users" class="size-4"></i> Professor
       </a>
       <a href="{% url 'coordenacao:coordenador_novo' %}"
-         class="inline-flex h-10 items-center gap-2 rounded-lg bg-[#1F4E8C] px-4 text-sm font-semibold text-white hover:bg-[#0B2545]">
+         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
         <i data-lucide="user-plus" class="size-4"></i> Coordenação
       </a>
     </div>
@@ -51,7 +51,7 @@
         </select>
       </div>
       <div class="flex gap-2">
-        <button type="submit" class="h-10 rounded-lg border border-[#E5E9F0] px-4 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">Filtrar</button>
+        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Filtrar</button>
         {% if filtrando %}
           <a href="{% url 'coordenacao:contas' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
         {% endif %}

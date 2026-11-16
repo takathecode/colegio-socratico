@@ -105,8 +105,12 @@ ml/                modelo treinado (.joblib) — não versionar
 - Fonte Inter. Fundo da página `#F5F7FA`, cards brancos com borda `#E5E9F0` e cantos arredondados.
 - Azul-marinho da marca `#0B2545` (painel lateral do login, logo "S"); botão primário `#1F4E8C`.
 - Selos: verde "Regular", âmbar "Em atenção", vermelho "Em risco".
-- Layout das áreas internas: barra lateral à esquerda (logo, menu, card "Precisa de ajuda?",
-  "Sair do portal"), topo com breadcrumb, busca, sino de notificações e avatar.
+- Layout das áreas internas: barra lateral à esquerda (nome do instituto sem o quadrado do "S", menu,
+  card "Precisa de ajuda?", "Sair do portal"), topo com breadcrumb, busca, sino de notificações e avatar.
+  As duas barras flutuam (12px das bordas, cantos arredondados).
+- Vidro (glassmorphism) **só nas barras e nos botões**, com CSS `backdrop-filter` (classes `vidro-barra`,
+  `botao-vidro` e `botao-vidro-claro` em `assets/tailwind.css`). Cards, tabelas e formulários continuam opacos.
+  O `expo-glass-effect` foi descartado: é React Native/iOS e não funciona na web.
 - Responsivo: em telas pequenas a barra lateral vira menu hambúrguer e os cards empilham.
 - Ícones: Lucide (via CDN). Componentes repetidos ficam em `templates/componentes/`.
 

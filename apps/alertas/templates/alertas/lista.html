@@ -46,7 +46,7 @@
             {% if alerta.link or not alerta.lido %}
               <form method="post" action="{% url 'alertas:abrir' alerta.pk %}" class="shrink-0 pl-11 sm:pl-0">
                 {% csrf_token %}
-                <button type="submit" class="inline-flex h-9 items-center gap-1 rounded-lg border border-[#E5E9F0] px-3 text-sm font-semibold text-[#1F4E8C] hover:border-[#1F4E8C]">
+                <button type="submit" class="botao-vidro-claro inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-semibold text-[#1F4E8C]">
                   {% if alerta.link %}Ver detalhes <i data-lucide="arrow-right" class="size-4"></i>{% else %}Marcar como lida{% endif %}
                 </button>
               </form>
