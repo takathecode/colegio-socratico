@@ -1,0 +1,65 @@
+{# Conteúdo da janela "Foto de perfil" (aberta pelo avatar do topo, em base.html). #}
+{# Ordem pensada: 1) regras, 2) confirmação, 3) escolha da imagem. O portal.js só libera o #}
+{# campo do arquivo depois da confirmação, e o servidor também recusa o envio sem ela.     #}
+{# Formatos e limite repetem apps/contas/foto.py (TIPOS_FOTO e TAMANHO_MAXIMO_FOTO).        #}
+<div class="mt-6 space-y-5">
+  <section aria-labelledby="regras-foto-titulo" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+    <h3 id="regras-foto-titulo" class="flex items-center gap-2 font-semibold">
+      <i data-lucide="shield-alert" class="size-4 shrink-0 text-amber-700"></i>
+      Antes de escolher a sua foto
+    </h3>
+    <ul class="mt-2 list-disc space-y-1.5 pl-5">
+      <li>Use uma foto sua, de rosto, adequada ao ambiente acadêmico.</li>
+      <li>É proibido enviar imagens ofensivas, discriminatórias, violentas, com nudez ou conteúdo sexual, ou com a imagem de outra pessoa sem autorização dela.</li>
+      <li><strong>O envio de imagem imprópria está sujeito a penalizações</strong> previstas no regimento do Instituto Socrático, como a remoção da foto e medidas disciplinares.</li>
+    </ul>
+  </section>
+
+  <form method="post" action="{% url 'contas:foto_enviar' %}" enctype="multipart/form-data"
+        data-carregando data-form-foto class="space-y-5">
+    {% csrf_token %}
+    <input type="hidden" name="proxima" value="{{ request.get_full_path }}">
+
+    <label class="flex cursor-pointer items-start gap-3 rounded-lg text-sm">
+      <input type="checkbox" name="aceite" required data-foto-aceite
+             class="mt-0.5 size-4 shrink-0 cursor-pointer accent-[#1F4E8C]">
+      <span>Li as regras acima e declaro que a foto escolhida as respeita.</span>
+    </label>
+
+    <div class="flex items-center gap-4">
+      {# Prévia: mostra a foto atual (ou as iniciais) e troca pela nova assim que ela é escolhida. #}
+      <span class="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EAF0F8] text-2xl font-semibold text-[#1F4E8C] ring-2 ring-[#E5E9F0]">
+        <span data-foto-atual class="flex size-full items-center justify-center">{% include "componentes/avatar.html" %}</span>
+        <img data-foto-previa alt="Prévia da nova foto" width="80" height="80" class="absolute inset-0 hidden size-full object-cover">
+      </span>
+
+      <div class="min-w-0 flex-1">
+        <label for="campo-foto" class="text-sm font-semibold">Nova foto</label>
+        <input id="campo-foto" type="file" name="foto" required accept="image/jpeg,image/png,image/webp"
+               data-limite="2097152" aria-describedby="ajuda-foto erro-foto"
+               class="mt-1 block w-full text-sm text-slate-600 file:mr-3 file:h-9 file:cursor-pointer file:rounded-lg file:border file:border-[#E5E9F0] file:bg-white file:px-3 file:text-sm file:font-semibold file:text-[#1F4E8C] disabled:cursor-not-allowed disabled:opacity-50 disabled:file:cursor-not-allowed">
+        <p id="ajuda-foto" class="mt-1 text-xs text-slate-500">
+          JPG, PNG ou WebP, até 2 MB. A foto é recortada em quadrado.
+          <span data-foto-dica>Marque a confirmação acima para liberar a escolha.</span>
+        </p>
+        <p id="erro-foto" data-foto-erro role="alert" class="mt-1 text-sm text-[#C62828]"></p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap justify-end gap-3">
+      <button type="button" data-fechar-modal
+              class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Cancelar</button>
+      {% include "componentes/botao_enviar.html" with texto="Salvar foto" texto_carregando="Enviando..." icone="upload" compacto=True %}
+    </div>
+  </form>
+
+  {% if user.foto %}
+    <form method="post" action="{% url 'contas:foto_remover' %}" class="border-t border-[#E5E9F0] pt-4">
+      {% csrf_token %}
+      <input type="hidden" name="proxima" value="{{ request.get_full_path }}">
+      <button type="submit" class="inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-[#C62828] hover:underline">
+        <i data-lucide="trash-2" class="size-4"></i> Remover foto atual
+      </button>
+    </form>
+  {% endif %}
+</div>

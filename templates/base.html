@@ -27,30 +27,23 @@
         <i data-lucide="menu" class="size-5"></i>
       </button>
 
-      <a href="{% url 'contas:inicio' %}" aria-label="Instituto Socrático: ir para o início" class="lg:hidden">
-        {% include "componentes/logo.html" %}
-      </a>
-
       <nav aria-label="Caminho da página" class="hidden min-w-0 truncate text-sm text-slate-500 lg:block">
         Portal Acadêmico / <span>{% block breadcrumb %}{% endblock %}</span>
       </nav>
 
       <div class="ml-auto flex items-center gap-2 sm:gap-4">
-        {# A busca ainda é só visual. #}
-        <label class="relative hidden md:block" title="A busca estará disponível em breve">
-          <span class="sr-only">Buscar no portal</span>
-          <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
-          <input type="search" disabled placeholder="Buscar no portal"
-                 class="h-9 w-56 rounded-lg bg-[#F5F7FA]/80 pl-9 pr-3 text-sm placeholder:text-slate-500 xl:w-72">
-        </label>
-        <button type="button" disabled aria-label="Buscar no portal (em breve)" title="A busca estará disponível em breve"
-                class="flex size-10 items-center justify-center text-slate-500 md:hidden">
-          <i data-lucide="search" class="size-5"></i>
-        </button>
         {% include "componentes/sino.html" %}
 
         <div class="flex items-center gap-3">
-          <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C]" aria-hidden="true">{{ user.iniciais }}</span>
+          {# Avatar: abre a janela da foto de perfil (componentes/foto_perfil.html). #}
+          <button type="button" data-abrir-modal="janela-foto" aria-haspopup="dialog" title="Alterar foto de perfil"
+                  class="group relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C] ring-2 ring-white/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F4E8C]">
+            {% include "componentes/avatar.html" %}
+            <span class="sr-only">Alterar foto de perfil</span>
+            <span class="absolute inset-0 hidden items-center justify-center bg-[#0B2545]/60 text-white group-hover:flex group-focus-visible:flex" aria-hidden="true">
+              <i data-lucide="camera" class="size-4"></i>
+            </span>
+          </button>
           <div class="hidden leading-tight sm:block">
             <p class="text-sm font-medium">{{ user.nome_com_tratamento|default:user.matricula }}</p>
             <p class="text-xs text-slate-500">{% if user.perfil == "ALUNO" %}RA{% else %}Matrícula{% endif %} {{ user.matricula }}</p>
@@ -65,4 +58,6 @@
       {% block conteudo %}{% endblock %}
     </main>
   </div>
+
+  {% include "componentes/modal.html" with id="janela-foto" titulo="Foto de perfil" subtitulo="Aparece no topo do portal, ao lado do seu nome." conteudo="componentes/foto_perfil.html" %}
 {% endblock %}

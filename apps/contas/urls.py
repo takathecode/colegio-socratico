@@ -10,6 +10,10 @@ urlpatterns = [
     path("entrar/", views.EntrarView.as_view(), name="entrar"),
     path("sair/", auth_views.LogoutView.as_view(), name="sair"),
     path("atendimento/", views.atendimento, name="atendimento"),
+    # Foto de perfil da própria pessoa (aluno, professor e coordenação).
+    path("conta/foto/", views.foto, name="foto"),
+    path("conta/foto/enviar/", views.enviar_foto, name="foto_enviar"),
+    path("conta/foto/remover/", views.remover_foto, name="foto_remover"),
     # Fluxo de "Esqueci minha senha" do próprio Django, só com as telas do projeto.
     path(
         "senha/esqueci/",

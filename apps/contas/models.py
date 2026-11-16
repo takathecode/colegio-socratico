@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 
+from .foto import VALIDADORES_FOTO, caminho_da_foto
+
 
 class UsuarioManager(BaseUserManager):
     """Cria usuários usando a matrícula no lugar do nome de usuário padrão do Django."""
@@ -47,6 +49,17 @@ class Usuario(AbstractUser):
     )
     # Informado no cadastro (ex.: "Prof." ou "Profa."), em vez de ser deduzido pelo nome.
     tratamento = models.CharField("tratamento", max_length=10, blank=True)
+    # Foto do avatar, enviada pela própria pessoa (regras em apps/contas/foto.py).
+    # O conteúdo fica no banco (ArquivoAnexo). O db_default="" deixa o banco preencher o campo
+    # sozinho, para quem ainda roda a versão anterior do código conseguir criar contas.
+    foto = models.FileField(
+        "foto de perfil",
+        upload_to=caminho_da_foto,
+        blank=True,
+        default="",
+        db_default="",
+        validators=VALIDADORES_FOTO,
+    )
 
     # Campo usado na tela de login.
     USERNAME_FIELD = "matricula"

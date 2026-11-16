@@ -3,6 +3,21 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 
 from . import bloqueio
+from .foto import VALIDADORES_FOTO
+
+
+class FormularioFoto(forms.Form):
+    """Envio da foto de perfil. Só passa com a confirmação de que a pessoa leu as regras."""
+
+    aceite = forms.BooleanField(
+        error_messages={
+            "required": "Confirme que leu as regras de uso da foto antes de enviar."
+        }
+    )
+    foto = forms.FileField(
+        validators=VALIDADORES_FOTO,
+        error_messages={"required": "Escolha uma imagem para enviar."},
+    )
 
 
 class FormularioLogin(AuthenticationForm):

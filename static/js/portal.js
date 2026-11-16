@@ -92,6 +92,131 @@ document.querySelectorAll("[data-fechar-modal]").forEach((botao) => {
 // Formulário com erro volta com a janela aberta, para o usuário ver o que corrigir.
 document.querySelectorAll("dialog[data-abrir-ao-carregar]").forEach((janela) => janela.showModal());
 
+// --- Foto de perfil (componentes/foto_perfil.html) ---
+// 1) O campo do arquivo só é liberado depois de a pessoa confirmar que leu as regras.
+// 2) A foto escolhida é recortada em quadrado e reduzida para 512×512 em JPEG. Isso deixa o
+//    envio leve e apaga os metadados (EXIF), como a localização GPS das fotos de celular.
+// O servidor confere tudo de novo (apps/contas/foto.py): estas checagens só ajudam a pessoa.
+const LADO_DA_FOTO = 512;
+const TIPOS_DE_FOTO = ["image/jpeg", "image/png", "image/webp"];
+const LIMITE_ORIGINAL = 20 * 1024 * 1024; // fotos de celular grandes são reduzidas antes do envio
+
+async function reduzirFoto(arquivo) {
+  const imagem = await createImageBitmap(arquivo); // já respeita a rotação da foto do celular
+  const lado = Math.min(imagem.width, imagem.height);
+  const tela = document.createElement("canvas");
+  tela.width = tela.height = Math.min(LADO_DA_FOTO, lado);
+  const contexto = tela.getContext("2d");
+  contexto.fillStyle = "#fff"; // PNG transparente fica com fundo branco, e não preto
+  contexto.fillRect(0, 0, tela.width, tela.height);
+  // Recorte central: pega o maior quadrado no meio da imagem.
+  contexto.drawImage(imagem, (imagem.width - lado) / 2, (imagem.height - lado) / 2, lado, lado,
+    0, 0, tela.width, tela.height);
+  imagem.close();
+  const blob = await new Promise((pronto) => tela.toBlob(pronto, "image/jpeg", 0.9));
+  if (!blob) {
+    throw new Error("O navegador não conseguiu converter a imagem.");
+  }
+  return new File([blob], "foto.jpg", { type: "image/jpeg" });
+}
+
+document.querySelectorAll("form[data-form-foto]").forEach((formulario) => {
+  const aceite = formulario.querySelector("[data-foto-aceite]");
+  const campo = formulario.querySelector('input[type="file"]');
+  const previa = formulario.querySelector("[data-foto-previa]");
+  const atual = formulario.querySelector("[data-foto-atual]");
+  const erro = formulario.querySelector("[data-foto-erro]");
+  const dica = formulario.querySelector("[data-foto-dica]");
+  const limite = Number(campo.dataset.limite);
+  let enderecoDaPrevia = null;
+  let processando = false;
+
+  function limparPrevia() {
+    if (enderecoDaPrevia) {
+      URL.revokeObjectURL(enderecoDaPrevia); // libera a memória da prévia anterior
+      enderecoDaPrevia = null;
+    }
+    previa.removeAttribute("src");
+    previa.classList.add("hidden");
+    atual.classList.remove("hidden");
+  }
+
+  function mostrarErro(texto) {
+    erro.textContent = texto;
+    campo.setAttribute("aria-invalid", texto ? "true" : "false");
+  }
+
+  function atualizarLiberacao() {
+    campo.disabled = !aceite.checked;
+    dica.hidden = aceite.checked;
+    if (!aceite.checked) {
+      campo.value = "";
+      limparPrevia();
+      mostrarErro("");
+    }
+  }
+
+  campo.addEventListener("change", async () => {
+    mostrarErro("");
+    limparPrevia();
+    const arquivo = campo.files[0];
+    if (!arquivo) {
+      return;
+    }
+    if (!TIPOS_DE_FOTO.includes(arquivo.type)) {
+      campo.value = "";
+      mostrarErro("Escolha uma imagem JPG, PNG ou WebP.");
+      return;
+    }
+    if (arquivo.size > LIMITE_ORIGINAL) {
+      campo.value = "";
+      mostrarErro("A imagem é grande demais. Escolha uma com até 20 MB.");
+      return;
+    }
+
+    processando = true;
+    let final = arquivo;
+    try {
+      final = await reduzirFoto(arquivo);
+      // Troca o arquivo do campo pela versão reduzida (DataTransfer é o jeito padrão de montar a lista).
+      const lista = new DataTransfer();
+      lista.items.add(final);
+      campo.files = lista.files;
+    } catch (falha) {
+      // Navegador antigo: envia a foto original, e o servidor confere o tamanho.
+      final = arquivo;
+    } finally {
+      processando = false;
+    }
+
+    if (final.size > limite) {
+      campo.value = "";
+      mostrarErro("A foto deve ter no máximo 2 MB.");
+      return;
+    }
+    enderecoDaPrevia = URL.createObjectURL(final);
+    previa.src = enderecoDaPrevia;
+    previa.classList.remove("hidden");
+    atual.classList.add("hidden");
+  });
+
+  // Não envia enquanto a foto ainda está sendo reduzida (leva uma fração de segundo).
+  formulario.addEventListener("submit", (evento) => {
+    if (processando) {
+      evento.preventDefault();
+      evento.stopImmediatePropagation();
+    }
+  }, true);
+
+  aceite.addEventListener("change", atualizarLiberacao);
+  // Ao fechar a janela, tudo volta ao começo: a confirmação vale só para aquele envio.
+  formulario.closest("dialog")?.addEventListener("close", () => {
+    formulario.reset();
+    atualizarLiberacao();
+  });
+  atualizarLiberacao();
+});
+
 // --- Modal de justificativa: a disciplina filtra as datas das faltas ---
 document.querySelectorAll("form[data-filtro-faltas]").forEach((formulario) => {
   const disciplina = formulario.querySelector("[data-disciplina-da-falta]");

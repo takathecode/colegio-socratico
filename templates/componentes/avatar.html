@@ -1,0 +1,8 @@
+{# Foto de perfil da pessoa logada ou, sem foto, as iniciais. Ocupa todo o círculo de quem incluir. #}
+{# O ?v= muda a cada foto nova, então o navegador pode guardar a imagem (ver contas.views.foto). #}
+{% if user.foto %}
+  <img src="{% url 'contas:foto' %}?v={{ user.foto.name|slugify }}" alt="" width="80" height="80" decoding="async"
+       class="size-full object-cover">
+{% else %}
+  <span aria-hidden="true">{{ user.iniciais }}</span>
+{% endif %}
