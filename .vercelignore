@@ -1,0 +1,11 @@
+# Arquivos que não sobem quando a publicação é feita pelo comando "vercel" no computador.
+# (Pelo GitHub só sobe o que está no Git, então isto vale só para a Vercel CLI.)
+.env
+.env*.local
+.venv/
+node_modules/
+media/
+staticfiles/
+__pycache__/
+*.exe
+docs/TEMA_8.pdf

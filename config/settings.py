@@ -38,6 +38,12 @@ DEBUG = os.getenv("DEBUG", "False").strip().lower() == "true"
 ALLOWED_HOSTS = [
     host.strip() for host in os.getenv("ALLOWED_HOSTS", "").split(",") if host.strip()
 ]
+# Na Vercel, o endereço de cada publicação (VERCEL_URL) e o endereço de produção
+# (VERCEL_PROJECT_PRODUCTION_URL) são preenchidos pela própria Vercel. Entram aqui sozinhos,
+# para o site abrir sem precisar adivinhar o domínio antes da primeira publicação.
+for variavel in ("VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL"):
+    if os.getenv(variavel):
+        ALLOWED_HOSTS.append(os.getenv(variavel).strip())
 
 # HTTPS: ligar só no servidor publicado (Vercel). No computador o site abre em http://,
 # e com isto ligado o navegador não guardaria o cookie do login.
@@ -124,16 +130,23 @@ if "test" in sys.argv:
         "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"},
     }
 else:
-    # O sistema usa o PostgreSQL do Supabase, pelo Session pooler (porta 5432).
+    # O sistema usa o PostgreSQL do Supabase. No computador, pelo Session pooler (porta 5432);
+    # na Vercel, pelo Transaction pooler (porta 6543), feito para servidores que sobem e
+    # descem a toda hora (cada instância da Vercel abriria a própria conexão).
     url_do_banco = variavel_obrigatoria("DATABASE_URL")
-    DATABASES = {
-        "default": dj_database_url.parse(
-            url_do_banco,
-            conn_max_age=60,  # reaproveita a conexão por 60 segundos
-            conn_health_checks=True,  # confere se a conexão reaproveitada ainda funciona
-            ssl_require=url_do_banco.startswith("postgres"),  # exige conexão criptografada
-        )
-    }
+    banco = dj_database_url.parse(
+        url_do_banco,
+        conn_max_age=60,  # reaproveita a conexão por 60 segundos
+        conn_health_checks=True,  # confere se a conexão reaproveitada ainda funciona
+        ssl_require=url_do_banco.startswith("postgres"),  # exige conexão criptografada
+    )
+    if str(banco.get("PORT")) == "6543":
+        # Transaction pooler: a conexão é devolvida ao Supabase no fim de cada transação.
+        # Por isso não adianta guardá-la (CONN_MAX_AGE 0), e os cursores do lado do servidor
+        # (usados pelo .iterator()) precisam ficar desligados, pois não sobrevivem à troca.
+        banco["CONN_MAX_AGE"] = 0
+        banco["DISABLE_SERVER_SIDE_CURSORS"] = True
+    DATABASES = {"default": banco}
 
 
 # Usuário customizado: o login é feito por matrícula (apps/contas/models.py).
@@ -169,6 +182,10 @@ USE_TZ = True
 # Arquivos estáticos (CSS, JavaScript e imagens)
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+# Pasta onde o "collectstatic" junta tudo (o nosso static/ mais o CSS do Admin e do Swagger).
+# Na Vercel, o build roda o collectstatic sozinho quando o STATIC_ROOT existe e entrega os
+# arquivos pelo CDN dela, sem passar pelo Django. Fica fora do Git (.gitignore).
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Anexos enviados pelos usuários. Esta pasta fica fora do Git e não tem rota pública em urls.py:
 # atestados contêm dados pessoais e só serão entregues por uma view que confere a permissão.
@@ -226,7 +243,12 @@ CELERY_TASK_ALWAYS_EAGER = (
     os.getenv("CELERY_SEM_REDIS", "False").strip().lower() == "true" or "test" in sys.argv
 )
 
+# Segredo que o Cron da Vercel manda para rodar a rotina diária (apps/alertas/cron.py).
+# Vazio no computador: a rota /tarefas/rotina-diaria/ fica desligada e responde 404.
+CRON_SECRET = os.getenv("CRON_SECRET", "").strip()
+
 # Rotina diária: recalcula o risco de evasão e gera os alertas, todo dia às 6h.
+# (Na Vercel não há beat: quem chama a rotina é o Cron do vercel.json, às 9h UTC = 6h de Brasília.)
 CELERY_BEAT_SCHEDULE = {
     "rotina-diaria-de-alertas": {
         "task": "apps.alertas.tasks.rotina_diaria",

@@ -15,8 +15,8 @@ __pycache__/
 staticfiles/
 media/
 
-# Modelo treinado: é gerado pelo comando treinar_modelo
-ml/*.joblib
+# Modelo treinado (ml/modelo_evasao.joblib): VAI para o Git (cerca de 1,3 MB), para a Vercel
+# ter o arquivo sem precisar treinar no build. Treinou de novo? Faça commit do arquivo novo.
 
 # Configurações pessoais do Claude Code
 .claude/settings.local.json
@@ -26,3 +26,10 @@ Thumbs.db
 
 # Dependências do Node (recriadas com npm install)
 node_modules/
+
+# Vercel: pasta criada pela CLI e variáveis baixadas com "vercel env pull"
+.vercel/
+.env*.local
+
+# Instaladores e executáveis não vão para o repositório
+*.exe

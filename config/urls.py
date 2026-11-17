@@ -3,6 +3,8 @@
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.alertas import cron
+
 # Textos exibidos no cabeçalho do Django Admin.
 admin.site.site_header = "Instituto Socrático"
 admin.site.site_title = "Instituto Socrático"
@@ -18,6 +20,8 @@ urlpatterns = [
     path("relatorios/", include("apps.relatorios.urls")),
     path("videochamadas/", include("apps.videochamadas.urls")),
     path("api/", include("apps.api.urls")),  # API REST; documentação em /api/docs/
+    # Rotina das 6h disparada pelo Cron da Vercel (vercel.json). Protegida pelo CRON_SECRET.
+    path("tarefas/rotina-diaria/", cron.rotina_diaria, name="cron_rotina_diaria"),
     # Login, saída, redefinição de senha e o redirecionamento de "/" por perfil.
     path("", include("apps.contas.urls")),
 ]

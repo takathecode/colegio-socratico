@@ -241,5 +241,4 @@ docs/              documentação para a apresentação
 | [docs/API.md](docs/API.md) | API REST: token, endpoints e exemplos |
 | [docs/SEGURANCA.md](docs/SEGURANCA.md) | Login, perfis, permissões e proteção dos dados |
 | [docs/VIDEOCHAMADA.md](docs/VIDEOCHAMADA.md) | Videochamada entre coordenação e professores |
-
-A publicação na internet (Vercel) é a próxima etapa do projeto e terá um guia próprio.
+| [docs/VERCEL.md](docs/VERCEL.md) | Publicação na internet (Vercel): variáveis, Cron e passo a passo |
