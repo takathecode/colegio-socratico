@@ -304,3 +304,16 @@ SPECTACULAR_SETTINGS = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Erros do servidor (500) no log.
+# Com DEBUG=False o Django esconde o erro: a tela mostra só "Server Error (500)" e, sem esta
+# configuração, nada aparece no terminal. Aqui o erro completo (traceback) vai para a saída
+# de erro, que na Vercel aparece em Deployments > Logs.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+    },
+}
