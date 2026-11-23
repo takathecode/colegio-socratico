@@ -4,12 +4,12 @@ from django.contrib.auth.views import LoginView
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import Http404, HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_GET, require_POST
 
 from .decorators import perfil_requerido
-from .foto import tipo_da_imagem
+from .foto import pode_ver_foto, tipo_da_imagem
 from .forms import FormularioFoto, FormularioLogin
 from .models import Usuario
 
@@ -79,8 +79,27 @@ def _voltar(request):
 @perfil_requerido(*PERFIS_DO_PORTAL)
 @require_GET
 def foto(request):
-    """Entrega a foto da própria pessoa. Não há como pedir a foto de outra conta."""
-    usuario = request.user
+    """Entrega a foto da própria pessoa (avatar do topo)."""
+    return entregar_foto(request.user)
+
+
+@login_required
+@perfil_requerido(*PERFIS_DO_PORTAL)
+@require_GET
+def foto_de(request, pk):
+    """Entrega a foto de outra pessoa, como na sala da videochamada e nas mensagens.
+
+    Quem não tem motivo para ver a pessoa (regra em foto.pode_ver_foto) recebe 404, o mesmo
+    de uma conta sem foto: assim ninguém descobre quais contas existem ou têm foto.
+    """
+    dono = get_object_or_404(Usuario, pk=pk)
+    if not pode_ver_foto(request.user, dono):
+        raise Http404("Sem foto de perfil.")
+    return entregar_foto(dono)
+
+
+def entregar_foto(usuario):
+    """Resposta com a imagem da foto de perfil, ou 404 se a pessoa não tiver foto."""
     if not usuario.foto:
         raise Http404("Sem foto de perfil.")
     try:

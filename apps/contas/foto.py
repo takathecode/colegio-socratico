@@ -1,8 +1,8 @@
 """Foto de perfil: regras de validação, nome do arquivo e tipo da imagem.
 
 A foto fica no banco, como os anexos (apps/academico/armazenamento.py), para aparecer em
-qualquer computador e na Vercel. Não existe endereço público: ela só sai pela view
-contas:foto, e cada pessoa só vê a própria foto.
+qualquer computador e na Vercel. Não existe endereço público: ela só sai pelas views
+contas:foto (a própria) e contas:foto_de (a de outra pessoa, conferida por pode_ver_foto).
 
 Por segurança, o tipo da imagem é conferido pelos primeiros bytes do arquivo (a "assinatura"),
 e não só pela extensão: um arquivo "foto.png" que na verdade é HTML ou SVG é recusado.
@@ -53,6 +53,45 @@ VALIDADORES_FOTO = [
     ),
     validar_foto,
 ]
+
+
+def pode_ver_foto(quem, dono):
+    """Diz se `quem` pode ver a foto de `dono`. Só quem tem motivo para ver a pessoa vê a foto.
+
+    - Cada um vê a própria foto.
+    - A coordenação vê a de todos (ela administra as contas).
+    - Professores e coordenadores veem a foto uns dos outros (videochamadas).
+    - O professor vê a dos alunos das turmas em que dá aula (ou com quem conversa).
+    - O aluno vê a dos professores das suas turmas (ou com quem conversa). Ele não vê a de
+      outros alunos nem a dos coordenadores, que falam com ele como "Secretaria acadêmica".
+    - A conta ADMIN não usa o portal, então ninguém vê a foto dela por aqui.
+    """
+    # Importados aqui para o app de contas não depender dos outros apps ao carregar.
+    from apps.academico.models import Matricula
+    from apps.mensagens.models import Conversa
+
+    from .models import Usuario
+
+    Perfil = Usuario.Perfil
+    if quem.pk == dono.pk:
+        return True
+    if dono.perfil == Perfil.ADMIN:
+        return False
+    if quem.perfil == Perfil.COORDENADOR:
+        return True
+    if quem.perfil == Perfil.PROFESSOR:
+        if dono.perfil in (Perfil.PROFESSOR, Perfil.COORDENADOR):
+            return True
+        return (
+            Matricula.objects.filter(aluno=dono, turma__ofertas__professor=quem).exists()
+            or Conversa.objects.filter(aluno=dono, contato=quem).exists()
+        )
+    if quem.perfil == Perfil.ALUNO and dono.perfil == Perfil.PROFESSOR:
+        return (
+            Matricula.objects.filter(aluno=quem, turma__ofertas__professor=dono).exists()
+            or Conversa.objects.filter(aluno=quem, contato=dono).exists()
+        )
+    return False
 
 
 def caminho_da_foto(usuario, nome_enviado):

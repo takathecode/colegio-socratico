@@ -49,7 +49,8 @@
           <li>
             <a href="{% url 'mensagens:caixa' %}?conversa={{ item.pk }}&{{ parametros }}" {% if item.pk == conversa.pk %}aria-current="true"{% endif %}
                class="flex gap-3 border-l-2 p-3 hover:bg-[#F5F7FA] {% if item.pk == conversa.pk %}border-[#1F4E8C] bg-[#EAF0F8]{% else %}border-transparent{% endif %}">
-              <span class="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#F5F7FA] text-[11px] font-semibold text-[#1F4E8C]" aria-hidden="true">{{ item.iniciais_do_outro }}</span>
+              {# A secretaria (coordenador visto pelo aluno) aparece sempre com as iniciais, sem foto. #}
+              <span class="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#F5F7FA] text-[11px] font-semibold text-[#1F4E8C]" aria-hidden="true">{% if item.mostra_foto_do_outro %}{% include "componentes/avatar.html" with pessoa=item.outro %}{% else %}{{ item.iniciais_do_outro }}{% endif %}</span>
               <span class="min-w-0 flex-1">
                 <span class="flex items-baseline justify-between gap-2">
                   <span class="truncate text-xs font-semibold">{{ item.nome_do_outro }}</span>

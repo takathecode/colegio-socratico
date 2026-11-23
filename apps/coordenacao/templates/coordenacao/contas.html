@@ -65,7 +65,7 @@
         {% for conta in pagina %}
           <li class="flex flex-wrap items-center justify-between gap-3 py-3">
             <div class="flex min-w-0 items-center gap-3">
-              <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C]" aria-hidden="true">{{ conta.iniciais }}</span>
+              <span class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C]" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=conta %}</span>
               <div class="min-w-0">
                 <p class="truncate text-sm font-medium">
                   {{ conta.get_full_name|default:conta.matricula }}

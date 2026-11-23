@@ -1,8 +1,12 @@
-{# Foto de perfil da pessoa logada ou, sem foto, as iniciais. Ocupa todo o círculo de quem incluir. #}
+{# Foto de perfil ou, sem foto, as iniciais. Ocupa todo o círculo de quem incluir (o círculo precisa de overflow-hidden). #}
+{# Sem parâmetro mostra a pessoa logada; com pessoa=... mostra outra conta: {% include "componentes/avatar.html" with pessoa=outro %} #}
+{# A foto de outra pessoa sai por contas:foto_de, que confere se quem está logado pode vê-la (contas/foto.py, pode_ver_foto). #}
 {# O ?v= muda a cada foto nova, então o navegador pode guardar a imagem (ver contas.views.foto). #}
-{% if user.foto %}
-  <img src="{% url 'contas:foto' %}?v={{ user.foto.name|slugify }}" alt="" width="80" height="80" decoding="async"
-       class="size-full object-cover">
-{% else %}
-  <span aria-hidden="true">{{ user.iniciais }}</span>
-{% endif %}
+{% with pessoa=pessoa|default:user %}
+  {% if pessoa.foto %}
+    <img src="{% if pessoa.pk == user.pk %}{% url 'contas:foto' %}{% else %}{% url 'contas:foto_de' pessoa.pk %}{% endif %}?v={{ pessoa.foto.name|slugify }}"
+         alt="" width="80" height="80" decoding="async" loading="lazy" class="size-full object-cover">
+  {% else %}
+    <span aria-hidden="true">{{ pessoa.iniciais }}</span>
+  {% endif %}
+{% endwith %}

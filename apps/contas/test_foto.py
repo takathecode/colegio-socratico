@@ -1,5 +1,6 @@
 """Foto de perfil: quem pode enviar, o que é aceito e como ela é entregue."""
 
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -7,6 +8,7 @@ from django.urls import reverse
 from apps.academico.models import ArquivoAnexo
 
 from .foto import TAMANHO_MAXIMO_FOTO
+from .models import Usuario
 from .test_login import SENHA, criar_usuarios
 
 # Só os primeiros bytes importam para a conferência do tipo.
@@ -166,3 +168,109 @@ class FotoDePerfilTests(TestCase):
         resposta = self.client.get(reverse("aluno:painel"))
         self.assertContains(resposta, reverse("contas:foto") + "?v=")
         self.assertContains(resposta, "Remover foto atual")
+
+
+class FotoDeOutraPessoaTests(TestCase):
+    """contas:foto_de: a foto de outra conta só sai para quem tem motivo para ver a pessoa."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from apps.academico.models import Curso, Disciplina, Matricula, Oferta, Turma
+
+        def conta(matricula, perfil):
+            usuario = Usuario.objects.create_user(
+                matricula, SENHA, perfil=perfil, first_name=matricula.title(), last_name="Silva"
+            )
+            usuario.foto.save("foto.png", ContentFile(PNG))
+            return usuario
+
+        cls.coordenador = conta("coord", "COORDENADOR")
+        cls.professor = conta("prof", "PROFESSOR")
+        cls.outro_professor = conta("prof2", "PROFESSOR")
+        cls.aluno = conta("aluno", "ALUNO")
+        cls.outro_aluno = conta("aluno2", "ALUNO")
+        cls.admin = Usuario.objects.create_superuser("admin", SENHA, email="admin@exemplo.com")
+
+        curso = Curso.objects.create(nome="Curso", total_creditos=200)
+        disciplina = Disciplina.objects.create(
+            curso=curso, codigo="MAT1", nome="Matemática", creditos=4, carga_horaria=40
+        )
+        turma = Turma.objects.create(curso=curso, codigo="T1", semestre="2026.2", periodo=1)
+        outra_turma = Turma.objects.create(curso=curso, codigo="T2", semestre="2026.2", periodo=1)
+        Oferta.objects.create(turma=turma, disciplina=disciplina, professor=cls.professor)
+        Oferta.objects.create(turma=outra_turma, disciplina=disciplina, professor=cls.outro_professor)
+        Matricula.objects.create(aluno=cls.aluno, turma=turma)
+        Matricula.objects.create(aluno=cls.outro_aluno, turma=outra_turma)
+
+    def status(self, quem, dono):
+        self.client.force_login(quem)
+        return self.client.get(reverse("contas:foto_de", args=[dono.pk])).status_code
+
+    def test_quem_pode_ver_a_foto_de_quem(self):
+        casos = [
+            # (quem vê, de quem é a foto, pode ver?)
+            (self.coordenador, self.aluno, True),
+            (self.coordenador, self.professor, True),
+            (self.professor, self.coordenador, True),  # videochamada
+            (self.professor, self.outro_professor, True),
+            (self.professor, self.aluno, True),  # aluno da turma dele
+            (self.professor, self.outro_aluno, False),  # aluno de outra turma
+            (self.aluno, self.professor, True),  # professor da turma dele
+            (self.aluno, self.outro_professor, False),
+            (self.aluno, self.outro_aluno, False),  # aluno não vê outros alunos
+            (self.aluno, self.coordenador, False),  # a coordenação é a "Secretaria acadêmica"
+            (self.coordenador, self.admin, False),  # o ADMIN não usa o portal
+        ]
+        for quem, dono, pode in casos:
+            with self.subTest(quem=quem.matricula, dono=dono.matricula):
+                self.assertEqual(self.status(quem, dono), 200 if pode else 404)
+
+    def test_conversa_tambem_libera_a_foto(self):
+        from apps.mensagens.models import Conversa
+
+        Conversa.objects.create(aluno=self.outro_aluno, contato=self.professor, assunto="Dúvida")
+        self.assertEqual(self.status(self.professor, self.outro_aluno), 200)
+        self.assertEqual(self.status(self.outro_aluno, self.professor), 200)
+
+    def test_conta_inexistente_ou_sem_foto_da_404(self):
+        self.assertEqual(self.status(self.coordenador, Usuario(pk=99999)), 404)
+        sem_foto = Usuario.objects.create_user("semfoto", SENHA, perfil="PROFESSOR")
+        self.assertEqual(self.status(self.coordenador, sem_foto), 404)
+
+    def test_entrega_a_imagem_com_os_cabecalhos_de_seguranca(self):
+        self.client.force_login(self.coordenador)
+        resposta = self.client.get(reverse("contas:foto_de", args=[self.professor.pk]))
+        self.assertEqual(resposta["Content-Type"], "image/png")
+        self.assertIn("private", resposta["Cache-Control"])
+        self.assertIn("sandbox", resposta["Content-Security-Policy"])
+
+    def test_visitante_vai_para_o_login_e_admin_leva_403(self):
+        rota = reverse("contas:foto_de", args=[self.professor.pk])
+        self.assertEqual(self.client.get(rota).status_code, 302)
+        self.client.force_login(self.admin)
+        self.assertEqual(self.client.get(rota).status_code, 403)
+
+    def test_sala_da_chamada_mostra_a_foto_do_outro(self):
+        from apps.videochamadas.models import Chamada
+
+        chamada = Chamada.objects.create(criada_por=self.coordenador, convidado=self.professor)
+        self.client.force_login(self.coordenador)
+        resposta = self.client.get(reverse("videochamadas:sala", args=[chamada.pk]))
+        self.assertContains(resposta, reverse("contas:foto_de", args=[self.professor.pk]) + "?v=")
+        resposta = self.client.get(reverse("videochamadas:inicio"))
+        self.assertContains(resposta, reverse("contas:foto_de", args=[self.professor.pk]) + "?v=")
+
+    def test_aluno_ve_a_foto_do_professor_mas_nao_a_da_secretaria(self):
+        from apps.mensagens.models import Conversa
+
+        Conversa.objects.create(aluno=self.aluno, contato=self.professor, assunto="Prova")
+        Conversa.objects.create(aluno=self.aluno, contato=self.coordenador, assunto="Documento")
+        self.client.force_login(self.aluno)
+        resposta = self.client.get(reverse("mensagens:caixa"))
+        self.assertContains(resposta, reverse("contas:foto_de", args=[self.professor.pk]))
+        self.assertNotContains(resposta, reverse("contas:foto_de", args=[self.coordenador.pk]))
+
+    def test_listas_da_coordenacao_mostram_as_fotos(self):
+        self.client.force_login(self.coordenador)
+        resposta = self.client.get(reverse("coordenacao:professores"))
+        self.assertContains(resposta, reverse("contas:foto_de", args=[self.professor.pk]))
