@@ -58,6 +58,46 @@ Detalhes que fazem a conexão não falhar:
   explica o problema (permissão negada, câmera usada por outro programa, computador sem câmera,
   página sem HTTPS). Sem câmera, ela entra só com o microfone.
 
+## Na sala: botões e conversa
+
+Depois de conectados, os dois navegadores abrem também um **canal de dados**
+(`RTCDataChannel`), que faz parte do WebRTC. Ele vai direto entre os dois, como o vídeo. Por ele
+passam:
+
+- **a conversa (chat)**: as mensagens não passam pelo portal, não ficam no banco e somem quando
+  a pessoa sai ou recarrega a sala. O campo só libera quando o outro está conectado. O texto do
+  outro é mostrado com `textContent` (nunca `innerHTML`), então um `<b>` aparece como texto e
+  não vira código. Limite de 500 caracteres por mensagem;
+- **o estado de cada um**: "meu microfone está desligado", "minha câmera está desligada",
+  "estou compartilhando a tela". A tela do outro mostra um selo ou a foto no lugar do vídeo.
+
+Os botões ficam sobre o vídeo:
+
+| Botão | O que faz |
+|---|---|
+| Microfone | desliga e religa o microfone (`track.enabled`): a ligação continua, mas vai silêncio |
+| Câmera | desliga e religa a câmera; o outro vê a sua foto no lugar do vídeo |
+| Compartilhar a tela | o navegador pergunta o que mostrar (a tela inteira, uma janela ou uma aba) e a imagem da tela entra no lugar da câmera; para parar, o mesmo botão ou o "Parar de compartilhar" do navegador. Não aparece no celular, que não compartilha a tela |
+| Tela cheia | o vídeo ocupa a tela toda (Esc sai). Na tela cheia, mensagem nova da conversa aparece por alguns segundos sobre o vídeo |
+
+Trocar a câmera pela tela usa `replaceTrack`: a imagem muda sem negociar a ligação de novo. Por
+isso quem cria a chamada sempre abre um "canal" de áudio e um de vídeo de ida e volta, mesmo sem
+câmera: um computador de laboratório sem câmera também consegue compartilhar a tela.
+
+## Reconexão automática
+
+Se a internet oscilar, a ligação fica "desconectada". O navegador ainda tenta voltar sozinho por
+3 segundos. Se não voltar, **quem criou a chamada refaz a negociação de rede** (*ICE restart*):
+manda uma oferta nova pela sinalização, o convidado responde, e os dois procuram de novo um
+caminho pela rede. A ligação é a mesma, então o vídeo, a conversa e o compartilhamento de tela
+continuam de onde estavam. São até 3 tentativas, com 10 segundos entre elas (e uma na hora,
+quando o computador avisa que a internet voltou). Se depois de 35 segundos ainda não tiver
+voltado, a tela explica o problema e sugere recarregar ou usar o Jitsi.
+
+Só quem criou a chamada refaz a oferta (a mesma regra do começo), para os dois não fazerem ao
+mesmo tempo. Cada oferta leva um número, e a resposta repete esse número: resposta de uma
+oferta antiga é ignorada.
+
 ## Por que a sinalização é por polling (e não por WebSocket)
 
 O jeito mais comum de fazer sinalização é um **WebSocket**: uma conexão que fica aberta e o
@@ -167,8 +207,8 @@ está logado, nunca um campo do formulário.
   apagados sempre que alguém entra numa sala (sem Celery).
 - As respostas de `sinal/` e `ice/` têm `Cache-Control: no-cache`: nada fica guardado no
   navegador nem em proxy.
-- **Nada é gravado.** O vídeo e o áudio não passam pelo portal, e o WebRTC criptografa a
-  ligação entre os dois navegadores (DTLS-SRTP). Mesmo quando passa pelo TURN, o vídeo continua
+- **Nada é gravado.** O vídeo, o áudio e a conversa não passam pelo portal, e o WebRTC
+  criptografa a ligação entre os dois navegadores (DTLS-SRTP no vídeo, DTLS no canal de dados). Mesmo quando passa pelo TURN, o vídeo continua
   criptografado: o TURN só repassa os pacotes.
 - A câmera só funciona em página segura: `https://` ou `http://localhost`. No servidor
   publicado, `USAR_HTTPS=True` (ver [SEGURANCA.md](SEGURANCA.md)).
@@ -188,7 +228,7 @@ encerrada, a tela do outro percebe em até 5 s e mostra "Esta chamada foi encerr
 | `apps/videochamadas/forms.py` | quem pode ser chamado (`pessoas_para_chamar`) |
 | `apps/videochamadas/views.py` | telas (início, sala, encerrar) e as rotas `sinal/` e `ice/` |
 | `apps/videochamadas/templates/videochamadas/_sala_propria.html` | a sala dentro do portal |
-| `static/js/chamada.js` | a negociação WebRTC, os estados da conexão e os avisos |
+| `static/js/chamada.js` | a negociação WebRTC, os botões, a conversa, a reconexão, os estados da conexão e os avisos |
 | `apps/alertas/regras.py` | `aviso_de_chamada`: o convite no sino |
 | `apps/videochamadas/tests.py` | testes de permissão, sinais, STUN/TURN, sala e histórico |
 
@@ -202,6 +242,12 @@ segundo se chegou algo novo. Usamos perguntas repetidas (polling) e não WebSock
 Vercel desliga o sistema entre um pedido e outro. Só os dois participantes leem os recados da
 chamada, o vídeo não passa pelo servidor e nada é gravado. Se a conexão direta falhar, um
 servidor TURN gratuito repassa o vídeo, e o Jitsi continua como plano B.
+
+**Resumo da fase 2 (botões, conversa e reconexão).** Na sala dá para desligar o microfone e a
+câmera, compartilhar a tela e usar a tela cheia. A conversa e os avisos de "microfone
+desligado" vão por um canal de dados do próprio WebRTC, direto entre os navegadores: o portal
+não vê as mensagens e nada fica no banco. Se a internet oscilar, quem criou a chamada refaz a
+negociação de rede sozinho, sem fechar a ligação, e a conversa continua.
 
 - Testem antes, na rede onde vão apresentar. Com cada computador num celular diferente,
   configurem o TURN.

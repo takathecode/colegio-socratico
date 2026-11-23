@@ -1,7 +1,8 @@
 {% comment %}
   Sala de vídeo própria (VIDEO_MODO=proprio). Usada só em videochamadas/sala.html.
-  O static/js/chamada.js lê os data-* deste <section> e controla os vídeos, o estado da
-  conexão e os avisos. O {% csrf_token %} daqui vai no cabeçalho X-CSRFToken dos POSTs.
+  O static/js/chamada.js lê os data-* deste <section> e controla os vídeos, os botões, a
+  conversa, o estado da conexão e os avisos. O {% csrf_token %} daqui vai no cabeçalho
+  X-CSRFToken dos POSTs.
 {% endcomment %}
 <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-4 sm:p-5"
          aria-labelledby="titulo-sala"
@@ -10,6 +11,7 @@
          data-url-ice="{% url 'videochamadas:ice' chamada.pk %}"
          data-url-inicio="{% url 'videochamadas:inicio' %}"
          data-ultimo-sinal="{{ ultimo_sinal }}"
+         data-nome-do-outro="{{ nome_do_outro }}"
          data-sou-quem-chamou="{% if fui_eu_que_chamei %}true{% else %}false{% endif %}">
   {% csrf_token %}
 
@@ -31,27 +33,100 @@
     </p>
   </div>
 
-  {# Vídeo do outro em tamanho grande e o seu em miniatura, no canto. #}
-  {# Altura limitada para os botões caberem na tela do notebook sem rolar. #}
-  <div class="relative mt-4 aspect-[4/5] max-h-[65vh] w-full overflow-hidden rounded-xl bg-[#0B2545] sm:aspect-video">
-    <video data-video-remoto autoplay playsinline class="size-full object-contain"></video>
+  {# Vídeo à esquerda e conversa à direita na tela grande; um embaixo do outro no celular. #}
+  <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+    {# "Palco": o vídeo do outro em tamanho grande, o seu em miniatura e os botões. É ele que #}
+    {# ocupa a tela inteira no botão "Tela cheia". Altura limitada para caber no notebook. #}
+    <div data-palco class="relative aspect-[4/5] max-h-[65vh] w-full overflow-hidden rounded-xl bg-[#0B2545] sm:aspect-video [&:fullscreen]:aspect-auto [&:fullscreen]:max-h-none [&:fullscreen]:rounded-none">
+      <video data-video-remoto autoplay playsinline class="size-full object-contain"></video>
 
-    {# Capa: aparece enquanto o outro não está conectado. #}
-    <div data-capa class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0B2545] p-4 text-center text-white">
-      <span class="flex size-16 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xl font-semibold sm:size-20 sm:text-2xl" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=outro %}</span>
-      <p data-capa-texto class="max-w-sm text-sm text-white/80">Preparando câmera e microfone...</p>
+      {# O outro desligou a câmera (ou está sem câmera): mostra a foto dele no lugar do vídeo. #}
+      <div data-outro-sem-video class="absolute inset-0 hidden flex-col items-center justify-center gap-3 bg-[#0B2545] p-4 text-center text-white">
+        <span class="flex size-16 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xl font-semibold sm:size-20 sm:text-2xl" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=outro %}</span>
+        <p class="text-sm text-white/80">Câmera desligada</p>
+      </div>
+
+      {# Capa: aparece enquanto o outro não está conectado. #}
+      <div data-capa class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0B2545] p-4 text-center text-white">
+        <span class="flex size-16 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xl font-semibold sm:size-20 sm:text-2xl" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=outro %}</span>
+        <p data-capa-texto class="max-w-sm text-sm text-white/80">Preparando câmera e microfone...</p>
+      </div>
+
+      {# Selos sobre o vídeo do outro: microfone desligado e tela compartilhada. #}
+      <div class="absolute left-3 top-3 flex flex-col items-start gap-1.5 text-xs font-medium text-white">
+        <p data-outro-mudo class="hidden items-center gap-1.5 rounded-md bg-black/60 px-2 py-1">
+          <i data-lucide="mic-off" class="size-3.5" aria-hidden="true"></i> Microfone desligado
+        </p>
+        <p data-outro-tela class="hidden items-center gap-1.5 rounded-md bg-black/60 px-2 py-1">
+          <i data-lucide="screen-share" class="size-3.5" aria-hidden="true"></i> Compartilhando a tela
+        </p>
+      </div>
+
+      {# Só aparece se o navegador bloquear o som automático. #}
+      <button type="button" data-ativar-som
+              class="botao-vidro absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white">
+        <i data-lucide="volume-2" class="size-4"></i> Ativar o som
+      </button>
+
+      <div class="absolute right-3 top-3 w-24 overflow-hidden rounded-lg bg-slate-800 ring-2 ring-white/80 sm:w-40">
+        {# A câmera aparece espelhada (-scale-x-100), como num espelho; o outro vê a imagem normal. #}
+        {# A tela compartilhada aparece sem espelhar (o chamada.js tira a classe). #}
+        <video data-video-local autoplay playsinline muted aria-label="Sua imagem" class="aspect-[3/4] w-full -scale-x-100 object-cover sm:aspect-video"></video>
+        <span data-sem-camera class="absolute inset-0 hidden items-center justify-center p-1 text-center text-xs text-white/80">Sem câmera</span>
+      </div>
+
+      {# Recado do chat, só na tela cheia (fora dela, a conversa fica ao lado). #}
+      <p data-recado class="absolute inset-x-3 bottom-20 mx-auto hidden w-fit max-w-md break-words rounded-lg bg-black/70 px-3 py-2 text-sm text-white" aria-hidden="true"></p>
+
+      {# Botões da chamada. O chamada.js troca o ícone, o texto e o atributo data-desligado/data-ativo. #}
+      <div class="absolute inset-x-0 bottom-3 flex justify-center gap-2 px-3">
+        <button type="button" data-botao-microfone aria-label="Desligar o microfone" title="Desligar o microfone"
+                class="botao-vidro flex size-11 items-center justify-center rounded-full text-white disabled:opacity-50 data-[desligado]:bg-[#C62828] data-[desligado]:hover:bg-[#A51F1F]">
+          <span data-icone-ligado><i data-lucide="mic" class="size-5" aria-hidden="true"></i></span>
+          <span data-icone-desligado class="hidden"><i data-lucide="mic-off" class="size-5" aria-hidden="true"></i></span>
+        </button>
+        <button type="button" data-botao-camera aria-label="Desligar a câmera" title="Desligar a câmera"
+                class="botao-vidro flex size-11 items-center justify-center rounded-full text-white disabled:opacity-50 data-[desligado]:bg-[#C62828] data-[desligado]:hover:bg-[#A51F1F]">
+          <span data-icone-ligado><i data-lucide="video" class="size-5" aria-hidden="true"></i></span>
+          <span data-icone-desligado class="hidden"><i data-lucide="video-off" class="size-5" aria-hidden="true"></i></span>
+        </button>
+        {# Escondido no celular e em navegadores que não compartilham a tela. #}
+        <button type="button" data-botao-tela aria-label="Compartilhar a tela" title="Compartilhar a tela"
+                class="botao-vidro hidden size-11 items-center justify-center rounded-full text-white data-[ativo]:bg-white data-[ativo]:text-[#1F4E8C] data-[ativo]:hover:bg-white">
+          <span data-icone-ligado><i data-lucide="screen-share" class="size-5" aria-hidden="true"></i></span>
+          <span data-icone-desligado class="hidden"><i data-lucide="screen-share-off" class="size-5" aria-hidden="true"></i></span>
+        </button>
+        <button type="button" data-botao-tela-cheia aria-label="Tela cheia" title="Tela cheia"
+                class="botao-vidro hidden size-11 items-center justify-center rounded-full text-white">
+          <span data-icone-ligado><i data-lucide="maximize" class="size-5" aria-hidden="true"></i></span>
+          <span data-icone-desligado class="hidden"><i data-lucide="minimize" class="size-5" aria-hidden="true"></i></span>
+        </button>
+      </div>
     </div>
 
-    {# Só aparece se o navegador bloquear o som automático. #}
-    <button type="button" data-ativar-som
-            class="botao-vidro absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white">
-      <i data-lucide="volume-2" class="size-4"></i> Ativar o som
-    </button>
-
-    <div class="absolute bottom-3 right-3 w-24 overflow-hidden rounded-lg bg-slate-800 ring-2 ring-white/80 sm:w-44">
-      {# Espelhada (-scale-x-100), como num espelho. O outro vê a imagem normal. #}
-      <video data-video-local autoplay playsinline muted aria-label="Sua imagem" class="aspect-[3/4] w-full -scale-x-100 object-cover sm:aspect-video"></video>
-      <span data-sem-camera class="absolute inset-0 hidden items-center justify-center p-1 text-center text-xs text-white/80">Sem câmera</span>
+    {# Conversa: vai direto entre os dois navegadores (canal de dados do WebRTC) e não é gravada. #}
+    {# Na tela grande, o card tem a altura do vídeo (position absolute) e a lista rola por dentro. #}
+    <div class="relative xl:min-h-0">
+      <aside class="flex flex-col rounded-xl border border-[#E5E9F0] bg-white xl:absolute xl:inset-0" aria-labelledby="titulo-conversa">
+        <h2 id="titulo-conversa" class="flex items-center gap-2 border-b border-[#E5E9F0] px-4 py-3 text-sm font-semibold text-[#0B2545]">
+          <i data-lucide="message-square" class="size-4" aria-hidden="true"></i> Conversa
+        </h2>
+        {# role="log": o leitor de tela lê cada mensagem nova. #}
+        <ol data-conversa role="log" aria-live="polite" aria-labelledby="titulo-conversa"
+            class="h-56 space-y-3 overflow-y-auto p-4 text-sm xl:h-auto xl:min-h-0 xl:flex-1">
+          <li class="text-center text-xs text-slate-500">As mensagens vão direto para o outro computador e não são gravadas: somem quando você sai da sala.</li>
+        </ol>
+        <form data-form-conversa class="flex gap-2 border-t border-[#E5E9F0] p-3" autocomplete="off">
+          <label for="campo-conversa" class="sr-only">Mensagem para {{ nome_do_outro }}</label>
+          <input id="campo-conversa" data-campo-conversa type="text" maxlength="500" disabled
+                 placeholder="A conversa abre quando o outro entrar"
+                 class="h-11 min-w-0 flex-1 rounded-lg border border-[#E5E9F0] px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#1F4E8C] focus:outline-none disabled:bg-[#F5F7FA]">
+          <button type="submit" data-enviar-conversa disabled
+                  class="botao-vidro flex size-11 shrink-0 items-center justify-center rounded-lg text-white disabled:opacity-50">
+            <i data-lucide="send" class="size-4" aria-hidden="true"></i><span class="sr-only">Enviar</span>
+          </button>
+        </form>
+      </aside>
     </div>
   </div>
 
@@ -77,7 +152,7 @@
   <p class="mt-2 text-xs text-slate-500">"Sair" deixa a chamada aberta para você voltar depois. "Encerrar" termina a chamada para os dois.</p>
 
   <div class="mt-4 flex flex-col gap-2 border-t border-[#E5E9F0] pt-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-    <p class="flex items-center gap-1.5"><i data-lucide="shield-check" class="size-4 shrink-0" aria-hidden="true"></i> O vídeo vai direto entre os dois computadores e não é gravado.</p>
+    <p class="flex items-center gap-1.5"><i data-lucide="shield-check" class="size-4 shrink-0" aria-hidden="true"></i> O vídeo e a conversa vão direto entre os dois computadores e não são gravados.</p>
     {# Plano B: se a conexão direta não funcionar, os dois abrem a mesma sala no Jitsi. #}
     <a href="{{ link_do_jitsi }}" target="_blank" rel="noopener noreferrer" data-link-jitsi
        class="inline-flex items-center gap-1 font-semibold text-[#1F4E8C] hover:underline">

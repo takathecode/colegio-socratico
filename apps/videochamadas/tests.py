@@ -19,7 +19,7 @@ from apps.alertas.models import Alerta
 from apps.professor.tests import HASH_RAPIDO
 
 from .forms import pessoas_para_chamar
-from .models import DURACAO_MAXIMA, Chamada, SinalChamada
+from .models import DURACAO_MAXIMA, Chamada, SinalChamada, nome_na_chamada
 from .views import LIMITE_DO_SINAL, STUN_PADRAO
 
 Usuario = get_user_model()
@@ -492,6 +492,25 @@ class SinalizacaoTests(TestCase):
         self.assertContains(resposta, "Não conectou? Entrar pelo Jitsi")
         self.assertContains(resposta, f"https://meet.jit.si/{self.chamada.sala}#")
         self.assertNotContains(resposta, "Entrar na chamada")
+
+    def test_sala_propria_tem_os_controles_e_a_conversa(self):
+        self.client.force_login(self.professor)
+        resposta = self.client.get(reverse("videochamadas:sala", args=[self.chamada.pk]))
+        for controle in ("data-botao-microfone", "data-botao-camera", "data-botao-tela", "data-botao-tela-cheia"):
+            self.assertContains(resposta, controle)
+        # A conversa vai pelo canal de dados do WebRTC: o formulário não aponta para o portal.
+        self.assertContains(resposta, '<form data-form-conversa class="flex gap-2 border-t border-[#E5E9F0] p-3" autocomplete="off">')
+        self.assertContains(resposta, "não são gravadas")
+        self.assertContains(resposta, f'data-nome-do-outro="{nome_na_chamada(self.coordenador)}"')
+
+    def test_nome_do_outro_e_escapado_na_sala(self):
+        # O nome vai num atributo lido pelo chamada.js: precisa chegar escapado.
+        self.coordenador.first_name = 'Ana" onclick="x'
+        self.coordenador.save()
+        self.client.force_login(self.professor)
+        resposta = self.client.get(reverse("videochamadas:sala", args=[self.chamada.pk]))
+        self.assertContains(resposta, "Ana&quot; onclick=&quot;x")
+        self.assertNotContains(resposta, 'Ana" onclick="x')
 
     def test_sala_comeca_depois_dos_sinais_antigos(self):
         # Sinais de uma aba que já foi fechada não são lidos de novo.
