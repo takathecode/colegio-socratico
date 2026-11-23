@@ -8,7 +8,7 @@
     <h1 class="text-2xl font-semibold text-[#0B2545]">Videochamadas</h1>
     <p class="mt-1 text-sm text-slate-500">
       {% if user.perfil == "COORDENADOR" %}Converse por vídeo com um professor.{% else %}Converse por vídeo com a coordenação.{% endif %}
-      A chamada abre no Jitsi Meet, em outra aba.
+      {% if video_proprio %}A chamada acontece aqui mesmo, no portal.{% else %}A chamada abre no Jitsi Meet, em outra aba.{% endif %}
     </p>
   </div>
 

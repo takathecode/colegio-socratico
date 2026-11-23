@@ -1,0 +1,88 @@
+{% comment %}
+  Sala de vídeo própria (VIDEO_MODO=proprio). Usada só em videochamadas/sala.html.
+  O static/js/chamada.js lê os data-* deste <section> e controla os vídeos, o estado da
+  conexão e os avisos. O {% csrf_token %} daqui vai no cabeçalho X-CSRFToken dos POSTs.
+{% endcomment %}
+<section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-4 sm:p-5"
+         aria-labelledby="titulo-sala"
+         data-sala-propria
+         data-url-sinal="{% url 'videochamadas:sinal' chamada.pk %}"
+         data-url-ice="{% url 'videochamadas:ice' chamada.pk %}"
+         data-url-inicio="{% url 'videochamadas:inicio' %}"
+         data-ultimo-sinal="{{ ultimo_sinal }}"
+         data-sou-quem-chamou="{% if fui_eu_que_chamei %}true{% else %}false{% endif %}">
+  {% csrf_token %}
+
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="flex min-w-0 items-center gap-3">
+      <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8] text-base font-semibold text-[#1F4E8C]" aria-hidden="true">{{ outro.iniciais }}</span>
+      <div class="min-w-0">
+        <h1 id="titulo-sala" class="truncate text-xl font-semibold text-[#0B2545]">{{ nome_do_outro }}</h1>
+        <p class="mt-0.5 truncate text-sm text-slate-500">
+          {{ chamada.assunto|default:"Sem assunto" }} ·
+          {% if fui_eu_que_chamei %}você chamou{% else %}chamou você{% endif %} às {{ chamada.criada_em|date:"H:i" }}
+        </p>
+      </div>
+    </div>
+    {# Estado da conexão. role="status": o leitor de tela anuncia cada mudança. #}
+    <p class="inline-flex items-center gap-2 whitespace-nowrap rounded-md bg-[#F5F7FA] px-2.5 py-1 text-sm font-medium text-slate-700" role="status" aria-live="polite">
+      <span data-luz class="size-2.5 rounded-full bg-amber-500" aria-hidden="true"></span>
+      <span data-estado-conexao>Preparando câmera e microfone...</span>
+    </p>
+  </div>
+
+  {# Vídeo do outro em tamanho grande e o seu em miniatura, no canto. #}
+  {# Altura limitada para os botões caberem na tela do notebook sem rolar. #}
+  <div class="relative mt-4 aspect-[4/5] max-h-[65vh] w-full overflow-hidden rounded-xl bg-[#0B2545] sm:aspect-video">
+    <video data-video-remoto autoplay playsinline class="size-full object-contain"></video>
+
+    {# Capa: aparece enquanto o outro não está conectado. #}
+    <div data-capa class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0B2545] p-4 text-center text-white">
+      <span class="flex size-16 items-center justify-center rounded-full bg-white/10 text-xl font-semibold sm:size-20 sm:text-2xl" aria-hidden="true">{{ outro.iniciais }}</span>
+      <p data-capa-texto class="max-w-sm text-sm text-white/80">Preparando câmera e microfone...</p>
+    </div>
+
+    {# Só aparece se o navegador bloquear o som automático. #}
+    <button type="button" data-ativar-som
+            class="botao-vidro absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white">
+      <i data-lucide="volume-2" class="size-4"></i> Ativar o som
+    </button>
+
+    <div class="absolute bottom-3 right-3 w-24 overflow-hidden rounded-lg bg-slate-800 ring-2 ring-white/80 sm:w-44">
+      {# Espelhada (-scale-x-100), como num espelho. O outro vê a imagem normal. #}
+      <video data-video-local autoplay playsinline muted aria-label="Sua imagem" class="aspect-[3/4] w-full -scale-x-100 object-cover sm:aspect-video"></video>
+      <span data-sem-camera class="absolute inset-0 hidden items-center justify-center p-1 text-center text-xs text-white/80">Sem câmera</span>
+    </div>
+  </div>
+
+  {# Avisos de câmera, microfone e conexão, em português. #}
+  <div data-aviso role="alert" class="mt-4 hidden items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+    <i data-lucide="triangle-alert" class="mt-0.5 size-4 shrink-0" aria-hidden="true"></i>
+    <p data-aviso-texto></p>
+  </div>
+
+  <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+    <button type="button" data-sair
+            class="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#C62828] px-5 text-sm font-semibold text-white hover:bg-[#A51F1F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C62828]">
+      <i data-lucide="phone-off" class="size-4"></i> Sair da chamada
+    </button>
+    <form method="post" action="{% url 'videochamadas:encerrar' chamada.pk %}" data-carregando>
+      {% csrf_token %}
+      <button type="submit" class="botao-vidro-claro inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold text-[#1F4E8C] disabled:cursor-wait sm:w-auto">
+        <span data-estado="normal" class="flex items-center gap-2"><i data-lucide="circle-stop" class="size-4"></i> Encerrar para os dois</span>
+        <span data-estado="carregando" class="hidden items-center gap-2"><i data-lucide="loader-circle" class="size-4 animate-spin"></i> Encerrando...</span>
+      </button>
+    </form>
+  </div>
+  <p class="mt-2 text-xs text-slate-500">"Sair" deixa a chamada aberta para você voltar depois. "Encerrar" termina a chamada para os dois.</p>
+
+  <div class="mt-4 flex flex-col gap-2 border-t border-[#E5E9F0] pt-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+    <p class="flex items-center gap-1.5"><i data-lucide="shield-check" class="size-4 shrink-0" aria-hidden="true"></i> O vídeo vai direto entre os dois computadores e não é gravado.</p>
+    {# Plano B: se a conexão direta não funcionar, os dois abrem a mesma sala no Jitsi. #}
+    <a href="{{ link_do_jitsi }}" target="_blank" rel="noopener noreferrer" data-link-jitsi
+       class="inline-flex items-center gap-1 font-semibold text-[#1F4E8C] hover:underline">
+      Não conectou? Entrar pelo Jitsi <span class="sr-only">(abre em outra aba)</span>
+      <i data-lucide="external-link" class="size-3.5" aria-hidden="true"></i>
+    </a>
+  </div>
+</section>

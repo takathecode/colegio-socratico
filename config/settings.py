@@ -215,6 +215,20 @@ ENDERECO_DO_SITE = os.getenv("ENDERECO_DO_SITE", "http://127.0.0.1:8000").rstrip
 # público e gratuito; uma escola com servidor próprio do Jitsi troca só esta linha no .env.
 JITSI_SERVIDOR = os.getenv("JITSI_SERVIDOR", "https://meet.jit.si").strip().rstrip("/")
 
+# Como a videochamada acontece (docs/VIDEOCHAMADA.md):
+# "proprio" (padrão): sala dentro do portal, com o vídeo direto entre os dois navegadores (WebRTC);
+# "jitsi": plano B, a sala abre no Jitsi Meet, em outra aba.
+VIDEO_MODO = os.getenv("VIDEO_MODO", "proprio").strip().lower() or "proprio"
+if VIDEO_MODO not in ("proprio", "jitsi"):
+    raise ImproperlyConfigured('VIDEO_MODO no .env precisa ser "proprio" ou "jitsi".')
+
+# Servidor TURN (opcional): retransmite o vídeo quando os dois computadores não conseguem se
+# achar direto (ex.: cada um no roteador de um celular). Sem as três variáveis, só o STUN é usado.
+# As credenciais só chegam ao navegador de quem participa da chamada (rota ice/).
+TURN_URLS = [url.strip() for url in os.getenv("TURN_URLS", "").split(",") if url.strip()]
+TURN_USUARIO = os.getenv("TURN_USUARIO", "").strip()
+TURN_SENHA = os.getenv("TURN_SENHA", "").strip()
+
 
 # Celery + Redis (config/celery.py e apps/alertas/tasks.py)
 def endereco_do_redis():

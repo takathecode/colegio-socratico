@@ -1,12 +1,13 @@
 """Videochamadas entre a coordenação e os professores (o aluno não participa).
 
-O vídeo não passa pelo portal. A chamada acontece no Jitsi Meet (https://meet.jit.si), um
-serviço gratuito que roda no navegador. O portal só:
-1. cria uma sala com nome difícil de adivinhar;
-2. avisa a outra pessoa pelo sino (apps/alertas/regras.py, aviso_de_chamada);
-3. guarda o histórico de quem chamou quem, e quando.
+O vídeo não passa pelo portal. Com VIDEO_MODO=proprio (o padrão), ele vai direto de um
+navegador ao outro (WebRTC, static/js/chamada.js), e o portal só leva os "sinais" que os dois
+navegadores trocam para se encontrar (model SinalChamada). Com VIDEO_MODO=jitsi, a chamada
+acontece no Jitsi Meet, em outra aba, como antes. Nos dois modos o portal:
+1. cria a chamada e avisa a outra pessoa pelo sino (apps/alertas/regras.py, aviso_de_chamada);
+2. guarda o histórico de quem chamou quem, e quando.
 
-O botão "Entrar na chamada" abre a sala do Jitsi em outra aba. Explicação em docs/VIDEOCHAMADA.md.
+Explicação em docs/VIDEOCHAMADA.md.
 """
 
 import json
@@ -98,6 +99,10 @@ class Chamada(models.Model):
     def outro_participante(self, usuario):
         return self.convidado if usuario.pk == self.criada_por_id else self.criada_por
 
+    def id_do_outro(self, usuario):
+        """Como outro_participante, mas só o número da conta (não busca a pessoa no banco)."""
+        return self.convidado_id if usuario.pk == self.criada_por_id else self.criada_por_id
+
     @property
     def em_andamento(self):
         return self.encerrada_em is None and timezone.now() - self.criada_em < DURACAO_MAXIMA
@@ -119,3 +124,47 @@ class Chamada(models.Model):
         if self.assunto:
             opcoes.append(f"config.subject={valor(self.assunto)}")
         return f"{settings.JITSI_SERVIDOR}/{self.sala}#{'&'.join(opcoes)}"
+
+
+# Sinais com mais deste tempo são apagados (a chamada já acabou ou a negociação já terminou).
+VALIDADE_DO_SINAL = timedelta(hours=2)
+
+
+class SinalChamada(models.Model):
+    """Um recado curto de um navegador para o outro, na sala de vídeo própria.
+
+    Para dois navegadores conversarem direto (WebRTC), eles precisam antes trocar alguns
+    recados: "entrei", a oferta, a resposta e os candidatos de rede (endereços onde cada um
+    pode ser encontrado). O portal guarda esses recados aqui, e cada navegador pergunta a cada
+    1 segundo se chegou algo novo para ele (polling). O vídeo em si nunca passa por aqui.
+
+    Os sinais são descartáveis: apagados quando a chamada é encerrada e depois de 2 horas.
+    """
+
+    class Tipo(models.TextChoices):
+        ENTREI = "entrei", "Entrei na sala"
+        OFERTA = "oferta", "Oferta"
+        RESPOSTA = "resposta", "Resposta"
+        CANDIDATO = "candidato", "Candidato de rede"
+        SAIU = "saiu", "Saí da sala"
+
+    chamada = models.ForeignKey(Chamada, on_delete=models.CASCADE, related_name="sinais")
+    de = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+", verbose_name="de"
+    )
+    para = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+", verbose_name="para"
+    )
+    tipo = models.CharField("tipo", max_length=10, choices=Tipo.choices)
+    conteudo = models.JSONField("conteúdo", null=True, blank=True)
+    criado_em = models.DateTimeField("criado em", default=timezone.now)
+
+    class Meta:
+        verbose_name = "sinal de videochamada"
+        verbose_name_plural = "sinais de videochamada"
+        ordering = ["id"]
+        # A consulta de cada segundo é "sinais desta chamada, para mim, depois do número X".
+        indexes = [models.Index(fields=["chamada", "para", "id"], name="sinal_chamada_para_id")]
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} (chamada {self.chamada_id})"
