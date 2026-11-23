@@ -89,8 +89,8 @@ def foto(request):
 def foto_de(request, pk):
     """Entrega a foto de outra pessoa, como na sala da videochamada e nas mensagens.
 
-    Quem não tem motivo para ver a pessoa (regra em foto.pode_ver_foto) recebe 404, o mesmo
-    de uma conta sem foto: assim ninguém descobre quais contas existem ou têm foto.
+    Qualquer pessoa logada no portal vê a foto de qualquer conta (regra em foto.pode_ver_foto).
+    A conta ADMIN responde 404, o mesmo de uma conta sem foto.
     """
     dono = get_object_or_404(Usuario, pk=pk)
     if not pode_ver_foto(request.user, dono):

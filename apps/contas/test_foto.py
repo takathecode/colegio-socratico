@@ -171,7 +171,7 @@ class FotoDePerfilTests(TestCase):
 
 
 class FotoDeOutraPessoaTests(TestCase):
-    """contas:foto_de: a foto de outra conta só sai para quem tem motivo para ver a pessoa."""
+    """contas:foto_de: qualquer conta do portal vê a foto de qualquer outra (menos a do ADMIN)."""
 
     @classmethod
     def setUpTestData(cls):
@@ -206,31 +206,21 @@ class FotoDeOutraPessoaTests(TestCase):
         self.client.force_login(quem)
         return self.client.get(reverse("contas:foto_de", args=[dono.pk])).status_code
 
-    def test_quem_pode_ver_a_foto_de_quem(self):
-        casos = [
-            # (quem vê, de quem é a foto, pode ver?)
-            (self.coordenador, self.aluno, True),
-            (self.coordenador, self.professor, True),
-            (self.professor, self.coordenador, True),  # videochamada
-            (self.professor, self.outro_professor, True),
-            (self.professor, self.aluno, True),  # aluno da turma dele
-            (self.professor, self.outro_aluno, False),  # aluno de outra turma
-            (self.aluno, self.professor, True),  # professor da turma dele
-            (self.aluno, self.outro_professor, False),
-            (self.aluno, self.outro_aluno, False),  # aluno não vê outros alunos
-            (self.aluno, self.coordenador, False),  # a coordenação é a "Secretaria acadêmica"
-            (self.coordenador, self.admin, False),  # o ADMIN não usa o portal
+    def test_todos_veem_a_foto_de_todos_sem_hierarquia(self):
+        contas = [
+            self.coordenador,
+            self.professor,
+            self.outro_professor,
+            self.aluno,
+            self.outro_aluno,  # de outra turma: também vê e é visto
         ]
-        for quem, dono, pode in casos:
-            with self.subTest(quem=quem.matricula, dono=dono.matricula):
-                self.assertEqual(self.status(quem, dono), 200 if pode else 404)
+        for quem in contas:
+            for dono in contas:
+                with self.subTest(quem=quem.matricula, dono=dono.matricula):
+                    self.assertEqual(self.status(quem, dono), 200)
 
-    def test_conversa_tambem_libera_a_foto(self):
-        from apps.mensagens.models import Conversa
-
-        Conversa.objects.create(aluno=self.outro_aluno, contato=self.professor, assunto="Dúvida")
-        self.assertEqual(self.status(self.professor, self.outro_aluno), 200)
-        self.assertEqual(self.status(self.outro_aluno, self.professor), 200)
+    def test_ninguem_ve_a_foto_do_admin(self):
+        self.assertEqual(self.status(self.coordenador, self.admin), 404)
 
     def test_conta_inexistente_ou_sem_foto_da_404(self):
         self.assertEqual(self.status(self.coordenador, Usuario(pk=99999)), 404)
@@ -260,7 +250,7 @@ class FotoDeOutraPessoaTests(TestCase):
         resposta = self.client.get(reverse("videochamadas:inicio"))
         self.assertContains(resposta, reverse("contas:foto_de", args=[self.professor.pk]) + "?v=")
 
-    def test_aluno_ve_a_foto_do_professor_mas_nao_a_da_secretaria(self):
+    def test_mensagens_mostram_a_foto_de_quem_conversa(self):
         from apps.mensagens.models import Conversa
 
         Conversa.objects.create(aluno=self.aluno, contato=self.professor, assunto="Prova")
@@ -268,7 +258,7 @@ class FotoDeOutraPessoaTests(TestCase):
         self.client.force_login(self.aluno)
         resposta = self.client.get(reverse("mensagens:caixa"))
         self.assertContains(resposta, reverse("contas:foto_de", args=[self.professor.pk]))
-        self.assertNotContains(resposta, reverse("contas:foto_de", args=[self.coordenador.pk]))
+        self.assertContains(resposta, reverse("contas:foto_de", args=[self.coordenador.pk]))
 
     def test_listas_da_coordenacao_mostram_as_fotos(self):
         self.client.force_login(self.coordenador)

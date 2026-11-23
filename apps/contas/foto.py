@@ -56,42 +56,15 @@ VALIDADORES_FOTO = [
 
 
 def pode_ver_foto(quem, dono):
-    """Diz se `quem` pode ver a foto de `dono`. Só quem tem motivo para ver a pessoa vê a foto.
+    """Diz se `quem` pode ver a foto de `dono`.
 
-    - Cada um vê a própria foto.
-    - A coordenação vê a de todos (ela administra as contas).
-    - Professores e coordenadores veem a foto uns dos outros (videochamadas).
-    - O professor vê a dos alunos das turmas em que dá aula (ou com quem conversa).
-    - O aluno vê a dos professores das suas turmas (ou com quem conversa). Ele não vê a de
-      outros alunos nem a dos coordenadores, que falam com ele como "Secretaria acadêmica".
-    - A conta ADMIN não usa o portal, então ninguém vê a foto dela por aqui.
+    Sem hierarquia: aluno, professor e coordenação veem a foto de qualquer conta do portal.
+    Quem chega até aqui já passou pelo login e pelo @perfil_requerido da view, então um
+    visitante nunca vê foto nenhuma. A única exceção é a conta ADMIN, que não usa o portal.
     """
-    # Importados aqui para o app de contas não depender dos outros apps ao carregar.
-    from apps.academico.models import Matricula
-    from apps.mensagens.models import Conversa
+    from .models import Usuario  # importado aqui: models.py importa este arquivo
 
-    from .models import Usuario
-
-    Perfil = Usuario.Perfil
-    if quem.pk == dono.pk:
-        return True
-    if dono.perfil == Perfil.ADMIN:
-        return False
-    if quem.perfil == Perfil.COORDENADOR:
-        return True
-    if quem.perfil == Perfil.PROFESSOR:
-        if dono.perfil in (Perfil.PROFESSOR, Perfil.COORDENADOR):
-            return True
-        return (
-            Matricula.objects.filter(aluno=dono, turma__ofertas__professor=quem).exists()
-            or Conversa.objects.filter(aluno=dono, contato=quem).exists()
-        )
-    if quem.perfil == Perfil.ALUNO and dono.perfil == Perfil.PROFESSOR:
-        return (
-            Matricula.objects.filter(aluno=quem, turma__ofertas__professor=dono).exists()
-            or Conversa.objects.filter(aluno=quem, contato=dono).exists()
-        )
-    return False
+    return dono.perfil != Usuario.Perfil.ADMIN
 
 
 def caminho_da_foto(usuario, nome_enviado):

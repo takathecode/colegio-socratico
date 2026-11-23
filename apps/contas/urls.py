@@ -14,7 +14,7 @@ urlpatterns = [
     path("conta/foto/", views.foto, name="foto"),
     path("conta/foto/enviar/", views.enviar_foto, name="foto_enviar"),
     path("conta/foto/remover/", views.remover_foto, name="foto_remover"),
-    # Foto de outra pessoa, só para quem tem motivo para vê-la (foto.pode_ver_foto).
+    # Foto de outra pessoa: qualquer conta do portal vê a de qualquer outra (foto.pode_ver_foto).
     path("conta/<int:pk>/foto/", views.foto_de, name="foto_de"),
     # Fluxo de "Esqueci minha senha" do próprio Django, só com as telas do projeto.
     path(

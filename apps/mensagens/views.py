@@ -23,7 +23,6 @@ from apps.alertas.fila import enfileirar
 from apps.alertas.models import Alerta
 from apps.alertas.regras import chave_da_conversa
 from apps.contas.decorators import perfil_requerido
-from apps.contas.models import Usuario
 
 from .forms import NovaConversaForm, RespostaForm
 from .models import Conversa, Mensagem, nome_de_exibicao
@@ -63,8 +62,7 @@ def listar_conversas(usuario):
         outro = conversa.outro_participante(usuario)
         conversa.outro = outro
         conversa.nome_do_outro = nome_de_exibicao(outro)
-        # O coordenador aparece para o aluno como "Secretaria acadêmica": sem a foto pessoal.
-        conversa.mostra_foto_do_outro = outro.perfil != Usuario.Perfil.COORDENADOR
+        # Sem foto, as iniciais saem do nome mostrado ("Secretaria acadêmica" vira "SA").
         conversa.iniciais_do_outro = "".join(
             parte[0] for parte in conversa.nome_do_outro.replace(".", "").split()[-2:]
         ).upper()
