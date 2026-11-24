@@ -3,7 +3,7 @@ from .models import Alerta
 # Quantos alertas a lista do sino mostra. Os outros ficam na tela "Notificações".
 ALERTAS_NO_SINO = 5
 
-PERFIS_COM_SINO = ("ALUNO", "PROFESSOR", "COORDENADOR")
+PERFIS_COM_SINO = ("ALUNO", "PROFESSOR", "COORDENADOR", "SECRETARIA")
 
 
 def sino(request):

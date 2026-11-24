@@ -1,5 +1,5 @@
 from django.contrib.auth import views as auth_views
-from django.urls import path, reverse_lazy
+from django.urls import path
 
 from . import views
 
@@ -10,41 +10,21 @@ urlpatterns = [
     path("entrar/", views.EntrarView.as_view(), name="entrar"),
     path("sair/", auth_views.LogoutView.as_view(), name="sair"),
     path("atendimento/", views.atendimento, name="atendimento"),
-    # Foto de perfil da própria pessoa (aluno, professor e coordenação).
+    # Foto de perfil da própria pessoa (aluno, professor, coordenação e Secretaria).
     path("conta/foto/", views.foto, name="foto"),
     path("conta/foto/enviar/", views.enviar_foto, name="foto_enviar"),
     path("conta/foto/remover/", views.remover_foto, name="foto_remover"),
     # Foto de outra pessoa: qualquer conta do portal vê a de qualquer outra (foto.pode_ver_foto).
     path("conta/<int:pk>/foto/", views.foto_de, name="foto_de"),
-    # Fluxo de "Esqueci minha senha" do próprio Django, só com as telas do projeto.
+    # Troca da senha por quem está logado (e a troca obrigatória depois da senha provisória).
+    path("conta/senha/", views.AlterarSenhaView.as_view(), name="senha_alterar"),
+    # "Esqueci minha senha" pela matrícula (regras em apps/contas/redefinicao.py).
+    path("senha/esqueci/", views.senha_esqueci, name="senha_esqueci"),
+    path("senha/esqueci/confirmar/", views.senha_confirmar, name="senha_confirmar"),
+    path("senha/enviada/", views.senha_enviada, name="senha_enviada"),
     path(
-        "senha/esqueci/",
-        auth_views.PasswordResetView.as_view(
-            template_name="contas/senha_esqueci.html",
-            email_template_name="contas/email_senha.txt",
-            subject_template_name="contas/email_senha_assunto.txt",
-            success_url=reverse_lazy("contas:senha_enviada"),
-        ),
-        name="senha_esqueci",
-    ),
-    path(
-        "senha/enviada/",
-        auth_views.PasswordResetDoneView.as_view(template_name="contas/senha_enviada.html"),
-        name="senha_enviada",
-    ),
-    path(
-        "senha/nova/<uidb64>/<token>/",
-        auth_views.PasswordResetConfirmView.as_view(
-            template_name="contas/senha_nova.html",
-            success_url=reverse_lazy("contas:senha_concluida"),
-        ),
-        name="senha_nova",
-    ),
-    path(
-        "senha/concluida/",
-        auth_views.PasswordResetCompleteView.as_view(
-            template_name="contas/senha_concluida.html"
-        ),
-        name="senha_concluida",
+        "senha/redefinir/<uidb64>/<token>/",
+        views.RedefinirSenhaView.as_view(),
+        name="senha_redefinir",
     ),
 ]

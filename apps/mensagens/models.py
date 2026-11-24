@@ -1,4 +1,4 @@
-"""Caixa de mensagens interna: conversas entre um aluno e um professor ou a secretaria."""
+"""Caixa de mensagens interna: conversas entre um aluno e um professor, a coordenação ou a Secretaria."""
 
 import os
 
@@ -12,9 +12,17 @@ from apps.academico.models import VALIDADORES_ANEXO, Oferta
 from apps.contas.models import Usuario
 
 
+# Quem pode estar do outro lado da conversa com o aluno.
+PERFIS_DE_CONTATO = (
+    Usuario.Perfil.PROFESSOR,
+    Usuario.Perfil.COORDENADOR,
+    Usuario.Perfil.SECRETARIA,
+)
+
+
 def nome_de_exibicao(usuario):
-    """Nome mostrado na conversa. Os coordenadores atendem como "Secretaria acadêmica"."""
-    if usuario.perfil == Usuario.Perfil.COORDENADOR:
+    """Nome mostrado na conversa. As contas da Secretaria atendem como "Secretaria acadêmica"."""
+    if usuario.perfil == Usuario.Perfil.SECRETARIA:
         return "Secretaria acadêmica"
     return usuario.nome_com_tratamento or usuario.matricula
 
@@ -33,12 +41,12 @@ class Conversa(models.Model):
         limit_choices_to={"perfil": Usuario.Perfil.ALUNO},
         verbose_name="aluno",
     )
-    # Quem fala com o aluno: um professor ou um coordenador, que representa a secretaria.
+    # Quem fala com o aluno: um professor, um coordenador ou a Secretaria.
     contato = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="conversas_como_contato",
-        limit_choices_to={"perfil__in": [Usuario.Perfil.PROFESSOR, Usuario.Perfil.COORDENADOR]},
+        limit_choices_to={"perfil__in": list(PERFIS_DE_CONTATO)},
         verbose_name="contato",
     )
     assunto = models.CharField("assunto", max_length=120)
@@ -66,9 +74,10 @@ class Conversa(models.Model):
     def clean(self):
         if self.aluno_id and self.aluno.perfil != Usuario.Perfil.ALUNO:
             raise ValidationError({"aluno": "O usuário escolhido não é aluno."})
-        perfis_de_contato = (Usuario.Perfil.PROFESSOR, Usuario.Perfil.COORDENADOR)
-        if self.contato_id and self.contato.perfil not in perfis_de_contato:
-            raise ValidationError({"contato": "O contato precisa ser professor ou coordenador."})
+        if self.contato_id and self.contato.perfil not in PERFIS_DE_CONTATO:
+            raise ValidationError(
+                {"contato": "O contato precisa ser professor, coordenador ou da Secretaria."}
+            )
 
     def outro_participante(self, usuario):
         return self.contato if usuario.pk == self.aluno_id else self.aluno

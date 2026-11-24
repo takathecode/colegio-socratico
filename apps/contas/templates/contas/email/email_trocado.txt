@@ -1,0 +1,8 @@
+{% autoescape off %}Olá, {{ nome }}.
+
+O e-mail da conta de matrícula {{ matricula }} foi trocado pela Secretaria em {{ quando|date:"d/m/Y" }} às {{ quando|date:"H:i" }}. A partir de agora, os avisos e os links de nova senha vão para o endereço novo, e não mais para este.
+
+Se você não pediu essa troca, procure a Secretaria imediatamente, com um documento com foto.
+
+Instituto Socrático · e-mail automático, não responda.
+{% endautoescape %}

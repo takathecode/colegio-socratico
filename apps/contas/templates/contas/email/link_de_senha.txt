@@ -1,0 +1,13 @@
+{% autoescape off %}Olá, {{ nome }}.
+
+Recebemos um pedido para criar uma nova senha para a matrícula {{ matricula }}.
+
+Para criar a nova senha, abra o link abaixo:
+{{ link }}
+
+O link vale por {{ minutos }} minutos, até as {{ valido_ate|date:"H:i" }} de {{ valido_ate|date:"d/m/Y" }}, e funciona uma única vez.
+
+Se você não pediu, ignore este e-mail. Sua senha continua a mesma.
+
+Instituto Socrático · e-mail automático, não responda.
+{% endautoescape %}

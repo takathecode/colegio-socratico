@@ -1,10 +1,11 @@
-"""Testes do login, do redirecionamento por perfil, das permissões e da redefinição de senha."""
+"""Testes do login, do redirecionamento por perfil e das permissões.
 
-import re
+A redefinição e a troca de senha ficam em test_senha.py.
+"""
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.core import mail
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import NoReverseMatch, reverse
@@ -20,6 +21,7 @@ PAINEIS = {
     "/aluno/": "ALUNO",
     "/professor/": "PROFESSOR",
     "/coordenacao/": "COORDENADOR",
+    "/secretaria/": "SECRETARIA",
 }
 
 
@@ -72,6 +74,7 @@ class LoginTests(TestCase):
             "aluno": "/aluno/",
             "professor": "/professor/",
             "coordenador": "/coordenacao/",
+            "secretaria": "/secretaria/",
             "admin": "/admin/",
         }
         for matricula, destino in destinos.items():
@@ -278,6 +281,46 @@ class LayoutTests(TestCase):
         self.assertContains(resposta, 'href="/relatorios/"')
         self.assertNotContains(resposta, 'href="#"')
 
+    def test_coordenacao_nao_tem_mais_o_item_contas(self):
+        self.client.force_login(self.usuarios["COORDENADOR"])
+        nomes = [item["nome"] for item in self.client.get("/coordenacao/").context["menu_itens"]]
+        self.assertNotIn("Contas", nomes)
+
+    def test_menu_da_secretaria_so_tem_a_area_de_acessos(self):
+        self.client.force_login(self.usuarios["SECRETARIA"])
+        resposta = self.client.get("/secretaria/")
+        nomes = [item["nome"] for item in resposta.context["menu_itens"]]
+        self.assertEqual(nomes, ["Visão geral de acessos", "Contas", "Mensagens"])
+        self.assertContains(resposta, "Sair do portal")
+
+    def test_card_de_ajuda_some_para_a_secretaria(self):
+        self.client.force_login(self.usuarios["SECRETARIA"])
+        self.assertNotContains(self.client.get("/secretaria/"), "Precisa de ajuda?")
+
+    def test_card_de_ajuda_do_aluno_abre_mensagem_para_a_secretaria(self):
+        self.client.force_login(self.usuarios["ALUNO"])
+        resposta = self.client.get("/aluno/")
+        self.assertContains(resposta, "A Secretaria cuida do seu acesso ao portal.")
+        secretaria = self.usuarios["SECRETARIA"]
+        self.assertContains(resposta, f"/mensagens/?para={secretaria.pk}&amp;assunto=Acesso")
+
+    def test_card_de_ajuda_do_professor_leva_a_central(self):
+        # As conversas sempre têm um aluno: professor e coordenação vão para a Central.
+        for perfil, painel in (("PROFESSOR", "/professor/"), ("COORDENADOR", "/coordenacao/")):
+            with self.subTest(perfil=perfil):
+                self.client.force_login(self.usuarios[perfil])
+                resposta = self.client.get(painel)
+                self.assertContains(resposta, "Falar com a Secretaria")
+                self.assertContains(resposta, f'href="{reverse("contas:atendimento")}"')
+
+    def test_menu_do_avatar_tem_alterar_minha_senha(self):
+        for painel, perfil in PAINEIS.items():
+            with self.subTest(perfil=perfil):
+                self.client.force_login(self.usuarios[perfil])
+                resposta = self.client.get(painel)
+                self.assertContains(resposta, "Alterar minha senha")
+                self.assertContains(resposta, f'href="{reverse("contas:senha_alterar")}"')
+
     def test_topo_mostra_iniciais_e_matricula(self):
         aluna = Usuario.objects.create_user(
             matricula="202410284", password=SENHA, first_name="Mariana", last_name="Alves"
@@ -286,46 +329,3 @@ class LayoutTests(TestCase):
         resposta = self.client.get("/aluno/")
         self.assertContains(resposta, "MA")
         self.assertContains(resposta, "RA 202410284")
-
-
-class RedefinirSenhaTests(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.usuarios = criar_usuarios()
-
-    def pedir_link(self, email="aluno@exemplo.com"):
-        return self.client.post(reverse("contas:senha_esqueci"), {"email": email})
-
-    def test_fluxo_completo(self):
-        self.assertRedirects(self.pedir_link(), reverse("contas:senha_enviada"))
-
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertEqual(mail.outbox[0].to, ["aluno@exemplo.com"])
-        self.assertIn("Instituto Socrático", mail.outbox[0].subject)
-        link = re.search(r"https?://[^/]+(/senha/nova/\S+)", mail.outbox[0].body).group(1)
-
-        # O Django troca o código do link por um endereço sem o código, guardado na sessão.
-        pagina = self.client.get(link, follow=True)
-        self.assertContains(pagina, "Criar nova senha")
-        nova_senha = "Nova-Senha-Forte-2026"
-        resposta = self.client.post(
-            pagina.redirect_chain[-1][0],
-            {"new_password1": nova_senha, "new_password2": nova_senha},
-        )
-        self.assertRedirects(resposta, reverse("contas:senha_concluida"))
-        self.assertTrue(self.client.login(matricula="aluno", password=nova_senha))
-
-    def test_email_desconhecido_nao_revela_que_nao_existe(self):
-        self.assertRedirects(
-            self.pedir_link("ninguem@exemplo.com"), reverse("contas:senha_enviada")
-        )
-        self.assertEqual(mail.outbox, [])
-
-    def test_link_invalido_mostra_aviso(self):
-        url = reverse("contas:senha_nova", args=["abc", "codigo-invalido"])
-        self.assertContains(self.client.get(url), "Link inválido")
-
-    def test_telas_publicas_abrem(self):
-        for nome in ("senha_esqueci", "senha_enviada", "senha_concluida", "atendimento"):
-            with self.subTest(nome=nome):
-                self.assertEqual(self.client.get(reverse(f"contas:{nome}")).status_code, 200)

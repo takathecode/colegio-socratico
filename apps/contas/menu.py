@@ -64,14 +64,9 @@ AREAS = {
                 "nome": "Alunos",
                 "icone": "graduation-cap",
                 "rota": "coordenacao:alunos",
-                "tambem_ativo": ("coordenacao:aluno_novo", "coordenacao:aluno_editar"),
+                "tambem_ativo": ("coordenacao:aluno_editar",),
             },
-            {
-                "nome": "Professores",
-                "icone": "users",
-                "rota": "coordenacao:professores",
-                "tambem_ativo": ("coordenacao:professor_novo", "coordenacao:professor_editar"),
-            },
+            {"nome": "Professores", "icone": "users", "rota": "coordenacao:professores"},
             {
                 "nome": "Turmas",
                 "icone": "school",
@@ -95,20 +90,33 @@ AREAS = {
                     "coordenacao:disciplina_excluir",
                 ),
             },
+            {"nome": "Relatórios", "icone": "file-text", "rota": "relatorios:inicio"},
+            {"nome": "Alertas", "icone": "bell-ring", "rota": "coordenacao:alertas"},
+            MENSAGENS,
+            VIDEOCHAMADAS,
+        ],
+    },
+    # A Secretaria só administra os acessos: não vê notas, frequência, riscos nem relatórios.
+    "SECRETARIA": {
+        "titulo": "Secretaria",
+        "itens": [
+            {
+                "nome": "Visão geral de acessos",
+                "icone": "layout-dashboard",
+                "rota": "secretaria:painel",
+            },
             {
                 "nome": "Contas",
                 "icone": "key-round",
-                "rota": "coordenacao:contas",
+                "rota": "secretaria:contas",
                 "tambem_ativo": (
-                    "coordenacao:coordenador_novo",
-                    "coordenacao:coordenador_editar",
-                    "coordenacao:senha_provisoria",
+                    "secretaria:conta",
+                    "secretaria:conta_nova",
+                    "secretaria:conta_editar",
+                    "secretaria:senha_provisoria",
                 ),
             },
-            {"nome": "Relatórios", "icone": "file-text", "rota": "relatorios:inicio"},
-            {"nome": "Alertas", "icone": "bell-ring", "rota": "coordenacao:alertas"},
-            MENSAGENS,  # os coordenadores respondem como "Secretaria acadêmica"
-            VIDEOCHAMADAS,
+            MENSAGENS,
         ],
     },
 }

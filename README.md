@@ -8,12 +8,15 @@ Sistema acadêmico em Django, com banco PostgreSQL no Supabase e uma área para 
   com anexo, calendário, mensagens e financeiro (simulado).
 - **Professor:** turmas, lançamento de notas, chamada com simulação de biometria, avaliação de
   justificativas, gráfico de desempenho, relatórios da disciplina e videochamada com a coordenação.
-- **Coordenação:** visão geral, alunos em risco de evasão (modelo de machine learning), cadastro
-  de alunos, professores, turmas e disciplinas, criação de contas, relatórios em PDF e Excel e
-  central de alertas e videochamada com os professores (Jitsi Meet).
+- **Coordenação:** visão geral, alunos em risco de evasão (modelo de machine learning), matrícula
+  dos alunos nas turmas, professores das disciplinas, turmas e disciplinas, relatórios em PDF e
+  Excel, central de alertas e videochamada com os professores.
+- **Secretaria:** só os acessos. Cria contas de aluno, professor e coordenação, edita nome e
+  e-mail, envia link de nova senha ou gera senha provisória, desbloqueia logins e desativa contas,
+  com o histórico (auditoria) de cada ação. Não vê notas, frequência, riscos nem relatórios.
 
 Também tem alertas automáticos (Celery + Redis), notificações no sino e uma API REST documentada
-em `/api/docs/`. Não existe tela de cadastro: as contas são criadas pela coordenação ou pelo
+em `/api/docs/`. Não existe tela de cadastro: as contas são criadas pela Secretaria ou pelo
 Django Admin.
 
 ---
@@ -66,6 +69,8 @@ Abra o `.env` e preencha. Cada variável tem a explicação no próprio arquivo.
 | `DATABASE_URL` | A URL do Supabase (passo 4) |
 | `REDIS_URL` e `CELERY_SEM_REDIS` | Veja o passo 7. Sem Redis, use `CELERY_SEM_REDIS=True` |
 | `USAR_HTTPS` | `False` no computador. `True` só no servidor publicado |
+| `SITE_URL` | O endereço do sistema, usado nos links dos e-mails. No computador, `http://127.0.0.1:8000` |
+| `EMAIL_BACKEND` e `EMAIL_*` | No computador, o backend de console (o e-mail aparece no terminal). No servidor, os dados do SMTP (`EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL`) |
 
 O `.env` tem senhas e **nunca** vai para o Git (ele está no `.gitignore`).
 
@@ -123,6 +128,7 @@ A senha é igual à matrícula. Essas contas existem só para desenvolvimento e 
 | Perfil | Matrícula | Observação |
 |---|---|---|
 | Administrador | `admin01` | Criada no passo 4 com `createsuperuser`; o `popular_demo` não recria |
+| Secretaria | `secretaria01` | Administra os acessos das outras contas (não as de administrador) |
 | Coordenador | `coord01` | |
 | Professor | `prof01` a `prof06` | Um por disciplina |
 | Aluno | `aluno01` a `aluno40` | `aluno01` reproduz os dados do protótipo |
@@ -130,9 +136,24 @@ A senha é igual à matrícula. Essas contas existem só para desenvolvimento e 
 Alunos com dados de risco: `aluno05`, `aluno09`, `aluno14`, `aluno18`, `aluno23`, `aluno27`,
 `aluno32` e `aluno38`.
 
-Em "Esqueci minha senha", durante o desenvolvimento, o e-mail com o link aparece no terminal do
-`runserver`. Depois de 5 senhas erradas seguidas, a matrícula fica bloqueada por 15 minutos.
-Trocar a senha libera na hora.
+### Esqueci minha senha
+
+1. Na tela de login, **Esqueci minha senha** e digite só a **matrícula** (ex.: `aluno01`).
+2. A tela mostra o e-mail cadastrado na conta, mascarado (ex.: `a*****1@i*****************.example`).
+   Clique em **Enviar link**.
+3. Durante o desenvolvimento, o e-mail aparece no **terminal do `runserver`**. Copie o link
+   (`http://127.0.0.1:8000/senha/redefinir/...`) para o navegador. Ele vale por **10 minutos**,
+   funciona uma vez só, e pedir outro cancela o anterior.
+4. Crie a nova senha (a matrícula aparece travada). Regras: de 10 a 128 caracteres, com letra
+   maiúscula, minúscula, número e caractere especial, sem a matrícula, o nome ou o e-mail, e
+   diferente da senha atual.
+
+Depois de 5 senhas erradas seguidas, a matrícula fica bloqueada por 15 minutos. Trocar a senha
+(ou o botão "Desbloquear" da Secretaria) libera na hora. Logado, qualquer perfil troca a senha
+em **Alterar minha senha**, no menu do avatar (topo).
+
+As migrações do perfil Secretaria (`contas/0005` e `mensagens/0002`) já estão aplicadas no
+Supabase. Em um banco novo, o `python manage.py migrate` do passo 4 aplica todas.
 
 ## 7. Alertas automáticos (Celery + Redis), opcional
 
@@ -186,7 +207,12 @@ Os testes usam um banco SQLite na memória: não precisam de internet nem do Red
 dados do Supabase. Entre eles:
 
 - **Login e bloqueio** (`apps/contas/test_login.py`): login por matrícula, "Manter conectado",
-  redefinição de senha e bloqueio depois de 5 senhas erradas.
+  menus de cada perfil e bloqueio depois de 5 senhas erradas.
+- **Senhas** (`apps/contas/test_senha.py`): "Esqueci minha senha" pela matrícula, máscara do
+  e-mail, link de uso único com prazo de 10 minutos, limite de pedidos, regras de senha forte,
+  senha provisória e "Alterar minha senha".
+- **Secretaria** (`apps/secretaria/tests.py`): contas, senhas, desbloqueio, auditoria e a
+  garantia de que a Secretaria não altera administrador, staff nem outra Secretaria.
 - **Varredura de permissões** (`apps/contas/test_permissoes.py`): percorre todas as rotas do
   sistema e confere que o visitante vai para o login e que cada perfil errado recebe 403. Uma tela
   nova sem `@perfil_requerido` faz o teste falhar.
@@ -212,11 +238,12 @@ dados do Supabase. Entre eles:
 
 ```
 config/            configurações (settings.py), rotas principais e Celery
-apps/contas/       usuário customizado, login, bloqueio de senhas erradas e permissões por perfil
+apps/contas/       usuário customizado, login, bloqueio, "Esqueci minha senha", auditoria e permissões por perfil
 apps/academico/    cursos, turmas, disciplinas, matrículas, notas, frequência (DER em docs/DER.md)
 apps/aluno/        área do aluno           → /aluno/
 apps/professor/    área do professor       → /professor/
 apps/coordenacao/  área da coordenação     → /coordenacao/
+apps/secretaria/   área da Secretaria (contas e senhas) → /secretaria/
 apps/mensagens/    caixa de mensagens      → /mensagens/
 apps/videochamadas/ videochamadas (Jitsi Meet) entre coordenação e professores → /videochamadas/
 apps/alertas/      alertas, sino de notificações e tarefas do Celery → /alertas/
@@ -239,6 +266,6 @@ docs/              documentação para a apresentação
 | [docs/ALERTAS.md](docs/ALERTAS.md) | Alertas automáticos com Celery e Redis |
 | [docs/RELATORIOS.md](docs/RELATORIOS.md) | Relatórios em PDF e Excel |
 | [docs/API.md](docs/API.md) | API REST: token, endpoints e exemplos |
-| [docs/SEGURANCA.md](docs/SEGURANCA.md) | Login, perfis, permissões e proteção dos dados |
+| [docs/SEGURANCA.md](docs/SEGURANCA.md) | Login, perfis (incluindo a Secretaria), redefinição de senha, auditoria e proteção dos dados |
 | [docs/VIDEOCHAMADA.md](docs/VIDEOCHAMADA.md) | Videochamada entre coordenação e professores |
 | [docs/VERCEL.md](docs/VERCEL.md) | Publicação na internet (Vercel): variáveis, Cron e passo a passo |

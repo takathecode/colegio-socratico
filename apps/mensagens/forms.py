@@ -9,12 +9,16 @@ from .models import Conversa, Mensagem, nome_de_exibicao
 
 
 def secretaria():
-    """A conta que recebe as mensagens da secretaria: o primeiro coordenador ativo."""
-    return (
-        Usuario.objects.filter(perfil=Usuario.Perfil.COORDENADOR, is_active=True)
-        .order_by("pk")
-        .first()
-    )
+    """A conta que recebe as mensagens escritas "para a Secretaria".
+
+    É a primeira conta ativa do perfil Secretaria. Enquanto a escola não tiver nenhuma
+    (ex.: logo depois de atualizar o sistema), o primeiro coordenador ativo responde.
+    """
+    for perfil in (Usuario.Perfil.SECRETARIA, Usuario.Perfil.COORDENADOR):
+        conta = Usuario.objects.filter(perfil=perfil, is_active=True).order_by("pk").first()
+        if conta is not None:
+            return conta
+    return None
 
 
 def contatos_do_aluno(aluno):
@@ -47,8 +51,15 @@ def alunos_do_professor(professor):
     )
 
 
+def alunos_ativos():
+    """A Secretaria escreve a qualquer conta de aluno ativa, mesmo sem matrícula (ex.: acesso)."""
+    return Usuario.objects.filter(perfil=Usuario.Perfil.ALUNO, is_active=True).order_by(
+        "first_name", "last_name"
+    )
+
+
 def alunos_da_secretaria():
-    """A secretaria pode escrever a qualquer aluno ativo com matrícula ativa."""
+    """A coordenação pode escrever a qualquer aluno ativo com matrícula ativa."""
     return (
         Usuario.objects.filter(
             perfil=Usuario.Perfil.ALUNO,
@@ -91,8 +102,9 @@ class RespostaForm(forms.ModelForm):
 class NovaConversaForm(forms.ModelForm):
     """Cria a conversa e a primeira mensagem de uma só vez.
 
-    Quem escreve é o aluno (escolhe um professor da turma ou a secretaria), o professor
-    (escolhe um aluno das suas turmas) ou a secretaria (escolhe qualquer aluno ativo).
+    Quem escreve é o aluno (escolhe um professor da turma ou a Secretaria), o professor
+    (escolhe um aluno das suas turmas), a coordenação (aluno com matrícula ativa) ou a
+    Secretaria (qualquer conta de aluno ativa).
     O campo "contato" é sempre "a outra pessoa".
     """
 
@@ -123,6 +135,9 @@ class NovaConversaForm(forms.ModelForm):
         elif usuario.perfil == Usuario.Perfil.COORDENADOR:
             self.fields["contato"].label = "Aluno"
             self.fields["contato"].queryset = alunos_da_secretaria()
+        elif usuario.perfil == Usuario.Perfil.SECRETARIA:
+            self.fields["contato"].label = "Aluno"
+            self.fields["contato"].queryset = alunos_ativos()
         else:
             self.fields["contato"].queryset = contatos_do_aluno(usuario)
 

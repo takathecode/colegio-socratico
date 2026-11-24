@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.utils import timezone
 
 from .foto import VALIDADORES_FOTO, caminho_da_foto
 
@@ -39,6 +41,8 @@ class Usuario(AbstractUser):
         ALUNO = "ALUNO", "Aluno"
         PROFESSOR = "PROFESSOR", "Professor"
         COORDENADOR = "COORDENADOR", "Coordenador"
+        # Cuida só dos acessos (contas, senhas, desbloqueios). Não vê dados acadêmicos.
+        SECRETARIA = "SECRETARIA", "Secretaria"
         ADMIN = "ADMIN", "Administrador"
 
     # Remove o campo "username" herdado de AbstractUser: quem identifica é a matrícula.
@@ -59,6 +63,16 @@ class Usuario(AbstractUser):
         default="",
         db_default="",
         validators=VALIDADORES_FOTO,
+    )
+    # Ligado quando a Secretaria gera uma senha provisória: no próximo login, a pessoa só
+    # consegue abrir a tela de troca de senha (apps/contas/middleware.py).
+    precisa_trocar_senha = models.BooleanField(
+        "precisa trocar a senha", default=False, db_default=False
+    )
+    # Momento do último pedido de link de "Esqueci minha senha". Entra no código do link
+    # (apps/contas/tokens.py): pedir um link novo faz o anterior parar de funcionar.
+    ultimo_pedido_reset = models.DateTimeField(
+        "último pedido de redefinição", null=True, blank=True
     )
 
     # Campo usado na tela de login.
@@ -83,7 +97,7 @@ class Usuario(AbstractUser):
         O set_password() do Django guarda a senha nova em self._password até o save().
         Trocar a senha já encerra as sessões do portal; sem isto, quem tivesse copiado o
         token antigo continuaria entrando pela API. Vale para a senha provisória da
-        coordenação, o "Esqueci minha senha" e o Django Admin.
+        Secretaria, o "Esqueci minha senha" e o Django Admin.
         """
         senha_mudou = self._password is not None
         super().save(*args, **kwargs)
@@ -92,7 +106,7 @@ class Usuario(AbstractUser):
             from rest_framework.authtoken.models import Token
 
             Token.objects.filter(user=self).delete()
-            # Senha nova (pela coordenação ou por "Esqueci minha senha") desbloqueia o login.
+            # Senha nova (pela Secretaria ou por "Esqueci minha senha") desbloqueia o login.
             BloqueioDeLogin.objects.filter(matricula=self.matricula).delete()
 
     @property
@@ -131,3 +145,81 @@ class BloqueioDeLogin(models.Model):
 
     def __str__(self):
         return self.matricula
+
+
+class RegistroDeAuditoria(models.Model):
+    """Histórico das ações sensíveis sobre as contas: quem fez, em qual conta, o quê, quando e de onde.
+
+    Nunca guarda senhas nem códigos de link. Os registros não são editados nem apagados pelo
+    portal; o Django Admin só mostra. Exemplos de texto em "detalhe": o e-mail antigo e o
+    novo (mascarados), ou o motivo de uma recusa.
+    """
+
+    class Acao(models.TextChoices):
+        CONTA_CRIADA = "CONTA_CRIADA", "Conta criada"
+        DADOS_ALTERADOS = "DADOS_ALTERADOS", "Dados de acesso alterados"
+        EMAIL_ALTERADO = "EMAIL_ALTERADO", "E-mail alterado"
+        LINK_ENVIADO = "LINK_ENVIADO", "Link de redefinição enviado"
+        SENHA_PROVISORIA = "SENHA_PROVISORIA", "Senha provisória gerada"
+        SENHA_REDEFINIDA = "SENHA_REDEFINIDA", "Senha redefinida pelo link"
+        SENHA_ALTERADA = "SENHA_ALTERADA", "Senha alterada pela própria pessoa"
+        DESBLOQUEIO = "DESBLOQUEIO", "Login desbloqueado"
+        DESATIVACAO = "DESATIVACAO", "Conta desativada"
+        REATIVACAO = "REATIVACAO", "Conta reativada"
+
+    # SET_NULL no autor: o registro continua existindo mesmo se a conta de quem fez sumir.
+    # Vazio também quando quem fez não estava logado (ex.: pedido de link pela tela pública).
+    autor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="acoes_de_auditoria",
+        verbose_name="quem fez",
+    )
+    conta = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="historico_de_acesso",
+        verbose_name="conta",
+    )
+    acao = models.CharField("ação", max_length=20, choices=Acao.choices)
+    detalhe = models.CharField("detalhe", max_length=200, blank=True)
+    ip = models.GenericIPAddressField("IP", null=True, blank=True)
+    criado_em = models.DateTimeField("data e hora", default=timezone.now, editable=False)
+
+    class Meta:
+        verbose_name = "registro de auditoria"
+        verbose_name_plural = "registros de auditoria"
+        ordering = ["-criado_em", "-pk"]
+        indexes = [models.Index(fields=["conta", "-criado_em"])]
+
+    def __str__(self):
+        return f"{self.get_acao_display()} · {self.conta}"
+
+
+class PedidoDeSenha(models.Model):
+    """Um pedido de link de "Esqueci minha senha", usado para limitar os pedidos por hora.
+
+    Fica no banco (e não na memória) pelo mesmo motivo do BloqueioDeLogin: na Vercel cada
+    pedido pode cair em uma cópia diferente do sistema. Regras em apps/contas/redefinicao.py.
+    "tipo" separa o pedido do link (ENVIO) da simples consulta da matrícula (CONSULTA).
+    """
+
+    class Tipo(models.TextChoices):
+        CONSULTA = "CONSULTA", "Consulta da matrícula"
+        ENVIO = "ENVIO", "Envio do link"
+
+    tipo = models.CharField("tipo", max_length=10, choices=Tipo.choices)
+    matricula = models.CharField("matrícula digitada", max_length=150, blank=True)
+    ip = models.GenericIPAddressField("IP", null=True, blank=True)
+    criado_em = models.DateTimeField("pedido em", default=timezone.now, editable=False)
+
+    class Meta:
+        verbose_name = "pedido de redefinição de senha"
+        verbose_name_plural = "pedidos de redefinição de senha"
+        ordering = ["-criado_em"]
+        indexes = [models.Index(fields=["tipo", "criado_em"])]
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} · {self.matricula or self.ip}"

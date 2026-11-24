@@ -4,34 +4,13 @@ A coordenação enxerga a instituição inteira, então aqui não há filtro por
 a proteção é o @perfil_requerido("COORDENADOR") de cada view.
 """
 
-import secrets
-
 from django.db.models import Count, Q
 
 from apps.academico.calculos import EM_ATENCAO, EM_RISCO, REGULAR, resumo_das_matriculas
 from apps.academico.models import Matricula, Turma
 from apps.contas.models import Usuario
 
-# Perfis que a coordenação pode gerenciar. Contas ADMIN ficam só no Django Admin.
-PERFIS_GERENCIADOS = (
-    Usuario.Perfil.ALUNO,
-    Usuario.Perfil.PROFESSOR,
-    Usuario.Perfil.COORDENADOR,
-)
-
 SITUACOES = (REGULAR, EM_ATENCAO, EM_RISCO)
-
-# Sem letras e números parecidos (0/O, 1/l/I), para a senha ser ditada sem confusão.
-CARACTERES_SENHA = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-
-
-def gerar_senha_provisoria(tamanho=10):
-    """Senha aleatória para uma conta nova. O módulo secrets é o indicado para senhas."""
-    return "".join(secrets.choice(CARACTERES_SENHA) for _ in range(tamanho))
-
-
-def contas_gerenciadas():
-    return Usuario.objects.filter(perfil__in=PERFIS_GERENCIADOS)
 
 
 def ultima_matricula(aluno):

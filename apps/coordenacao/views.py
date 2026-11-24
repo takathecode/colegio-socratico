@@ -1,7 +1,8 @@
 """Telas da área da coordenação.
 
 Todas usam @perfil_requerido("COORDENADOR"): os outros perfis recebem 403.
-Contas nunca são apagadas por aqui, só desativadas, para não perder o histórico acadêmico.
+A coordenação cuida do cadastro acadêmico (matrículas, turmas, disciplinas, professores das
+disciplinas). As contas de acesso (criar, nome, e-mail, senha, desativar) são da Secretaria.
 Turmas, disciplinas e ofertas só podem ser excluídas enquanto não têm registros ligados.
 """
 
@@ -16,7 +17,6 @@ from django.db.models import Count, Max, ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from apps.academico.calculos import GRAVIDADE, indicadores_da_turma, resumo_das_matriculas
@@ -34,30 +34,9 @@ from apps.contas.models import Usuario
 from apps.relatorios.filtros import RiscoFiltro
 
 from . import servicos
-from .forms import (
-    FORM_DO_PERFIL,
-    AlunoForm,
-    CoordenadorForm,
-    DisciplinaForm,
-    OfertaForm,
-    ProfessorForm,
-    TurmaForm,
-)
+from .forms import DisciplinaForm, MatriculaDoAlunoForm, OfertaForm, TurmaForm
 
 ITENS_POR_PAGINA = 25
-
-# Para onde cada perfil volta depois de editar, e qual rota edita a conta.
-LISTA_DO_PERFIL = {
-    Usuario.Perfil.ALUNO: "coordenacao:alunos",
-    Usuario.Perfil.PROFESSOR: "coordenacao:professores",
-    Usuario.Perfil.COORDENADOR: "coordenacao:contas",
-}
-EDICAO_DO_PERFIL = {
-    Usuario.Perfil.ALUNO: "coordenacao:aluno_editar",
-    Usuario.Perfil.PROFESSOR: "coordenacao:professor_editar",
-    Usuario.Perfil.COORDENADOR: "coordenacao:coordenador_editar",
-}
-
 
 def paginar(request, itens):
     return Paginator(itens, ITENS_POR_PAGINA).get_page(request.GET.get("pagina"))
@@ -116,56 +95,6 @@ def tela_de_exclusao(request, objeto, *, descricao, voltar, depois):
         request,
         "coordenacao/confirmar_exclusao.html",
         {"descricao": descricao, "voltar": voltar},
-    )
-
-
-def guardar_senha_e_mostrar(request, usuario, senha, acao):
-    """Guarda a senha provisória na sessão (no servidor) e abre a tela que a mostra uma vez."""
-    request.session["senha_provisoria"] = {
-        "nome": nome_de(usuario),
-        "matricula": usuario.matricula,
-        "perfil": usuario.get_perfil_display(),
-        "senha": senha,
-        "acao": acao,
-        "voltar": reverse(LISTA_DO_PERFIL[usuario.perfil]),
-    }
-    return redirect("coordenacao:senha_provisoria")
-
-
-def nova_conta(request, form_classe, *, titulo, subtitulo):
-    form = form_classe(request.POST or None)
-
-    def ao_salvar(usuario):
-        return guardar_senha_e_mostrar(request, usuario, form.senha_provisoria, "criada")
-
-    return tela_de_formulario(
-        request,
-        form,
-        titulo=titulo,
-        subtitulo=subtitulo,
-        voltar=reverse(LISTA_DO_PERFIL[form_classe.perfil]),
-        botao="Criar conta",
-        ao_salvar=ao_salvar,
-    )
-
-
-def editar_conta(request, pk, perfil):
-    usuario = get_object_or_404(Usuario, pk=pk, perfil=perfil)
-    form = FORM_DO_PERFIL[perfil](request.POST or None, instance=usuario)
-    lista = reverse(LISTA_DO_PERFIL[perfil])
-
-    def ao_salvar(usuario):
-        messages.success(request, f"Dados de {nome_de(usuario)} atualizados.")
-        return redirect(lista)
-
-    return tela_de_formulario(
-        request,
-        form,
-        titulo=f"Editar {usuario.get_perfil_display().lower()}",
-        subtitulo=f"{nome_de(usuario)} · matrícula {usuario.matricula}",
-        voltar=lista,
-        botao="Salvar alterações",
-        ao_salvar=ao_salvar,
     )
 
 
@@ -400,22 +329,28 @@ def alunos(request):
 
 @login_required
 @perfil_requerido("COORDENADOR")
-def aluno_novo(request):
+def aluno_editar(request, pk):
+    """Matrícula do aluno: turma e situação. A conta (nome, e-mail, senha) é da Secretaria."""
+    aluno = get_object_or_404(Usuario, pk=pk, perfil=Usuario.Perfil.ALUNO)
     if not Turma.objects.exists():
         messages.warning(request, "Cadastre uma turma antes de matricular alunos.")
         return redirect("coordenacao:turma_nova")
-    return nova_conta(
+    form = MatriculaDoAlunoForm(request.POST or None, aluno=aluno)
+    nome = aluno.get_full_name() or aluno.matricula
+
+    def ao_salvar(matricula):
+        messages.success(request, f"Matrícula de {nome} atualizada.")
+        return redirect("coordenacao:alunos")
+
+    return tela_de_formulario(
         request,
-        AlunoForm,
-        titulo="Novo aluno",
-        subtitulo="Cria a conta do aluno e a matrícula dele na turma.",
+        form,
+        titulo="Matrícula do aluno" if form.matricula_atual else "Matricular aluno",
+        subtitulo=f"{nome} · RA {aluno.matricula}",
+        voltar=reverse("coordenacao:alunos"),
+        botao="Salvar matrícula",
+        ao_salvar=ao_salvar,
     )
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-def aluno_editar(request, pk):
-    return editar_conta(request, pk, Usuario.Perfil.ALUNO)
 
 
 # --- Professores ---
@@ -436,131 +371,6 @@ def professores(request):
         "coordenacao/professores.html",
         {"pagina": paginar(request, lista), "total": len(lista), "busca": busca},
     )
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-def professor_novo(request):
-    return nova_conta(
-        request,
-        ProfessorForm,
-        titulo="Novo professor",
-        subtitulo="Depois de criar a conta, ligue o professor às disciplinas na tela da turma.",
-    )
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-def professor_editar(request, pk):
-    return editar_conta(request, pk, Usuario.Perfil.PROFESSOR)
-
-
-# --- Contas ---
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-def contas(request):
-    lista = servicos.contas_gerenciadas().order_by("first_name", "last_name")
-    busca = request.GET.get("busca", "").strip()
-    perfil = request.GET.get("perfil", "")
-    estado = request.GET.get("estado", "")
-    if perfil in servicos.PERFIS_GERENCIADOS:
-        lista = lista.filter(perfil=perfil)
-    if estado in ("ativas", "inativas"):
-        lista = lista.filter(is_active=estado == "ativas")
-    lista = servicos.filtrar_por_busca(list(lista), busca)
-    for conta in lista:
-        conta.url_editar = reverse(EDICAO_DO_PERFIL[conta.perfil], args=[conta.pk])
-
-    return render(
-        request,
-        "coordenacao/contas.html",
-        {
-            "pagina": paginar(request, lista),
-            "total": len(lista),
-            "perfis": [(p.value, p.label) for p in servicos.PERFIS_GERENCIADOS],
-            "busca": busca,
-            "perfil": perfil,
-            "estado": estado,
-            "filtrando": bool(busca or perfil or estado),
-        },
-    )
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-def coordenador_novo(request):
-    return nova_conta(
-        request,
-        CoordenadorForm,
-        titulo="Nova conta de coordenação",
-        subtitulo="A conta terá acesso a toda a área da coordenação.",
-    )
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-def coordenador_editar(request, pk):
-    return editar_conta(request, pk, Usuario.Perfil.COORDENADOR)
-
-
-def conta_de_outra_pessoa(request, pk):
-    """Conta gerenciada pela coordenação. A própria conta fica de fora dessas ações."""
-    conta = get_object_or_404(servicos.contas_gerenciadas(), pk=pk)
-    if conta == request.user:
-        messages.error(
-            request, "Você não pode fazer isso com a sua própria conta. Peça a outro coordenador."
-        )
-        return None
-    return conta
-
-
-def voltar_para(request, padrao="coordenacao:contas"):
-    """Volta para a página que enviou o formulário (campo "proxima"), se ela for do próprio site."""
-    proxima = request.POST.get("proxima", "")
-    if url_has_allowed_host_and_scheme(proxima, allowed_hosts={request.get_host()}):
-        return redirect(proxima)
-    return redirect(padrao)
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-@require_POST
-def conta_nova_senha(request, pk):
-    conta = conta_de_outra_pessoa(request, pk)
-    if conta is None:
-        return voltar_para(request)
-    senha = servicos.gerar_senha_provisoria()
-    # Trocar a senha também encerra as sessões abertas daquela conta.
-    conta.set_password(senha)
-    conta.save(update_fields=["password"])
-    return guardar_senha_e_mostrar(request, conta, senha, "redefinida")
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-@require_POST
-def conta_alternar_ativa(request, pk):
-    """Desativa (a pessoa não entra mais) ou reativa uma conta. Nada é apagado."""
-    conta = conta_de_outra_pessoa(request, pk)
-    if conta is None:
-        return voltar_para(request)
-    conta.is_active = not conta.is_active
-    conta.save(update_fields=["is_active"])
-    estado = "reativada" if conta.is_active else "desativada"
-    messages.success(request, f"Conta de {nome_de(conta)} {estado}.")
-    return voltar_para(request)
-
-
-@login_required
-@perfil_requerido("COORDENADOR")
-def senha_provisoria(request):
-    """Mostra a senha uma única vez: ela é retirada da sessão ao abrir a página."""
-    dados = request.session.pop("senha_provisoria", None)
-    if dados is None:
-        return redirect("coordenacao:contas")
-    return render(request, "coordenacao/senha_provisoria.html", {"dados": dados})
 
 
 # --- Turmas e ofertas ---

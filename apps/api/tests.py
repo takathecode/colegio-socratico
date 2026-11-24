@@ -73,10 +73,25 @@ class TokenTests(BaseApiMixin, TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {token.key}")
         self.assertEqual(self.get("eu").status_code, 401)
 
-    def test_senha_provisoria_da_coordenacao_apaga_o_token(self):
+    def test_senha_provisoria_da_secretaria_apaga_o_token(self):
         Token.objects.create(user=self.aluno)
-        self.client.force_login(self.coordenador)
-        self.client.post(reverse("coordenacao:conta_nova_senha", args=[self.aluno.pk]))
+        secretaria = Usuario.objects.create_user("secr", "senha", perfil="SECRETARIA")
+        self.client.force_login(secretaria)
+        self.client.post(
+            reverse("secretaria:conta_redefinir", args=[self.aluno.pk]),
+            {"acao": "provisoria", "identidade": "conferida"},
+        )
+        self.assertFalse(Token.objects.filter(user=self.aluno).exists())
+
+    def test_secretaria_nao_usa_a_api(self):
+        Usuario.objects.create_user("secr", "senha", perfil="SECRETARIA")
+        self.assertEqual(self.pedir_token("secr", "senha").status_code, 403)
+
+    def test_senha_provisoria_nao_recebe_token(self):
+        # Com a troca pendente, a senha provisória só serve para criar a senha própria.
+        Usuario.objects.filter(pk=self.aluno.pk).update(precisa_trocar_senha=True)
+        resposta = self.pedir_token(self.aluno.matricula, "senha")
+        self.assertEqual(resposta.status_code, 403)
         self.assertFalse(Token.objects.filter(user=self.aluno).exists())
 
     def test_salvar_sem_trocar_a_senha_mantem_o_token(self):

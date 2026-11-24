@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     "apps.relatorios",
     "apps.api",
     "apps.videochamadas",
+    "apps.secretaria",
 ]
 
 MIDDLEWARE = [
@@ -99,6 +100,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Quem entrou com senha provisória só abre a tela de troca de senha.
+    "apps.contas.middleware.TrocaDeSenhaObrigatoria",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -161,14 +164,28 @@ LOGIN_URL = "contas:entrar"
 LOGIN_REDIRECT_URL = "contas:inicio"
 LOGOUT_REDIRECT_URL = "contas:entrar"
 
-# Prazo do link de "Esqueci minha senha": 1 hora, em segundos.
-PASSWORD_RESET_TIMEOUT = 60 * 60
+# Prazo do link de "Esqueci minha senha": 10 minutos, em segundos. Prazo curto de propósito:
+# quem pegar o e-mail aberto depois não consegue mais usar o link (apps/contas/tokens.py).
+PASSWORD_RESET_TIMEOUT = 10 * 60
 
+# Regras de senha forte. Valem para "Esqueci minha senha", "Alterar minha senha", a troca
+# obrigatória depois da senha provisória e o Django Admin. As três últimas são do projeto
+# (apps/contas/senhas.py), com as mensagens em português.
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {
+        # Recusa senha parecida com a matrícula, o nome ou o e-mail.
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "OPTIONS": {"user_attributes": ("matricula", "first_name", "last_name", "email")},
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 10},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {"NAME": "apps.contas.senhas.ComplexidadeValidator"},  # maiúscula, minúscula, número e símbolo
+    {"NAME": "apps.contas.senhas.DadosPessoaisValidator"},  # não contém matrícula, nome nem e-mail
+    {"NAME": "apps.contas.senhas.DiferenteDaAtualValidator"},  # não repete a senha atual
 ]
 
 
@@ -200,7 +217,15 @@ STORAGES = {
 }
 
 # E-mail. Em desenvolvimento, o backend de console mostra a mensagem no terminal do runserver.
+# Em produção, EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend e os dados do SMTP
+# (ex.: Gmail com "senha de app", Brevo, SendGrid). Passo a passo em docs/VERCEL.md.
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "localhost").strip()
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587") or 587)
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "").strip()
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").strip().lower() == "true"
+EMAIL_TIMEOUT = 10  # segundos: um SMTP fora do ar não trava a tela para sempre
 DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL", "Instituto Socrático <nao-responda@institutosocratico.example>"
 )
@@ -208,8 +233,16 @@ DEFAULT_FROM_EMAIL = os.getenv(
 # Modelo de evasão treinado pelo comando treinar_modelo. A pasta ml/ fica fora do Git.
 MODELO_EVASAO = BASE_DIR / "ml" / "modelo_evasao.joblib"
 
-# Endereço do sistema, usado para montar os links dos e-mails de alerta.
-ENDERECO_DO_SITE = os.getenv("ENDERECO_DO_SITE", "http://127.0.0.1:8000").rstrip("/")
+# Endereço do sistema, usado para montar os links dos e-mails (redefinição de senha e alertas).
+# Vem sempre daqui, e nunca do cabeçalho "Host" do pedido: quem forjasse esse cabeçalho faria
+# o link do e-mail apontar para outro site (host header poisoning).
+# ENDERECO_DO_SITE é o nome antigo, ainda aceito para quem já tem o .env preenchido.
+SITE_URL = (
+    os.getenv("SITE_URL", "").strip()
+    or os.getenv("ENDERECO_DO_SITE", "").strip()
+    or "http://127.0.0.1:8000"
+).rstrip("/")
+ENDERECO_DO_SITE = SITE_URL
 
 # Servidor do Jitsi Meet usado nas videochamadas (apps/videochamadas). O padrão é o serviço
 # público e gratuito; uma escola com servidor próprio do Jitsi troca só esta linha no .env.

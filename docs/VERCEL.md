@@ -56,7 +56,12 @@ versão no computador e na Vercel, e o arquivo só abre na mesma versão.
    | `DATABASE_URL` | Painel do Supabase > *Connect* > **Transaction pooler** > URI (porta **6543**), com a senha e `?sslmode=require` no fim |
    | `CELERY_SEM_REDIS` | `True` |
    | `CRON_SECRET` | `python -c "import secrets; print(secrets.token_urlsafe(32))"` |
-   | `ENDERECO_DO_SITE` | o endereço final, ex.: `https://colegio-socratico.vercel.app` (links dos e-mails) |
+   | `SITE_URL` | o endereço final, ex.: `https://colegio-socratico.vercel.app` (links dos e-mails; o antigo `ENDERECO_DO_SITE` ainda funciona) |
+   | `EMAIL_BACKEND` | `django.core.mail.backends.smtp.EmailBackend` |
+   | `EMAIL_HOST`, `EMAIL_PORT` | servidor e porta do SMTP, ex.: `smtp.gmail.com` e `587` |
+   | `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` | usuário e senha do SMTP (no Gmail, uma "senha de app", nunca a senha da conta) |
+   | `EMAIL_USE_TLS` | `True` (porta 587) |
+   | `DEFAULT_FROM_EMAIL` | remetente, ex.: `Instituto Socrático <nao-responda@seu-dominio>` |
    | `ALLOWED_HOSTS` | opcional: o domínio próprio, se houver. O endereço da Vercel entra sozinho (`VERCEL_URL` e `VERCEL_PROJECT_PRODUCTION_URL`) |
 
 3. **Deploy.** Cada push na `main` publica em produção. Cada push em outra branch gera um
@@ -75,9 +80,13 @@ versão no computador e na Vercel, e o arquivo só abre na mesma versão.
 
 ## Limites que vale saber
 
-- **E-mail:** sem um servidor SMTP nas variáveis (`EMAIL_BACKEND` e as configurações do SMTP),
-  os e-mails (redefinição de senha e alertas "Em risco") só aparecem no log da função, em
-  *Deployments > Logs*. Para enviar de verdade, é preciso cadastrar um SMTP.
+- **E-mail:** sem um servidor SMTP nas variáveis (`EMAIL_BACKEND` e as `EMAIL_*`), os e-mails
+  (link de nova senha, aviso de senha alterada, aviso de troca de e-mail e alertas "Em risco") só
+  aparecem no log da função, em *Deployments > Logs*. Com o prazo de 10 minutos do link, o SMTP é
+  necessário para o "Esqueci minha senha" funcionar de verdade. Na Vercel (`CELERY_SEM_REDIS=True`)
+  o e-mail sai na hora, dentro do pedido, com limite de 10 segundos (`EMAIL_TIMEOUT`).
+- **Limite de pedidos de link:** fica no banco (tabela `PedidoDeSenha`), e não na memória, porque
+  cada pedido pode cair numa cópia diferente da função.
 - **Tamanho do pacote:** o limite da função Python é de 500 MB. pandas, scikit-learn, scipy e
   matplotlib são os maiores, e o projeto fica abaixo do limite. Se uma biblioteca nova estourar,
   o build avisa.

@@ -1,0 +1,37 @@
+{% extends "contas/base_login.html" %}
+
+{% block titulo %}{% if obrigatoria %}Crie a sua senha{% else %}Alterar minha senha{% endif %}{% endblock %}
+
+{% block conteudo %}
+  {% if obrigatoria %}
+    <h1 class="text-3xl font-semibold">Crie a sua senha</h1>
+    <p class="mt-2 text-sm leading-relaxed text-slate-500">Você entrou com uma senha provisória entregue pela Secretaria. Antes de usar o portal, crie a sua própria senha.</p>
+  {% else %}
+    <h1 class="text-3xl font-semibold">Alterar minha senha</h1>
+    <p class="mt-2 text-sm leading-relaxed text-slate-500">Confirme a senha atual e escolha a nova. Os outros aparelhos conectados à sua conta serão desconectados.</p>
+  {% endif %}
+
+  <form method="post" data-carregando novalidate class="mt-6 space-y-5">
+    {% csrf_token %}
+    {% include "contas/_matricula_travada.html" with matricula=user.matricula %}
+    {% include "componentes/campo.html" with campo=form.old_password icone="key-round" tipo="password" autocomplete="current-password" %}
+    {% include "componentes/campo.html" with campo=form.new_password1 icone="lock-keyhole" tipo="password" autocomplete="new-password" descrito_por="requisitos-senha" %}
+    {% include "componentes/campo.html" with campo=form.new_password2 icone="lock-keyhole" tipo="password" autocomplete="new-password" %}
+    {% include "componentes/checklist_senha.html" with campo=form.new_password1.id_for_label confirmacao=form.new_password2.id_for_label %}
+    {% include "componentes/botao_enviar.html" with texto="Salvar nova senha" texto_carregando="Salvando…" icone="check" %}
+  </form>
+
+  {% if obrigatoria %}
+    {# Durante a troca obrigatória, só esta tela e "Sair" abrem (apps/contas/middleware.py). #}
+    <form method="post" action="{% url 'contas:sair' %}" class="mt-6">
+      {% csrf_token %}
+      <button type="submit" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+        <i data-lucide="log-out" class="size-4"></i> Sair sem trocar
+      </button>
+    </form>
+  {% else %}
+    <a href="{% url 'contas:inicio' %}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+      <i data-lucide="arrow-left" class="size-4"></i> Voltar ao portal
+    </a>
+  {% endif %}
+{% endblock %}

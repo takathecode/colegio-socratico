@@ -36,7 +36,7 @@ def tearDownModule():
 
 
 # Contas da demonstração usadas no teste (a aluno05 é uma das que estão em risco).
-CONTAS = ["aluno01", "aluno05", "prof01", "coord01"]
+CONTAS = ["aluno01", "aluno05", "prof01", "coord01", "secretaria01"]
 
 # Respostas esperadas sem número na URL: 200 (tela), 302 (a tela manda para outra, como
 # Relatório da turma sem ?turma=) ou 405 (a rota só aceita POST, como "Recalcular agora").
@@ -123,7 +123,6 @@ class TelasComDadosDeDemonstracaoTests(ModeloTreinadoMixin, TestCase):
         oferta = Oferta.objects.first()
         disciplina = Disciplina.objects.first()
         matricula = Matricula.objects.get(aluno__matricula="aluno05")
-        professor = Usuario.objects.get(matricula="prof01")
         for url in (
             reverse("coordenacao:turma", args=[turma.pk]),
             reverse("coordenacao:turma_editar", args=[turma.pk]),
@@ -133,7 +132,6 @@ class TelasComDadosDeDemonstracaoTests(ModeloTreinadoMixin, TestCase):
             reverse("coordenacao:disciplina_editar", args=[disciplina.pk]),
             reverse("coordenacao:disciplina_excluir", args=[disciplina.pk]),
             reverse("coordenacao:aluno_editar", args=[matricula.aluno.pk]),
-            reverse("coordenacao:professor_editar", args=[professor.pk]),
             reverse("relatorios:boletim", args=[matricula.pk]),
             f"{reverse('relatorios:turma')}?turma={turma.pk}&formato=xlsx",
             f"{reverse('relatorios:risco')}?formato=xlsx",
@@ -142,3 +140,39 @@ class TelasComDadosDeDemonstracaoTests(ModeloTreinadoMixin, TestCase):
         ):
             with self.subTest(url=url):
                 self.abrir(url)
+
+    def test_telas_da_secretaria_com_numero_na_url(self):
+        self.entrar("secretaria01")
+        for tipo in ("aluno", "professor", "coordenacao"):
+            with self.subTest(tipo=tipo):
+                self.abrir(reverse("secretaria:conta_nova", args=[tipo]))
+        for matricula in ("aluno01", "prof01", "coord01"):
+            conta = Usuario.objects.get(matricula=matricula)
+            with self.subTest(conta=matricula):
+                self.abrir(reverse("secretaria:conta", args=[conta.pk]))
+                self.abrir(reverse("secretaria:conta_editar", args=[conta.pk]))
+
+    def test_secretaria01_redefine_a_senha_das_contas_mas_nao_do_admin01(self):
+        """Critério de aceite: aluno01, prof01 e coord01 sim; admin01 (Django Admin) não."""
+        admin = Usuario.objects.create_superuser("admin01", "admin01", email="admin01@exemplo.com")
+        self.entrar("secretaria01")
+        pedido = {"acao": "provisoria", "identidade": "conferida"}
+        for matricula in ("aluno01", "prof01", "coord01"):
+            conta = Usuario.objects.get(matricula=matricula)
+            with self.subTest(conta=matricula):
+                url = reverse("secretaria:conta_redefinir", args=[conta.pk])
+                self.assertRedirects(
+                    self.client.post(url, pedido),
+                    reverse("secretaria:senha_provisoria"),
+                    fetch_redirect_response=False,
+                )
+                senha = self.abrir(reverse("secretaria:senha_provisoria")).context["dados"]["senha"]
+                conta.refresh_from_db()
+                self.assertTrue(conta.check_password(senha))
+                self.assertTrue(conta.precisa_trocar_senha)
+
+        url = reverse("secretaria:conta_redefinir", args=[admin.pk])
+        self.assertEqual(self.client.post(url, pedido).status_code, 404)
+        admin.refresh_from_db()
+        self.assertTrue(admin.check_password("admin01"))
+        self.assertFalse(admin.precisa_trocar_senha)

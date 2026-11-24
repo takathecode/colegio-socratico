@@ -4,12 +4,12 @@
 
 {% block conteudo %}
   <h1 class="text-3xl font-semibold">Esqueci minha senha</h1>
-  <p class="mt-2 text-sm text-slate-500">Informe o e-mail cadastrado na sua conta para receber um link de redefinição.</p>
+  <p class="mt-2 text-sm text-slate-500">Digite a sua matrícula. Vamos mostrar para qual e-mail o link de redefinição será enviado.</p>
 
-  <form method="post" data-carregando class="mt-6 space-y-5">
+  <form method="post" data-carregando novalidate class="mt-6 space-y-5">
     {% csrf_token %}
-    {% include "componentes/campo.html" with campo=form.email icone="mail" tipo="email" rotulo="E-mail" autocomplete="email" %}
-    {% include "componentes/botao_enviar.html" with texto="Enviar link" texto_carregando="Enviando…" icone="send" %}
+    {% include "componentes/campo.html" with campo=form.matricula icone="user-round" tipo="text" rotulo="Matrícula" autocomplete="username" %}
+    {% include "componentes/botao_enviar.html" with texto="Continuar" texto_carregando="Conferindo…" icone="arrow-right" %}
   </form>
 
   <a href="{% url 'contas:entrar' %}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">

@@ -1,0 +1,7 @@
+{% extends "contas/email/base.html" %}
+{% block titulo %}Sua senha foi alterada{% endblock %}
+{% block conteudo %}
+  <p style="margin:0 0 12px;font-size:20px;font-weight:600;">Olá, {{ nome }}.</p>
+  <p style="margin:0 0 20px;">Sua senha foi alterada em <strong>{{ quando|date:"d/m/Y" }} às {{ quando|date:"H:i" }}</strong>.</p>
+  <p style="margin:0;padding:12px 16px;background:#FEF2F2;border-radius:8px;font-size:13px;color:#991B1B;">Se não foi você, procure a Secretaria imediatamente.</p>
+{% endblock %}

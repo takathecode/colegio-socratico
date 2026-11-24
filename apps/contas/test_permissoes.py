@@ -14,8 +14,8 @@ from django.urls import URLResolver, get_resolver, reverse
 
 from .test_login import criar_usuarios
 
-ALUNO, PROFESSOR, COORDENADOR = "ALUNO", "PROFESSOR", "COORDENADOR"
-TODOS_DO_PORTAL = {ALUNO, PROFESSOR, COORDENADOR}
+ALUNO, PROFESSOR, COORDENADOR, SECRETARIA = "ALUNO", "PROFESSOR", "COORDENADOR", "SECRETARIA"
+TODOS_DO_PORTAL = {ALUNO, PROFESSOR, COORDENADOR, SECRETARIA}
 
 # Quem pode abrir cada área (namespace das rotas). O ADMIN não entra em nenhuma:
 # ele usa só o Django Admin.
@@ -23,6 +23,8 @@ PERFIS_DA_AREA = {
     "aluno": {ALUNO},
     "professor": {PROFESSOR},
     "coordenacao": {COORDENADOR},
+    # A Secretaria só administra acessos: as áreas acadêmicas acima lhe dão 403.
+    "secretaria": {SECRETARIA},
     "mensagens": TODOS_DO_PORTAL,
     "alertas": TODOS_DO_PORTAL,
     "videochamadas": {PROFESSOR, COORDENADOR},  # o aluno não participa das chamadas
@@ -153,8 +155,41 @@ class VarreduraTests(TestCase):
             with self.subTest(rota=f"api:{nome}"):
                 self.assertEqual(self.client.get(url).status_code, 401)
 
-    def test_api_responde_403_para_o_admin(self):
-        self.client.force_login(self.usuarios["ADMIN"])
-        for nome, url in self.rotas_da_api():
-            with self.subTest(rota=f"api:{nome}"):
-                self.assertEqual(self.client.get(url).status_code, 403)
+    def test_api_responde_403_para_o_admin_e_a_secretaria(self):
+        for perfil in ("ADMIN", SECRETARIA):
+            self.client.force_login(self.usuarios[perfil])
+            for nome, url in self.rotas_da_api():
+                with self.subTest(perfil=perfil, rota=f"api:{nome}"):
+                    self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_secretaria_recebe_403_em_todas_as_areas_academicas(self):
+        """Menor privilégio: notas, frequência, riscos, relatórios e financeiro ficam fechados."""
+        self.client.force_login(self.usuarios[SECRETARIA])
+        academicas = {"aluno", "professor", "coordenacao", "relatorios", "videochamadas"}
+        testadas = 0
+        for namespace, nome, url, _ in self.rotas_das_telas():
+            if namespace in academicas:
+                testadas += 1
+                with self.subTest(rota=f"{namespace}:{nome}"):
+                    self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertGreater(testadas, 40)
+
+    def test_coordenacao_nao_tem_mais_rotas_de_conta_e_senha(self):
+        """As ações de conta saíram da coordenação: os endereços antigos nem existem."""
+        from django.urls import NoReverseMatch
+
+        for nome in (
+            "contas",
+            "conta_nova_senha",
+            "conta_alternar_ativa",
+            "senha_provisoria",
+            "coordenador_novo",
+            "aluno_novo",
+            "professor_novo",
+        ):
+            with self.subTest(rota=nome), self.assertRaises(NoReverseMatch):
+                reverse(f"coordenacao:{nome}")
+        self.client.force_login(self.usuarios[COORDENADOR])
+        for caminho in ("/coordenacao/contas/", "/coordenacao/contas/1/nova-senha/"):
+            with self.subTest(caminho=caminho):
+                self.assertEqual(self.client.post(caminho).status_code, 404)

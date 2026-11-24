@@ -14,7 +14,13 @@ from apps.academico.models import ArquivoAnexo, Curso, Disciplina, Matricula, Of
 from apps.alertas import tasks
 from apps.alertas.models import Alerta
 
-from .forms import alunos_da_secretaria, alunos_do_professor, contatos_do_aluno
+from .forms import (
+    alunos_ativos,
+    alunos_da_secretaria,
+    alunos_do_professor,
+    contatos_do_aluno,
+    secretaria,
+)
 from .models import Conversa, Mensagem
 from .views import rotulo_de_tempo
 
@@ -43,7 +49,11 @@ class MensagensTests(TestCase):
             "prof", "senha", perfil="PROFESSOR", first_name="Ana", last_name="Dias", tratamento="Profa."
         )
         cls.professor_de_fora = Usuario.objects.create_user("prof2", "senha", perfil="PROFESSOR")
-        cls.coordenador = Usuario.objects.create_user("coord", "senha", perfil="COORDENADOR")
+        cls.coordenador = Usuario.objects.create_user(
+            "coord", "senha", perfil="COORDENADOR", first_name="Lia", last_name="Prado"
+        )
+        # A conta da Secretaria atende os alunos como "Secretaria acadêmica".
+        cls.secretaria = Usuario.objects.create_user("secr", "senha", perfil="SECRETARIA")
         cls.oferta = Oferta.objects.create(turma=turma, disciplina=disciplina, professor=cls.professor)
         Oferta.objects.create(
             turma=outra_turma, disciplina=disciplina, professor=cls.professor_de_fora
@@ -103,10 +113,10 @@ class MensagensTests(TestCase):
 
     def test_filtro_e_busca(self):
         lida = Conversa.objects.create(
-            aluno=self.aluno, contato=self.coordenador, assunto="Cadastro"
+            aluno=self.aluno, contato=self.secretaria, assunto="Cadastro"
         )
         Mensagem.objects.create(
-            conversa=lida, remetente=self.coordenador, texto="x", lida_em=timezone.now()
+            conversa=lida, remetente=self.secretaria, texto="x", lida_em=timezone.now()
         )
         assuntos = lambda **p: [c.assunto for c in self.client.get(self.caixa, p).context["conversas"]]
         self.assertEqual(len(assuntos()), 2)
@@ -144,7 +154,19 @@ class MensagensTests(TestCase):
 
     def test_contatos_sao_professores_da_turma_e_secretaria(self):
         contatos = set(contatos_do_aluno(self.aluno))
-        self.assertEqual(contatos, {self.professor, self.coordenador})
+        self.assertEqual(contatos, {self.professor, self.secretaria})
+
+    def test_sem_conta_da_secretaria_o_coordenador_atende(self):
+        # Logo depois da atualização, antes de a escola criar a conta da Secretaria.
+        self.assertEqual(secretaria(), self.secretaria)
+        Usuario.objects.filter(pk=self.secretaria.pk).update(is_active=False)
+        self.assertEqual(secretaria(), self.coordenador)
+
+    def test_coordenador_aparece_com_o_proprio_nome(self):
+        from .models import nome_de_exibicao
+
+        self.assertEqual(nome_de_exibicao(self.secretaria), "Secretaria acadêmica")
+        self.assertEqual(nome_de_exibicao(self.coordenador), "Lia Prado")
 
     def test_nova_conversa_liga_a_disciplina_do_professor(self):
         resposta = self.client.post(
@@ -219,19 +241,28 @@ class MensagensTests(TestCase):
         self.assertFalse(Conversa.objects.filter(assunto="Oi").exists())
 
     def test_secretaria_ve_o_botao_e_escolhe_qualquer_aluno_ativo(self):
-        self.client.force_login(self.coordenador)
+        self.client.force_login(self.secretaria)
         resposta = self.client.get(self.caixa)
         self.assertTrue(resposta.context["pode_iniciar"])
         self.assertContains(resposta, "Escreva para um aluno, como Secretaria acadêmica.")
-        self.assertEqual(set(alunos_da_secretaria()), {self.aluno, self.outro_aluno})
+        # A Secretaria cuida do acesso: escreve até para aluno com matrícula trancada.
+        Matricula.objects.filter(aluno=self.outro_aluno).update(
+            situacao=Matricula.Situacao.TRANCADA
+        )
+        self.assertEqual(set(alunos_ativos()), {self.aluno, self.outro_aluno})
 
+    def test_coordenacao_escolhe_aluno_com_matricula_ativa(self):
+        self.client.force_login(self.coordenador)
+        resposta = self.client.get(self.caixa)
+        self.assertContains(resposta, "Escreva para um aluno com matrícula ativa.")
+        self.assertEqual(set(alunos_da_secretaria()), {self.aluno, self.outro_aluno})
         Matricula.objects.filter(aluno=self.outro_aluno).update(
             situacao=Matricula.Situacao.TRANCADA
         )
         self.assertEqual(set(alunos_da_secretaria()), {self.aluno})
 
     def test_secretaria_inicia_conversa_sem_disciplina(self):
-        self.client.force_login(self.coordenador)
+        self.client.force_login(self.secretaria)
         resposta = self.client.post(
             reverse("mensagens:nova"),
             {"contato": self.outro_aluno.pk, "assunto": "Documentos", "texto": "Falta o RG."},
@@ -239,12 +270,12 @@ class MensagensTests(TestCase):
         conversa = Conversa.objects.get(assunto="Documentos")
         self.assertRedirects(resposta, f"{self.caixa}?conversa={conversa.pk}")
         self.assertEqual(conversa.aluno, self.outro_aluno)
-        self.assertEqual(conversa.contato, self.coordenador)
+        self.assertEqual(conversa.contato, self.secretaria)
         self.assertIsNone(conversa.oferta)
-        self.assertEqual(conversa.mensagens.get().remetente, self.coordenador)
+        self.assertEqual(conversa.mensagens.get().remetente, self.secretaria)
 
     def test_secretaria_nao_escreve_para_professor(self):
-        self.client.force_login(self.coordenador)
+        self.client.force_login(self.secretaria)
         resposta = self.client.post(
             reverse("mensagens:nova"),
             {"contato": self.professor.pk, "assunto": "Oi", "texto": "Oi"},
@@ -377,7 +408,7 @@ class MensagensTests(TestCase):
         self.assertEqual(rotulo_de_tempo(antes), antes.strftime("%d/%m"))
 
     def test_menu_marca_mensagens_e_cada_perfil_tem_o_item(self):
-        for usuario in (self.aluno, self.professor, self.coordenador):
+        for usuario in (self.aluno, self.professor, self.coordenador, self.secretaria):
             self.client.force_login(usuario)
             resposta = self.client.get(self.caixa)
             ativos = [item["nome"] for item in resposta.context["menu_itens"] if item["ativo"]]

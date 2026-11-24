@@ -1,4 +1,4 @@
-"""Caixa de mensagens. A mesma tela atende aluno, professor e coordenador.
+"""Caixa de mensagens. A mesma tela atende aluno, professor, coordenação e Secretaria.
 
 A segurança vem de Conversa.objects.do_usuario: quem não participa recebe 404, e nem
 descobre se a conversa existe.
@@ -27,8 +27,8 @@ from apps.contas.decorators import perfil_requerido
 from .forms import NovaConversaForm, RespostaForm
 from .models import Conversa, Mensagem, nome_de_exibicao
 
-PERFIS = ("ALUNO", "PROFESSOR", "COORDENADOR")
-PERFIS_QUE_INICIAM = ("ALUNO", "PROFESSOR", "COORDENADOR")
+PERFIS = ("ALUNO", "PROFESSOR", "COORDENADOR", "SECRETARIA")
+PERFIS_QUE_INICIAM = PERFIS
 
 
 def rotulo_de_tempo(momento):
@@ -123,7 +123,7 @@ def renderizar_caixa(request, conversa_aberta=None, form_resposta=None, form_nov
     if atual:
         mensagens_da_conversa = atual.mensagens.select_related("remetente")
 
-    # Aluno, professor e secretaria (coordenação) iniciam conversas.
+    # Todos os perfis do portal iniciam conversas (sempre com um aluno do outro lado).
     pode_iniciar = usuario.perfil in PERFIS_QUE_INICIAM
     abrir_modal = False
     if pode_iniciar and form_nova is None:
@@ -151,8 +151,9 @@ def renderizar_caixa(request, conversa_aberta=None, form_resposta=None, form_nov
             "pode_iniciar": pode_iniciar,
             "subtitulo_do_modal": {
                 "PROFESSOR": "Escreva para um aluno das suas turmas.",
-                "COORDENADOR": "Escreva para um aluno, como Secretaria acadêmica.",
-            }.get(usuario.perfil, "Escreva para um professor da sua turma ou para a secretaria."),
+                "COORDENADOR": "Escreva para um aluno com matrícula ativa.",
+                "SECRETARIA": "Escreva para um aluno, como Secretaria acadêmica.",
+            }.get(usuario.perfil, "Escreva para um professor da sua turma ou para a Secretaria."),
             "abrir_modal": abrir_modal,
         },
     )
