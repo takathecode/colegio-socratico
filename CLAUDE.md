@@ -130,7 +130,10 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
   em `assets/tailwind.css`); em tela de toque (`pointer: coarse`) botões e campos têm no mínimo 44px
   (`--spacing-toque`; nos alvos pequenos, `pointer-coarse:min-h-toque`); campos com 16px no celular
   para o iPhone não dar zoom. O menu do celular atualiza `aria-expanded`, leva o foco para dentro e trava
-  a rolagem da página.
+  a rolagem da página. Tabela com mais de 3 colunas tem, abaixo de `md`, uma lista de cards
+  (`<ul class="divide-y divide-borda md:hidden">`) e a tabela fica `hidden md:block`. Botões no fim de
+  formulário ficam em `<div class="acoes">` (Cancelar primeiro no HTML): no celular empilham em
+  largura cheia, com a ação principal em cima.
 - Ícones: Lucide (via CDN). Componentes repetidos ficam em `templates/componentes/`.
 
 ## Gráficos e ML

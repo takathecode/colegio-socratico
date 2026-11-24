@@ -5,7 +5,7 @@
   {% include "componentes/campo_form.html" with campo=form_nova.assunto %}
   {% include "componentes/campo_form.html" with campo=form_nova.texto %}
   {% include "componentes/campo_anexo.html" with campo=form_nova.anexo %}
-  <div class="flex justify-end gap-3">
+  <div class="acoes">
     <button type="button" data-fechar-modal
             class="botao-vidro-claro h-10 rounded-controle px-4 text-sm font-semibold text-primaria">Cancelar</button>
     {% include "componentes/botao_enviar.html" with texto="Enviar mensagem" texto_carregando="Enviando..." icone="send" compacto=True %}

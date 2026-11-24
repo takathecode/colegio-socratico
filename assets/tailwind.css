@@ -301,6 +301,16 @@
   .selo-info { @apply bg-primaria-suave text-primaria; }
   .selo-neutro { @apply bg-slate-100 text-slate-700; }
 
+  /* Linha de botões no fim de um formulário (Cancelar + ação principal, nessa ordem no HTML).
+     No celular: um embaixo do outro, largura cheia, com a ação principal em cima (perto do polegar
+     e do que a pessoa acabou de preencher). Do sm em diante: lado a lado, alinhados à direita. */
+  .acoes {
+    @apply flex flex-col-reverse gap-3 sm:flex-row sm:flex-wrap sm:justify-end;
+  }
+  .acoes > * {
+    @apply justify-center max-sm:w-full;
+  }
+
   /* Campo de formulário (input, select, textarea). A altura e a largura ficam no template
      (h-10, py-2.5, w-full...). O foco mostra borda azul + anel claro, também nos filtros. */
   .campo {

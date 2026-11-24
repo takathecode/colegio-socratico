@@ -46,7 +46,7 @@
       </div>
 
       {% if turmas %}
-        <div class="overflow-x-auto">
+        <div class="hidden overflow-x-auto md:block">
           <table class="tabela min-w-[560px]">
             <thead>
               <tr>
@@ -76,6 +76,25 @@
             </tbody>
           </table>
         </div>
+
+        {# No celular, cada turma vira um card com os mesmos números. #}
+        <ul class="divide-y divide-borda md:hidden">
+          {% for turma in turmas %}
+            <li class="py-3">
+              <a href="{% url 'coordenacao:turma' turma.pk %}" class="font-medium text-primaria hover:underline">{{ turma.codigo }}</a>
+              <p class="mt-0.5 text-xs text-slate-500">{{ turma.curso.nome }} · {{ turma.periodo }}º período</p>
+              <p class="mt-1 text-xs text-slate-600">
+                {{ turma.total_alunos }} aluno{{ turma.total_alunos|pluralize }} ·
+                média <span class="font-semibold">{{ turma.indicadores.media|floatformat:1|default:"—" }}</span> ·
+                freq. {% if turma.indicadores.frequencia is None %}—{% else %}{{ turma.indicadores.frequencia|floatformat:0 }}%{% endif %}
+              </p>
+              <p class="mt-0.5 text-xs">
+                <span class="text-red-800">{{ turma.indicadores.risco }} em risco</span> ·
+                <span class="text-amber-900">{{ turma.indicadores.atencao }} em atenção</span>
+              </p>
+            </li>
+          {% endfor %}
+        </ul>
       {% else %}
         {% include "componentes/vazio.html" with titulo="Nenhuma turma cadastrada" texto="Crie a primeira turma para começar a matricular alunos." icone="school" %}
       {% endif %}

@@ -12,7 +12,7 @@
     <h1 class="mt-4 text-xl font-semibold text-marinho">Excluir {{ descricao }}?</h1>
     <p class="mt-2 text-sm text-slate-500">Esta ação não pode ser desfeita.</p>
 
-    <form method="post" data-carregando class="mt-6 flex flex-wrap justify-center gap-3">
+    <form method="post" data-carregando class="acoes mt-6 sm:justify-center">
       {% csrf_token %}
       <a href="{{ voltar }}" class="botao-vidro-claro inline-flex h-10 items-center rounded-controle px-4 text-sm font-semibold text-primaria">Cancelar</a>
       <button type="submit" class="inline-flex h-10 items-center gap-2 rounded-controle bg-perigo px-4 text-sm font-semibold text-white hover:bg-red-800 pointer-coarse:min-h-toque">
