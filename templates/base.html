@@ -22,7 +22,7 @@
   <div class="lg:pl-conteudo lg:recolhida:pl-conteudo-recolhido transition-[padding] duration-200">
     {# Topo flutuante: descolado 12px das bordas e preso a 12px do alto ao rolar. #}
     {# "-segura" soma o entalhe do iPhone (safe-area) a esses 12px; ver assets/tailwind.css. #}
-    <header class="vidro-barra sticky top-barra-segura z-20 mx-barra mt-barra-segura flex h-16 items-center gap-2 rounded-barra px-2.5 sm:gap-3 sm:px-5 lg:ml-0">
+    <header class="vidro-barra sticky top-barra-segura z-20 max-w-topo mx-barra mt-barra-segura flex h-16 items-center gap-2 rounded-barra px-2.5 sm:gap-3 sm:px-5 lg:ml-0">
       {# aria-expanded é atualizado pelo portal.js (só no celular, onde o botão abre o menu). #}
       <button type="button" data-alternar-menu aria-label="Abrir ou recolher o menu" aria-controls="barra-lateral" aria-expanded="false"
               class="flex size-toque shrink-0 items-center justify-center rounded-controle text-slate-600 hover:bg-white/70">
@@ -65,7 +65,7 @@
     </header>
 
     {# Mesmas margens do topo, para os cards alinharem com as bordas da barra. #}
-    <main class="px-barra pb-segura pt-5 lg:pl-0">
+    <main class="max-w-pagina px-barra pb-segura pt-5 lg:pl-0">
       {% include "componentes/mensagens.html" %}
       {% block conteudo %}{% endblock %}
     </main>

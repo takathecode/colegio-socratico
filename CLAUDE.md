@@ -116,6 +116,9 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
 - Componentes base em `assets/tailwind.css`: `.cartao`, `.tabela`, `.campo` e `.selo` (+ `selo-ok`,
   `selo-atencao`, `selo-risco`, `selo-info`, `selo-neutro`); KPI sempre pelo `componentes/card_kpi.html`.
   Foco do teclado padrão (contorno azul de 2px) para links, botões e `<summary>`.
+- Cabeçalho de página: `<h1 class="titulo-pagina">` + `<p class="subtitulo-pagina">`. Topo e conteúdo param de
+  crescer em 1600px (`max-w-topo`/`max-w-pagina` no `base.html`). Nos painéis, a coluna larga empilha
+  gráfico e tabelas e a estreita fica com as listas curtas, para não sobrar vazio embaixo das tabelas.
 - Fonte Inter. Fundo da página `fundo` (#F5F7FA), cards brancos com borda `borda` (#E5E9F0) e cantos `rounded-cartao`.
 - Azul-marinho da marca `marinho` (#0B2545: painel lateral do login, logo "S"); botão primário `primaria` (#1F4E8C).
 - Selos: verde "Regular", âmbar "Em atenção", vermelho "Em risco".

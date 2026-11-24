@@ -6,8 +6,8 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-end justify-between gap-2">
     <div>
-      <h1 class="text-2xl font-semibold text-marinho">{{ saudacao }}, {{ user.nome_com_tratamento|default:user.matricula }}</h1>
-      <p class="mt-1 text-sm text-slate-500">Acompanhe suas turmas e o que precisa da sua atenção.</p>
+      <h1 class="titulo-pagina">{{ saudacao }}, {{ user.nome_com_tratamento|default:user.matricula }}</h1>
+      <p class="subtitulo-pagina">Acompanhe suas turmas e o que precisa da sua atenção.</p>
     </div>
     <p class="text-sm text-slate-500">{{ hoje|date:"l, d/m/Y"|capfirst }}</p>
   </div>
@@ -55,13 +55,13 @@
                   <td>{{ resumo.indicadores.alunos }}</td>
                   <td class="font-semibold">{{ resumo.indicadores.media|floatformat:1|default:"—" }}</td>
                   <td>{% if resumo.indicadores.frequencia is None %}—{% else %}{{ resumo.indicadores.frequencia|floatformat:0 }}%{% endif %}</td>
-                  <td>
+                  <td class="whitespace-nowrap">
                     {% if resumo.indicadores.risco %}
                       {% include "componentes/selo.html" with situacao="Em risco" %}
-                      <span class="ml-1 text-xs text-slate-500">{{ resumo.indicadores.risco }} aluno{{ resumo.indicadores.risco|pluralize }}</span>
+                      <span class="mt-1 block text-xs text-slate-500">{{ resumo.indicadores.risco }} aluno{{ resumo.indicadores.risco|pluralize }}</span>
                     {% elif resumo.indicadores.atencao %}
                       {% include "componentes/selo.html" with situacao="Em atenção" %}
-                      <span class="ml-1 text-xs text-slate-500">{{ resumo.indicadores.atencao }} aluno{{ resumo.indicadores.atencao|pluralize }}</span>
+                      <span class="mt-1 block text-xs text-slate-500">{{ resumo.indicadores.atencao }} aluno{{ resumo.indicadores.atencao|pluralize }}</span>
                     {% elif resumo.indicadores.alunos %}
                       {% include "componentes/selo.html" with situacao="Regular" %}
                     {% else %}

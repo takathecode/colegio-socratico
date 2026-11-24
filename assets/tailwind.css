@@ -63,6 +63,15 @@
   --text-micro: 10px;  /* contadores (sino, mensagens não lidas) e "PORTAL ACADÊMICO" */
   --text-mini: 11px;   /* horários, etiqueta "Nova", itens do calendário */
   --text-marca: 15px;  /* nome "Instituto Socrático" na barra lateral */
+  --text-titulo: 1.75rem;              /* título da página no computador (28px) */
+  --text-titulo--line-height: 2.25rem;
+
+  /* Largura máxima do topo e do conteúdo: em monitores muito largos, linhas e tabelas
+     esticadas ficam difíceis de ler. 1600px cabe tudo em 1080p e para de crescer depois. */
+  --container-pagina: 100rem;
+  /* O topo tem margem à direita (mx-barra) e o conteúdo tem padding: o topo desconta essa margem
+     para as bordas direitas dos dois ficarem alinhadas. */
+  --container-topo: calc(var(--container-pagina) - var(--spacing-barra));
 
   /* Sombras do vidro (usadas em .vidro-barra, .botao-vidro e .botao-vidro-claro). */
   --shadow-barra:
@@ -267,6 +276,15 @@
    ainda pode completar ou trocar algo (ex.: class="cartao p-5 mt-4").
    --------------------------------------------------------------------------- */
 @layer components {
+  /* Cabeçalho da página: o título é o maior texto da tela (hierarquia), um pouco maior no
+     computador e com as letras mais juntas, como nos títulos da Apple. */
+  .titulo-pagina {
+    @apply text-2xl font-semibold tracking-tight text-marinho lg:text-titulo;
+  }
+  .subtitulo-pagina {
+    @apply mt-1 text-sm text-slate-500;
+  }
+
   /* Card branco e opaco (sem vidro). O espaço interno fica no template: p-4, p-5... */
   .cartao {
     @apply rounded-cartao border border-borda bg-white;

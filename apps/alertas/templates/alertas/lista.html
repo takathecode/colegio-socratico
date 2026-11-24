@@ -6,8 +6,8 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-marinho">Notificações</h1>
-      <p class="mt-1 text-sm text-slate-500">Avisos automáticos do sistema sobre o que precisa da sua atenção.</p>
+      <h1 class="titulo-pagina">Notificações</h1>
+      <p class="subtitulo-pagina">Avisos automáticos do sistema sobre o que precisa da sua atenção.</p>
     </div>
     {% if total_nao_lidos %}
       <form method="post" action="{% url 'alertas:marcar_todos' %}" data-carregando>

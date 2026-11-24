@@ -6,8 +6,8 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-end justify-between gap-2">
     <div>
-      <h1 class="text-2xl font-semibold text-marinho">{{ saudacao }}, {{ user.first_name|default:user.matricula }}</h1>
-      <p class="mt-1 text-sm text-slate-500">{{ matricula.turma.curso.nome }} · {{ matricula.turma.periodo }}º período · {{ matricula.turma.semestre }}</p>
+      <h1 class="titulo-pagina">{{ saudacao }}, {{ user.first_name|default:user.matricula }}</h1>
+      <p class="subtitulo-pagina">{{ matricula.turma.curso.nome }} · {{ matricula.turma.periodo }}º período · {{ matricula.turma.semestre }}</p>
     </div>
     <p class="text-sm text-slate-500">{{ hoje|date:"l, d/m/Y"|capfirst }}</p>
   </div>
@@ -42,9 +42,9 @@
     <section class="cartao p-5">
       <h2 class="font-semibold">Situação das disciplinas</h2>
       {% if situacoes.total %}
-        <div class="mt-3 flex items-center gap-5">
+        <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-3">
           {# Cada disciplina vale 1 parte do contorno (pathLength). O fundo branco separa os trechos. #}
-          <svg viewBox="0 0 100 100" class="size-28 shrink-0 -rotate-90" role="img"
+          <svg viewBox="0 0 100 100" class="size-24 shrink-0 -rotate-90 2xl:size-28" role="img"
                aria-label="{{ situacoes.total }} disciplinas: {{ situacoes.regulares }} regulares, {{ situacoes.atencao }} em atenção, {{ situacoes.risco }} em risco">
             <circle cx="50" cy="50" r="40" fill="none" class="stroke-borda" stroke-width="12"></circle>
             {% if situacoes.regulares %}
@@ -64,9 +64,9 @@
             <text x="50" y="50" transform="rotate(90 50 50)" text-anchor="middle" dominant-baseline="central" font-size="22" font-weight="600" class="fill-marinho">{{ situacoes.total }}</text>
           </svg>
           <ul class="space-y-2 text-xs">
-            <li class="flex items-center gap-1.5 font-medium text-primaria"><i data-lucide="circle-check" class="size-4"></i>{{ situacoes.regulares }} regulares</li>
-            <li class="flex items-center gap-1.5 text-amber-900"><i data-lucide="triangle-alert" class="size-4 text-amber-600"></i>{{ situacoes.atencao }} em atenção</li>
-            <li class="flex items-center gap-1.5 text-red-800"><i data-lucide="circle-alert" class="size-4"></i>{{ situacoes.risco }} em risco</li>
+            <li class="flex items-center gap-1.5 whitespace-nowrap font-medium text-primaria"><i data-lucide="circle-check" class="size-4"></i>{{ situacoes.regulares }} regulares</li>
+            <li class="flex items-center gap-1.5 whitespace-nowrap text-amber-900"><i data-lucide="triangle-alert" class="size-4 text-amber-600"></i>{{ situacoes.atencao }} em atenção</li>
+            <li class="flex items-center gap-1.5 whitespace-nowrap text-red-800"><i data-lucide="circle-alert" class="size-4"></i>{{ situacoes.risco }} em risco</li>
           </ul>
         </div>
       {% else %}
