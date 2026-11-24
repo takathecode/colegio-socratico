@@ -2,7 +2,7 @@
 {# Parâmetros: ofertas e oferta (a escolhida). Outros campos podem vir no bloco do formulário que inclui este. #}
 <label class="sr-only" for="escolher-disciplina">Disciplina</label>
 <select id="escolher-disciplina" name="oferta" data-enviar-ao-mudar
-        class="h-10 max-w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm font-semibold text-[#1F4E8C]">
+        class="h-10 max-w-full rounded-controle border border-borda bg-white px-3 text-sm font-semibold text-primaria">
   {% for item in ofertas %}
     <option value="{{ item.pk }}" {% if item.pk == oferta.pk %}selected{% endif %}>{{ item.disciplina.nome }} · {{ item.turma.codigo }}</option>
   {% endfor %}

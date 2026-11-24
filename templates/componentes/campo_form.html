@@ -4,6 +4,6 @@
   <div class="mt-2">{{ campo }}</div>
   {% if campo.help_text %}<p class="mt-1 text-xs text-slate-500">{{ campo.help_text }}</p>{% endif %}
   {% for erro in campo.errors %}
-    <p class="mt-1 text-sm text-[#C62828]">{{ erro }}</p>
+    <p class="mt-1 text-sm text-perigo">{{ erro }}</p>
   {% endfor %}
 </div>

@@ -6,12 +6,9 @@ from django.http import FileResponse, Http404
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
-# Aparência dos campos de formulário. O Tailwind encontra estas classes porque também lê os .py.
-CLASSES_CAMPO = (
-    "w-full rounded-lg border border-[#E5E9F0] bg-white px-3 py-2.5 text-sm outline-none "
-    "focus:border-[#1F4E8C] focus:ring-2 focus:ring-[#1F4E8C]/30 "
-    "aria-[invalid=true]:border-[#C62828]"
-)
+# Aparência dos campos de formulário: a classe .campo (assets/tailwind.css) + tamanho.
+# O Tailwind encontra estas classes porque também lê os .py.
+CLASSES_CAMPO = "campo w-full py-2.5"
 FORMATOS_ANEXO = ".pdf,.jpg,.jpeg,.png"
 
 

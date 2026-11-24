@@ -7,7 +7,7 @@
   <p class="mt-2 text-sm text-slate-500">Entre com sua matrícula e senha institucional.</p>
 
   {% if form.errors %}
-    <div role="alert" class="mt-6 flex gap-3 rounded-lg border border-[#C62828] bg-red-50 p-4 text-[#B71C1C]">
+    <div role="alert" class="mt-6 flex gap-3 rounded-controle border border-perigo bg-red-50 p-4 text-perigo-texto">
       <i data-lucide="circle-alert" class="mt-0.5 size-5 shrink-0"></i>
       <div>
         {% if form.minutos_de_bloqueio %}
@@ -32,10 +32,10 @@
 
     <div class="flex items-center justify-between gap-4 text-xs">
       <label class="flex items-center gap-2 text-slate-500">
-        <input type="checkbox" name="{{ form.manter_conectado.html_name }}" class="size-4 rounded border-[#E5E9F0] accent-[#1F4E8C]" {% if form.manter_conectado.value %}checked{% endif %}>
+        <input type="checkbox" name="{{ form.manter_conectado.html_name }}" class="size-4 rounded border-borda accent-primaria" {% if form.manter_conectado.value %}checked{% endif %}>
         Manter conectado
       </label>
-      <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-[#1F4E8C] hover:underline">Esqueci minha senha</a>
+      <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-primaria hover:underline">Esqueci minha senha</a>
     </div>
 
     {% include "componentes/botao_enviar.html" with texto="Entrar no portal" texto_carregando="Entrando no portal…" icone="arrow-right" %}
@@ -45,8 +45,8 @@
     </p>
   </form>
 
-  <div class="mt-6 border-t border-[#E5E9F0] pt-6 text-center text-xs">
+  <div class="mt-6 border-t border-borda pt-6 text-center text-xs">
     <p class="text-slate-500">Primeiro acesso ou dificuldade para entrar?</p>
-    <a href="{% url 'contas:atendimento' %}" class="mt-4 inline-block text-sm font-semibold text-[#1F4E8C] hover:underline">Fale com a Central de Atendimento</a>
+    <a href="{% url 'contas:atendimento' %}" class="mt-4 inline-block text-sm font-semibold text-primaria hover:underline">Fale com a Central de Atendimento</a>
   </div>
 {% endblock %}

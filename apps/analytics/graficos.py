@@ -13,11 +13,13 @@ e o servidor não guarda nada na memória entre um acesso e outro.
 import base64
 import textwrap
 from io import BytesIO
+from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")  # desenha só em memória, sem abrir janela (o servidor não tem tela)
 
+from matplotlib import font_manager  # noqa: E402
 from matplotlib.figure import Figure  # noqa: E402 (precisa vir depois do use("Agg"))
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Patch  # noqa: E402
@@ -29,11 +31,11 @@ from .dados import ABAIXO_DE_6, ENTRE_6_E_7, SETE_OU_MAIS  # noqa: E402
 
 # --- Cores (as mesmas do Tailwind nas telas) ---
 TEXTO = "#0B2545"  # azul-marinho da marca
-TEXTO_SECUNDARIO = "#64748B"  # slate-500
+TEXTO_SECUNDARIO = "#56677F"  # slate-500 do tema (assets/tailwind.css), que passa no WCAG AA
 GRADE = "#E5E9F0"  # borda dos cards
 EIXO = "#CBD5E1"  # slate-300
 AZUL = "#1F4E8C"  # botão primário
-REFERENCIA = "#64748B"  # linhas de mínimo (média 7, frequência 75%)
+REFERENCIA = "#56677F"  # linhas de mínimo (média 7, frequência 75%)
 
 # Cores das faixas de média: as mesmas do anel "Situação das disciplinas" do aluno.
 # O azul é um pouco mais claro que o da marca para separar bem do vermelho e do âmbar,
@@ -54,6 +56,20 @@ CORES_DAS_TURMAS = [
 ]
 
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
+
+# --- Fonte: a mesma Inter das telas ---
+# Os arquivos .ttf ficam em apps/analytics/fontes (licença OFL, que permite distribuir), para o
+# gráfico sair igual no Windows dos alunos e no Linux da Vercel, onde a Inter não vem instalada.
+# A Inter tem todos os acentos do português. Sem os arquivos, o matplotlib volta à DejaVu Sans.
+PASTA_DAS_FONTES = Path(__file__).resolve().parent / "fontes"
+for arquivo in sorted(PASTA_DAS_FONTES.glob("*.ttf")):
+    font_manager.fontManager.addfont(str(arquivo))
+matplotlib.rcParams["font.family"] = "Inter"
+
+# Tamanho na tela: 1 polegada da figura = 96 px do CSS. Com isso, o texto de 9 pt sai com
+# 12 px, como o texto pequeno das telas. A imagem nunca estica além desse tamanho natural
+# (componentes/grafico.html), senão as letras do gráfico ficariam maiores que as da página.
+PX_POR_POLEGADA = 96
 
 
 # --- Funções de apoio ---
@@ -92,12 +108,26 @@ def legenda_embaixo(eixos, itens, colunas, distancia=0.2):
     )
 
 
-def para_base64(figura):
-    """Salva a figura como PNG na memória e devolve o texto em base64."""
+DPI = PX_POR_POLEGADA * 2  # 2 pixels da imagem por pixel do CSS: nítido em telas de alta resolução
+
+
+def resultado(figura, descricao):
+    """Salva a figura como PNG e devolve o que as telas recebem.
+
+    - "png": a imagem em base64;
+    - "descricao": o texto para o leitor de tela;
+    - "largura": a largura natural em px do CSS (a do PNG dividida por 2, por causa do DPI dobrado).
+    """
     buffer = BytesIO()
-    # dpi 144 deixa a imagem nítida em telas de alta resolução (celulares e notebooks).
-    figura.savefig(buffer, format="png", dpi=144, bbox_inches="tight", facecolor="white")
-    return base64.b64encode(buffer.getvalue()).decode("ascii")
+    figura.savefig(buffer, format="png", dpi=DPI, bbox_inches="tight", facecolor="white")
+    png = buffer.getvalue()
+    # No cabeçalho de todo PNG, os bytes 16 a 20 guardam a largura da imagem em pixels.
+    largura_em_pixels = int.from_bytes(png[16:20], "big")
+    return {
+        "png": base64.b64encode(png).decode("ascii"),
+        "descricao": descricao,
+        "largura": round(largura_em_pixels * PX_POR_POLEGADA / DPI),
+    }
 
 
 # --- Os três gráficos ---
@@ -116,11 +146,16 @@ def notas_por_disciplina(linhas):
     nomes = [linha["oferta"].disciplina.nome for linha in com_nota]
     medias = [float(linha["media"]) for linha in com_nota]
 
-    figura, eixos = nova_figura()
+    figura, eixos = nova_figura(6, 3.2)
     posicoes = range(len(medias))
     barras = eixos.bar(posicoes, medias, width=0.4, color=AZUL)
     textos = eixos.bar_label(
-        barras, labels=[numero(m) for m in medias], padding=3, fontsize=9, color=TEXTO
+        barras,
+        labels=[numero(m) for m in medias],
+        padding=3,
+        fontsize=9,
+        color=TEXTO,
+        fontweight="semibold",
     )
     for texto in textos:
         # Fundo branco atrás do número, para a linha tracejada não passar por cima dele.
@@ -145,7 +180,7 @@ def notas_por_disciplina(linhas):
     descricao = "Gráfico de barras com a sua média em cada disciplina: " + "; ".join(
         f"{nome}, {numero(media)}" for nome, media in zip(nomes, medias)
     )
-    return {"png": para_base64(figura), "descricao": descricao + "."}
+    return resultado(figura, descricao + ".")
 
 
 def distribuicao_de_notas(faixas):
@@ -160,7 +195,7 @@ def distribuicao_de_notas(faixas):
     rotulos = [faixa["rotulo"] for faixa in faixas]
     quantidades = [faixa["quantidade"] for faixa in faixas]
 
-    figura, eixos = nova_figura()
+    figura, eixos = nova_figura(7, 3.2)
     barras = eixos.bar(
         rotulos,
         quantidades,
@@ -174,6 +209,7 @@ def distribuicao_de_notas(faixas):
         padding=3,
         fontsize=9,
         color=TEXTO,
+        fontweight="semibold",
     )
     eixos.yaxis.set_major_locator(MaxNLocator(integer=True))  # não existe meio aluno
     eixos.set_ylim(0, max(quantidades) * 1.15)
@@ -190,7 +226,7 @@ def distribuicao_de_notas(faixas):
         f"{faixa['rotulo']}, {faixa['quantidade']} aluno{'s' if faixa['quantidade'] != 1 else ''}"
         for faixa in faixas
     )
-    return {"png": para_base64(figura), "descricao": descricao + "."}
+    return resultado(figura, descricao + ".")
 
 
 def evolucao_da_frequencia(series):
@@ -208,7 +244,7 @@ def evolucao_da_frequencia(series):
     meses = sorted({mes for serie in series for mes, _ in serie["meses"]})
     posicao = {mes: indice for indice, mes in enumerate(meses)}
 
-    figura, eixos = nova_figura()
+    figura, eixos = nova_figura(9, 3.4)
     itens_da_legenda = []
     menor = 100.0
     for serie, cor in zip(series, CORES_DAS_TURMAS):
@@ -261,4 +297,4 @@ def evolucao_da_frequencia(series):
         )
         partes.append(f"{serie['nome']}: {valores}")
     descricao = "Gráfico de linhas com a frequência de cada turma por mês. " + "; ".join(partes)
-    return {"png": para_base64(figura), "descricao": descricao + "."}
+    return resultado(figura, descricao + ".")

@@ -46,10 +46,14 @@ def dados_de_frequencia(linhas):
 
 def dados_de_creditos(matricula):
     total = matricula.turma.curso.total_creditos
+    percentual = round(matricula.creditos_concluidos * 100 / total) if total else 0
     return {
         "concluidos": matricula.creditos_concluidos,
         "total": total,
-        "percentual": round(matricula.creditos_concluidos * 100 / total) if total else 0,
+        "percentual": percentual,
+        # Textos prontos para o card_kpi, que não consegue juntar valores no template.
+        "fracao": f"{matricula.creditos_concluidos}/{total}",
+        "integralizado": f"{percentual}% do curso integralizado",
     }
 
 
@@ -109,6 +113,7 @@ def notas(request):
             "linhas": linhas,
             "em_atencao": atencao,
             "nomes_em_atencao": ", ".join(l["oferta"].disciplina.nome for l in atencao),
+            "contagem_em_atencao": f"{len(atencao)} de {len(linhas)}",
             "atualizada_em": atualizacao["ultima"],
             "media_minima": MEDIA_MINIMA,
             "frequencia_minima": int(FREQUENCIA_MINIMA),

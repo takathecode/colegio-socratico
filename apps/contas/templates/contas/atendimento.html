@@ -15,8 +15,8 @@
     <section>
       <h2 class="font-semibold">Esqueceu a senha?</h2>
       <ol class="mt-1 list-decimal space-y-1 pl-5 leading-relaxed text-slate-600">
-        <li>Clique em <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-[#1F4E8C] hover:underline">Esqueci minha senha</a> e digite sua matrícula.</li>
-        <li>Confira o e-mail mostrado e clique em <strong class="text-[#0B2545]">Enviar link</strong>.</li>
+        <li>Clique em <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-primaria hover:underline">Esqueci minha senha</a> e digite sua matrícula.</li>
+        <li>Confira o e-mail mostrado e clique em <strong class="text-marinho">Enviar link</strong>.</li>
         <li>Abra o link em até 10 minutos e crie a nova senha.</li>
       </ol>
     </section>
@@ -28,11 +28,11 @@
 
     <section>
       <h2 class="font-semibold">Não recebeu o e-mail ou não usa mais esse endereço?</h2>
-      <p class="mt-1 leading-relaxed text-slate-600">Olhe a caixa de spam. Se não estiver lá, ou se o e-mail estiver errado, vá <strong class="text-[#0B2545]">pessoalmente à Secretaria da escola</strong> com um documento com foto. Ela atualiza seu e-mail ou redefine sua senha.</p>
+      <p class="mt-1 leading-relaxed text-slate-600">Olhe a caixa de spam. Se não estiver lá, ou se o e-mail estiver errado, vá <strong class="text-marinho">pessoalmente à Secretaria da escola</strong> com um documento com foto. Ela atualiza seu e-mail ou redefine sua senha.</p>
     </section>
   </div>
 
-  <a href="{% url 'contas:inicio' %}" class="mt-8 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+  <a href="{% url 'contas:inicio' %}" class="mt-8 inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
     <i data-lucide="arrow-left" class="size-4"></i> Voltar ao portal
   </a>
 {% endblock %}

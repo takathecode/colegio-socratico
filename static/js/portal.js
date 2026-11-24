@@ -10,17 +10,38 @@ if (window.lucide) {
 // O botão do topo recolhe o menu no computador e abre o menu no celular.
 const raiz = document.documentElement;
 const telaGrande = window.matchMedia("(min-width: 1024px)");
+const botaoDoMenu = document.querySelector("[data-alternar-menu]");
+const barraLateral = document.getElementById("barra-lateral");
 
-function fecharMenuCelular() {
-  delete raiz.dataset.menu;
+// No celular: abrir leva o foco para o primeiro link do menu; fechar devolve o foco ao botão,
+// para quem usa teclado ou leitor de tela não se perder na página.
+function abrirMenuCelular() {
+  raiz.dataset.menu = "aberto";
+  botaoDoMenu?.setAttribute("aria-expanded", "true");
+  barraLateral?.querySelector("a, button")?.focus();
 }
 
-document.querySelector("[data-alternar-menu]")?.addEventListener("click", () => {
+function fecharMenuCelular() {
+  if (raiz.dataset.menu !== "aberto") return;
+  delete raiz.dataset.menu;
+  botaoDoMenu?.setAttribute("aria-expanded", "false");
+  botaoDoMenu?.focus();
+}
+
+// Virou o celular ou aumentou a janela até o tamanho de computador: o menu do celular fecha.
+telaGrande.addEventListener("change", () => {
+  if (telaGrande.matches) {
+    delete raiz.dataset.menu;
+    botaoDoMenu?.setAttribute("aria-expanded", "false");
+  }
+});
+
+botaoDoMenu?.addEventListener("click", () => {
   if (!telaGrande.matches) {
     if (raiz.dataset.menu === "aberto") {
       fecharMenuCelular();
     } else {
-      raiz.dataset.menu = "aberto";
+      abrirMenuCelular();
     }
     return;
   }
@@ -132,6 +153,55 @@ formularios.forEach((formulario) => {
 // Ao voltar pelo botão do navegador, a página pode reaparecer ainda no estado "carregando".
 window.addEventListener("pageshow", () => {
   formularios.forEach((formulario) => marcarCarregando(formulario, false));
+  pararEsqueleto();
+});
+
+// --- Esqueleto da navegação ---
+// Cada página vem do servidor (e o banco fica no Supabase), então trocar de tela pode levar
+// cerca de 1 segundo. Se a próxima página demorar mais de 300 ms, o conteúdo dá lugar ao
+// esqueleto (base.html), mostrando que algo está carregando. Abaixo de 300 ms nada muda,
+// para a tela não piscar.
+let esperaDoEsqueleto;
+const conteudo = document.querySelector("main");
+
+function mostrarEsqueleto() {
+  clearTimeout(esperaDoEsqueleto);
+  esperaDoEsqueleto = setTimeout(() => {
+    raiz.dataset.navegando = "";
+    conteudo?.setAttribute("aria-busy", "true");
+    // Rede de segurança: se a página não trocou (ex.: um download), o conteúdo volta.
+    esperaDoEsqueleto = setTimeout(pararEsqueleto, 10000);
+  }, 300);
+}
+
+function pararEsqueleto() {
+  clearTimeout(esperaDoEsqueleto);
+  delete raiz.dataset.navegando;
+  conteudo?.removeAttribute("aria-busy");
+}
+
+// Só links que trocam de página dentro do portal: nada de nova aba, download, âncora (#),
+// arquivo (PDF/Excel) ou clique com Ctrl/Shift/Cmd.
+document.addEventListener("click", (evento) => {
+  const link = evento.target.closest("a[href]");
+  if (!link || evento.defaultPrevented || evento.button !== 0) return;
+  if (evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
+  if (link.target && link.target !== "_self") return;
+  if (link.hasAttribute("download")) return;
+  const destino = new URL(link.href, location.href);
+  if (destino.origin !== location.origin) return;
+  if (destino.pathname === location.pathname && destino.search === location.search) return;
+  // Arquivos baixados não trocam a página: relatórios (PDF/Excel), anexos e fotos.
+  if (destino.searchParams.has("formato") || /\/(anexo|foto)/.test(destino.pathname)) return;
+  if (/^\/relatorios\/.+/.test(destino.pathname)) return;
+  mostrarEsqueleto();
+});
+
+// Filtros e buscas (formulários GET) também trocam a página inteira.
+document.querySelectorAll('main form:not([method]), main form[method="get"]').forEach((formulario) => {
+  formulario.addEventListener("submit", () => {
+    if (!formulario.target) mostrarEsqueleto();
+  });
 });
 
 // --- Janelas modais (elemento <dialog>) ---
@@ -414,7 +484,7 @@ document.querySelectorAll("[data-chamada]").forEach((area) => {
 
     for (const [indice, linha] of fila.entries()) {
       status.textContent = `Lendo a digital de ${linha.dataset.aluno} (${indice + 1} de ${fila.length})...`;
-      linha.classList.add("bg-[#EAF0F8]");
+      linha.classList.add("bg-primaria-suave");
       linha.scrollIntoView({ block: "nearest", behavior: "smooth" });
       await esperar(TEMPO_DE_LEITURA);
 
@@ -424,7 +494,7 @@ document.querySelectorAll("[data-chamada]").forEach((area) => {
       } else {
         marcar(linha, "falta", "MANUAL");
       }
-      linha.classList.remove("bg-[#EAF0F8]");
+      linha.classList.remove("bg-primaria-suave");
     }
 
     leitor.classList.remove("animate-pulse");

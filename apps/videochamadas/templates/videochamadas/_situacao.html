@@ -2,23 +2,23 @@
 {# A cor sempre vem com ícone e texto, para não depender só da cor. #}
 {% with situacao=chamada.situacao %}
   {% if situacao == "chamando" %}
-    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-[#EAF0F8] px-2 py-1 text-xs font-medium text-[#1F4E8C]">
+    <span class="selo selo-info">
       <i data-lucide="phone-call" class="size-3.5"></i>{{ situacao.label }}
     </span>
   {% elif situacao == "em_andamento" %}
-    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-800">
+    <span class="selo selo-ok">
       <i data-lucide="video" class="size-3.5"></i>{{ situacao.label }}
     </span>
   {% elif situacao == "atendida" %}
-    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
+    <span class="selo selo-neutro">
       <i data-lucide="phone" class="size-3.5"></i>{{ situacao.label }}
     </span>
   {% elif situacao == "recusada" %}
-    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-800">
+    <span class="selo selo-risco">
       <i data-lucide="phone-off" class="size-3.5"></i>{{ situacao.label }}
     </span>
   {% else %}
-    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900">
+    <span class="selo selo-atencao">
       <i data-lucide="phone-missed" class="size-3.5"></i>{{ situacao.label }}
     </span>
   {% endif %}

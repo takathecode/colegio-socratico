@@ -749,8 +749,8 @@
     cabecalho.textContent = `${autor} · ${horaAgora()}`;
     const corpo = document.createElement("p");
     corpo.className = minha
-      ? "whitespace-pre-wrap break-words rounded-lg bg-[#1F4E8C] px-3 py-2 text-white"
-      : "whitespace-pre-wrap break-words rounded-lg bg-[#F5F7FA] px-3 py-2 text-slate-800";
+      ? "whitespace-pre-wrap break-words rounded-controle bg-primaria px-3 py-2 text-white"
+      : "whitespace-pre-wrap break-words rounded-controle bg-fundo px-3 py-2 text-slate-800";
     corpo.textContent = texto;
     item.append(cabecalho, corpo);
     adicionarNaConversa(item);

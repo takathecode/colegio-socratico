@@ -6,36 +6,22 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-[#0B2545]">Notas e Boletim</h1>
-      <p class="mt-1 text-sm text-slate-500">Seu desempenho, avaliação por avaliação.</p>
+      <h1 class="titulo-pagina">Notas e Boletim</h1>
+      <p class="subtitulo-pagina">Seu desempenho, avaliação por avaliação.</p>
     </div>
     <a href="{% url 'relatorios:meu_boletim' %}"
-       class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+       class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
       <i data-lucide="download" class="size-4"></i> Baixar boletim (PDF)
     </a>
   </div>
 
   <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
     {% include "componentes/card_kpi.html" with rotulo="Coeficiente de rendimento" valor=matricula.coeficiente_rendimento|floatformat:1 detalhe="Acumulado do curso" icone="graduation-cap" %}
-    <div class="rounded-xl border border-[#E5E9F0] bg-white p-4">
-      <div class="flex items-start justify-between gap-2">
-        <p class="text-xs text-slate-500">Créditos concluídos</p>
-        <i data-lucide="book-open" class="size-4 shrink-0 text-[#1F4E8C]"></i>
-      </div>
-      <p class="mt-1 text-2xl font-semibold">{{ creditos.concluidos }}/{{ creditos.total }}</p>
-      <p class="mt-1 text-xs text-slate-500">{{ creditos.percentual }}% de integralização</p>
-    </div>
-    <div class="rounded-xl border border-[#E5E9F0] bg-white p-4 sm:col-span-2 xl:col-span-1">
-      <div class="flex items-start justify-between gap-2">
-        <p class="text-xs text-slate-500">Disciplinas em atenção</p>
-        <i data-lucide="info" class="size-4 shrink-0 text-[#1F4E8C]"></i>
-      </div>
-      <p class="mt-1 text-2xl font-semibold">{{ em_atencao|length }} de {{ linhas|length }}</p>
-      <p class="mt-1 truncate text-xs text-slate-500" title="{{ nomes_em_atencao }}">{{ nomes_em_atencao|default:"Nenhuma, continue assim" }}</p>
-    </div>
+    {% include "componentes/card_kpi.html" with rotulo="Créditos concluídos" valor=creditos.fracao detalhe=creditos.integralizado icone="book-open" %}
+    {% include "componentes/card_kpi.html" with rotulo="Disciplinas em atenção" valor=contagem_em_atencao detalhe=nomes_em_atencao|default:"Nenhuma, continue assim" icone="info" classe="sm:col-span-2 xl:col-span-1" %}
   </div>
 
-  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+  <section class="cartao mt-4 p-5">
     <div class="mb-4 flex items-start justify-between gap-3">
       <div>
         <h2 class="font-semibold">Boletim do semestre</h2>
@@ -43,7 +29,7 @@
           Notas parciais de 0 a 10{% if atualizada_em %} · atualização em {{ atualizada_em|date:"d/m/Y" }}{% endif %}
         </p>
       </div>
-      <span class="text-sm font-semibold text-[#1F4E8C]">{{ matricula.turma.semestre }}</span>
+      <span class="text-sm font-semibold text-primaria">{{ matricula.turma.semestre }}</span>
     </div>
     {% include "aluno/_disciplinas.html" with coluna="avaliacoes" %}
     <p class="mt-4 flex items-start gap-2 text-xs text-slate-500">
@@ -53,7 +39,7 @@
   </section>
 
   {% for linha in em_atencao %}
-    <section class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-5">
+    <section class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-cartao border border-amber-200 bg-amber-50 p-5">
       <div class="flex min-w-0 flex-1 items-start gap-3">
         <i data-lucide="triangle-alert" class="mt-0.5 size-5 shrink-0 text-amber-600"></i>
         <div>
@@ -65,7 +51,7 @@
         </div>
       </div>
       <a href="{% url 'mensagens:caixa' %}?para={{ linha.oferta.professor_id }}&assunto={{ linha.oferta.disciplina.nome|urlencode }}"
-         class="botao-vidro-claro inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center rounded-controle px-4 text-sm font-semibold text-primaria">
         Falar com professor
       </a>
     </section>

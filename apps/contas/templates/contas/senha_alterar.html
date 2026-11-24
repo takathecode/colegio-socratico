@@ -25,12 +25,12 @@
     {# Durante a troca obrigatória, só esta tela e "Sair" abrem (apps/contas/middleware.py). #}
     <form method="post" action="{% url 'contas:sair' %}" class="mt-6">
       {% csrf_token %}
-      <button type="submit" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+      <button type="submit" class="inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
         <i data-lucide="log-out" class="size-4"></i> Sair sem trocar
       </button>
     </form>
   {% else %}
-    <a href="{% url 'contas:inicio' %}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+    <a href="{% url 'contas:inicio' %}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
       <i data-lucide="arrow-left" class="size-4"></i> Voltar ao portal
     </a>
   {% endif %}
