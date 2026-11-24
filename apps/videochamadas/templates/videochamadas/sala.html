@@ -13,7 +13,7 @@
     {# Sala dentro do portal (WebRTC). O comportamento está em static/js/chamada.js. #}
     {% include "videochamadas/_sala_propria.html" %}
   {% else %}
-    <section class="mt-4 max-w-2xl rounded-cartao border border-borda bg-white p-5">
+    <section class="cartao mt-4 max-w-2xl p-5">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex min-w-0 items-center gap-3">
           <span class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primaria-suave text-base font-semibold text-primaria" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=outro %}</span>

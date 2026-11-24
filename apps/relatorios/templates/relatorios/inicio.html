@@ -10,14 +10,14 @@
   </div>
 
   {% if not turmas %}
-    <section class="mt-5 rounded-cartao border border-borda bg-white p-5">
+    <section class="cartao mt-5 p-5">
       {% include "componentes/vazio.html" with titulo="Nenhuma turma cadastrada" texto="Os relatórios aparecem depois que houver turmas com alunos." icone="file-text" %}
     </section>
   {% else %}
     <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
 
       {# Os formulários usam GET: o arquivo é baixado e a tela continua aberta. #}
-      <section class="flex flex-col rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao flex flex-col p-5">
         <div class="flex items-start gap-3">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-controle bg-primaria-suave text-primaria"><i data-lucide="school" class="size-5"></i></span>
           <div>
@@ -28,7 +28,7 @@
         <form method="get" action="{% url 'relatorios:turma' %}" class="mt-4 flex flex-1 flex-col justify-end gap-3">
           <div>
             <label for="turma-desempenho" class="text-sm font-medium">Turma</label>
-            <select id="turma-desempenho" name="turma" required class="mt-1 h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+            <select id="turma-desempenho" name="turma" required class="campo mt-1 h-10 w-full">
               {% for item in turmas %}
                 <option value="{{ item.pk }}">{{ item.codigo }} · {{ item.semestre }} · {{ item.curso.nome }}</option>
               {% endfor %}
@@ -38,7 +38,7 @@
         </form>
       </section>
 
-      <section class="flex flex-col rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao flex flex-col p-5">
         <div class="flex items-start gap-3">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-controle bg-primaria-suave text-primaria"><i data-lucide="triangle-alert" class="size-5"></i></span>
           <div>
@@ -51,7 +51,7 @@
             <div class="grid gap-3 sm:grid-cols-2">
               <div>
                 <label for="turma-risco" class="text-sm font-medium">Turma</label>
-                <select id="turma-risco" name="turma" class="mt-1 h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+                <select id="turma-risco" name="turma" class="campo mt-1 h-10 w-full">
                   <option value="">Todas as turmas</option>
                   {% for item in turmas %}
                     <option value="{{ item.pk }}">{{ item.codigo }} · {{ item.semestre }}</option>
@@ -60,7 +60,7 @@
               </div>
               <div>
                 <label for="nivel-risco" class="text-sm font-medium">Nível</label>
-                <select id="nivel-risco" name="nivel" class="mt-1 h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+                <select id="nivel-risco" name="nivel" class="campo mt-1 h-10 w-full">
                   <option value="">Todos os níveis</option>
                   {% for valor, rotulo in niveis %}
                     <option value="{{ valor }}">{{ rotulo }}</option>
@@ -80,7 +80,7 @@
         {% endif %}
       </section>
 
-      <section class="flex flex-col rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao flex flex-col p-5">
         <div class="flex items-start gap-3">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-controle bg-primaria-suave text-primaria"><i data-lucide="graduation-cap" class="size-5"></i></span>
           <div>
@@ -93,7 +93,7 @@
           <div class="grid gap-3 sm:grid-cols-3">
             <div>
               <label for="turma-alunos" class="text-sm font-medium">Turma</label>
-              <select id="turma-alunos" name="turma" class="mt-1 h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+              <select id="turma-alunos" name="turma" class="campo mt-1 h-10 w-full">
                 <option value="">Todas</option>
                 {% for item in turmas %}
                   <option value="{{ item.pk }}">{{ item.codigo }} · {{ item.semestre }}</option>
@@ -102,7 +102,7 @@
             </div>
             <div>
               <label for="matricula-alunos" class="text-sm font-medium">Matrícula</label>
-              <select id="matricula-alunos" name="situacao_matricula" class="mt-1 h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+              <select id="matricula-alunos" name="situacao_matricula" class="campo mt-1 h-10 w-full">
                 <option value="">Todas</option>
                 {% for valor, rotulo in situacoes_matricula %}
                   <option value="{{ valor }}">{{ rotulo }}</option>
@@ -111,7 +111,7 @@
             </div>
             <div>
               <label for="situacao-alunos" class="text-sm font-medium">Situação</label>
-              <select id="situacao-alunos" name="situacao" class="mt-1 h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+              <select id="situacao-alunos" name="situacao" class="campo mt-1 h-10 w-full">
                 <option value="">Todas</option>
                 {% for item in selos %}
                   <option value="{{ item }}">{{ item }}</option>
@@ -123,7 +123,7 @@
         </form>
       </section>
 
-      <section class="flex flex-col rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao flex flex-col p-5">
         <div class="flex items-start gap-3">
           <span class="flex size-10 shrink-0 items-center justify-center rounded-controle bg-primaria-suave text-primaria"><i data-lucide="file-text" class="size-5"></i></span>
           <div>

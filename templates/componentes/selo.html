@@ -1,18 +1,18 @@
 {# Selo de situação. Parâmetro: situacao. A cor sempre vem com ícone e texto, nunca sozinha. #}
 {% if situacao == "Regular" or situacao == "Ativa" or situacao == "Aprovada" or situacao == "Pago" or situacao == "Acima do mínimo" or situacao == "Risco baixo" %}
-  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-800">
+  <span class="selo selo-ok">
     <i data-lucide="circle-check" class="size-3.5"></i>{{ situacao }}
   </span>
 {% elif situacao == "Em atenção" or situacao == "Pendente" or situacao == "Ação necessária" or situacao == "Risco médio" %}
-  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900">
+  <span class="selo selo-atencao">
     <i data-lucide="triangle-alert" class="size-3.5 text-amber-600"></i>{{ situacao }}
   </span>
 {% elif situacao == "Em risco" or situacao == "Rejeitada" or situacao == "Em atraso" or situacao == "Abaixo do mínimo" or situacao == "Risco alto" %}
-  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-800">
+  <span class="selo selo-risco">
     <i data-lucide="circle-alert" class="size-3.5"></i>{{ situacao }}
   </span>
 {% elif situacao %}
-  <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-primaria-suave px-2 py-1 text-xs font-medium text-primaria">
+  <span class="selo selo-info">
     <i data-lucide="info" class="size-3.5"></i>{{ situacao }}
   </span>
 {% else %}

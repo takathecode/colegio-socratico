@@ -4,7 +4,7 @@
   e escolha dos aparelhos), os vídeos, os botões, a conversa, o estado da conexão e os avisos. O {% csrf_token %} daqui vai no cabeçalho
   X-CSRFToken dos POSTs.
 {% endcomment %}
-<section class="mt-4 rounded-cartao border border-borda bg-white p-4 sm:p-5"
+<section class="cartao mt-4 p-4 sm:p-5"
          aria-labelledby="titulo-sala"
          data-sala-propria
          data-url-sinal="{% url 'videochamadas:sinal' chamada.pk %}"
@@ -66,13 +66,13 @@
       </div>
       <div>
         <label for="escolha-camera" class="mb-1 block text-sm font-medium">Câmera</label>
-        <select id="escolha-camera" data-escolha-camera disabled class="w-full rounded-controle border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30 disabled:bg-fundo disabled:text-slate-500">
+        <select id="escolha-camera" data-escolha-camera disabled class="campo w-full py-2.5">
           <option>Procurando...</option>
         </select>
       </div>
       <div>
         <label for="escolha-microfone" class="mb-1 block text-sm font-medium">Microfone</label>
-        <select id="escolha-microfone" data-escolha-microfone disabled class="w-full rounded-controle border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30 disabled:bg-fundo disabled:text-slate-500">
+        <select id="escolha-microfone" data-escolha-microfone disabled class="campo w-full py-2.5">
           <option>Procurando...</option>
         </select>
         {# A barra verde acompanha o volume do microfone: se ela mexe, o microfone está ouvindo. #}
@@ -164,7 +164,7 @@
     {# Conversa: vai direto entre os dois navegadores (canal de dados do WebRTC) e não é gravada. #}
     {# Na tela grande, o card tem a altura do vídeo (position absolute) e a lista rola por dentro. #}
     <div class="relative xl:min-h-0">
-      <aside class="flex flex-col rounded-cartao border border-borda bg-white xl:absolute xl:inset-0" aria-labelledby="titulo-conversa">
+      <aside class="cartao flex flex-col xl:absolute xl:inset-0" aria-labelledby="titulo-conversa">
         <h2 id="titulo-conversa" class="flex items-center gap-2 border-b border-borda px-4 py-3 text-sm font-semibold text-marinho">
           <i data-lucide="message-square" class="size-4" aria-hidden="true"></i> Conversa
         </h2>
@@ -177,7 +177,7 @@
           <label for="campo-conversa" class="sr-only">Mensagem para {{ nome_do_outro }}</label>
           <input id="campo-conversa" data-campo-conversa type="text" maxlength="500" disabled
                  placeholder="A conversa abre quando o outro entrar"
-                 class="h-11 min-w-0 flex-1 rounded-controle border border-borda px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primaria focus:outline-none disabled:bg-fundo">
+                 class="campo h-11 min-w-0 flex-1 text-slate-800 placeholder:text-slate-400">
           <button type="submit" data-enviar-conversa disabled
                   class="botao-vidro flex size-11 shrink-0 items-center justify-center rounded-controle text-white disabled:opacity-50">
             <i data-lucide="send" class="size-4" aria-hidden="true"></i><span class="sr-only">Enviar</span>

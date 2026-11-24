@@ -40,7 +40,7 @@
     {% include "componentes/card_kpi.html" with rotulo="Em risco" valor=indicadores.risco detalhe="Média abaixo de 6 ou frequência abaixo de 75%" icone="triangle-alert" %}
   </div>
 
-  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
+  <section class="cartao mt-4 p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="font-semibold">Alunos</h2>
@@ -50,40 +50,40 @@
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca-aluno">Buscar aluno por nome ou matrícula</label>
         <input id="busca-aluno" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou matrícula"
-               class="h-10 w-full rounded-controle border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
+               class="campo h-10 w-full pl-9 pr-3">
       </form>
     </div>
 
     {% if linhas %}
       <div class="hidden overflow-x-auto md:block">
-        <table class="w-full text-sm">
+        <table class="tabela">
           <thead>
-            <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
-              <th scope="col" class="px-3 py-2.5 font-medium">Aluno</th>
+            <tr>
+              <th scope="col">Aluno</th>
               {% for avaliacao in avaliacoes %}
-                <th scope="col" class="px-3 py-2.5 font-medium whitespace-nowrap">{{ avaliacao.nome }}</th>
+                <th scope="col" class="whitespace-nowrap">{{ avaliacao.nome }}</th>
               {% endfor %}
-              <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Frequência</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Situação</th>
+              <th scope="col">Média</th>
+              <th scope="col">Frequência</th>
+              <th scope="col">Situação</th>
             </tr>
           </thead>
           <tbody>
             {% for linha in linhas %}
-              <tr class="border-b border-borda">
-                <td class="px-3 py-3">
+              <tr>
+                <td class="py-3">
                   <p class="font-medium">{{ linha.matricula.aluno.get_full_name|default:linha.matricula.aluno.matricula }}</p>
                   <p class="mt-0.5 text-xs text-slate-500">RA {{ linha.matricula.aluno.matricula }}</p>
                 </td>
                 {% for nota in linha.notas %}
-                  <td class="px-3 text-slate-600">{{ nota|floatformat:1|default:"—" }}</td>
+                  <td class="text-slate-600">{{ nota|floatformat:1|default:"—" }}</td>
                 {% endfor %}
-                <td class="px-3 text-base font-semibold">{{ linha.media|floatformat:1|default:"—" }}</td>
-                <td class="px-3 whitespace-nowrap">
+                <td class="text-base font-semibold">{{ linha.media|floatformat:1|default:"—" }}</td>
+                <td class="whitespace-nowrap">
                   {% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}
                   <span class="block text-xs text-slate-500">{{ linha.horas_faltas }} h de falta</span>
                 </td>
-                <td class="px-3">{% include "componentes/selo.html" with situacao=linha.situacao %}</td>
+                <td>{% include "componentes/selo.html" with situacao=linha.situacao %}</td>
               </tr>
             {% endfor %}
           </tbody>

@@ -25,7 +25,7 @@
   </div>
 
   <div class="mt-4 grid gap-4 xl:grid-cols-[2.2fr_1fr]">
-    <section class="rounded-cartao border border-borda bg-white p-5">
+    <section class="cartao p-5">
       <div class="mb-3 flex items-center justify-between gap-3">
         <h2 class="font-semibold">Minhas disciplinas</h2>
         <a href="{% url 'professor:turmas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
@@ -34,28 +34,28 @@
       </div>
       {% if resumos %}
         <div class="hidden md:block">
-          <table class="w-full text-sm">
+          <table class="tabela">
             <thead>
-              <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
-                <th scope="col" class="px-3 py-2.5 font-medium">Disciplina</th>
-                <th scope="col" class="px-3 py-2.5 font-medium">Alunos</th>
-                <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
-                <th scope="col" class="px-3 py-2.5 font-medium">Frequência</th>
-                <th scope="col" class="px-3 py-2.5 font-medium">Situação</th>
-                <th scope="col" class="px-3 py-2.5 font-medium"><span class="sr-only">Ações</span></th>
+              <tr>
+                <th scope="col">Disciplina</th>
+                <th scope="col">Alunos</th>
+                <th scope="col">Média</th>
+                <th scope="col">Frequência</th>
+                <th scope="col">Situação</th>
+                <th scope="col"><span class="sr-only">Ações</span></th>
               </tr>
             </thead>
             <tbody>
               {% for resumo in resumos %}
-                <tr class="border-b border-borda">
-                  <td class="px-3 py-3">
+                <tr>
+                  <td class="py-3">
                     <a href="{% url 'professor:turma' resumo.oferta.pk %}" class="font-medium hover:text-primaria hover:underline">{{ resumo.oferta.disciplina.nome }}</a>
                     <p class="mt-0.5 text-xs text-slate-500">Turma {{ resumo.oferta.turma.codigo }} · {{ resumo.oferta.turma.semestre }}</p>
                   </td>
-                  <td class="px-3">{{ resumo.indicadores.alunos }}</td>
-                  <td class="px-3 font-semibold">{{ resumo.indicadores.media|floatformat:1|default:"—" }}</td>
-                  <td class="px-3">{% if resumo.indicadores.frequencia is None %}—{% else %}{{ resumo.indicadores.frequencia|floatformat:0 }}%{% endif %}</td>
-                  <td class="px-3">
+                  <td>{{ resumo.indicadores.alunos }}</td>
+                  <td class="font-semibold">{{ resumo.indicadores.media|floatformat:1|default:"—" }}</td>
+                  <td>{% if resumo.indicadores.frequencia is None %}—{% else %}{{ resumo.indicadores.frequencia|floatformat:0 }}%{% endif %}</td>
+                  <td>
                     {% if resumo.indicadores.risco %}
                       {% include "componentes/selo.html" with situacao="Em risco" %}
                       <span class="ml-1 text-xs text-slate-500">{{ resumo.indicadores.risco }} aluno{{ resumo.indicadores.risco|pluralize }}</span>
@@ -68,7 +68,7 @@
                       {% include "componentes/selo.html" with situacao=None %}
                     {% endif %}
                   </td>
-                  <td class="px-3 text-right whitespace-nowrap">
+                  <td class="text-right whitespace-nowrap">
                     <a href="{% url 'professor:notas' %}?oferta={{ resumo.oferta.pk }}" title="Lançar notas" aria-label="Lançar notas de {{ resumo.oferta.disciplina.nome }} da turma {{ resumo.oferta.turma.codigo }}"
                        class="inline-flex size-9 items-center justify-center rounded-controle text-primaria hover:bg-primaria-suave"><i data-lucide="square-pen" class="size-4"></i></a>
                     <a href="{% url 'professor:chamada' %}?oferta={{ resumo.oferta.pk }}" title="Fazer chamada" aria-label="Fazer chamada de {{ resumo.oferta.disciplina.nome }} da turma {{ resumo.oferta.turma.codigo }}"
@@ -96,7 +96,7 @@
       {% endif %}
     </section>
 
-    <section class="rounded-cartao border border-borda bg-white p-5">
+    <section class="cartao p-5">
       <div class="mb-1 flex items-center justify-between gap-3">
         <h2 class="font-semibold">Justificativas pendentes</h2>
         {% if total_pendentes %}
@@ -124,7 +124,7 @@
   </div>
 
   <div class="mt-4 grid gap-4 xl:grid-cols-[2.2fr_1fr]">
-    <section class="rounded-cartao border border-borda bg-white p-5">
+    <section class="cartao p-5">
       <h2 class="font-semibold">Alunos em risco</h2>
       <p class="mb-3 mt-1 text-sm text-slate-500">
         {% if total_em_risco %}{{ total_em_risco }} registro{{ total_em_risco|pluralize }} com média abaixo de 6 ou frequência abaixo de 75%, começando pela menor frequência.{% else %}Média abaixo de 6 ou frequência abaixo de 75%.{% endif %}
@@ -148,7 +148,7 @@
       </ul>
     </section>
 
-    <section class="rounded-cartao border border-borda bg-white p-5">
+    <section class="cartao p-5">
       <h2 class="font-semibold">Próximas avaliações</h2>
       <ul class="mt-2 divide-y divide-borda">
         {% for avaliacao in proximas %}

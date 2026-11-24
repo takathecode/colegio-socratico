@@ -30,7 +30,7 @@
   {% if linhas %}
     <div data-chamada class="mt-4 grid gap-4 lg:grid-cols-[320px_1fr]">
       {# Leitor biométrico simulado. A leitura acontece no navegador (portal.js). #}
-      <section class="h-fit rounded-cartao border border-borda bg-white p-5 lg:sticky lg:top-24">
+      <section class="cartao h-fit p-5 lg:sticky lg:top-24">
         <h2 class="font-semibold">Leitor biométrico</h2>
         <p class="mt-1 text-xs text-slate-500">Simulação: cada aluno encosta o dedo no leitor.</p>
 
@@ -70,7 +70,7 @@
       </section>
 
       <form method="post" action="?oferta={{ oferta.pk }}&data={{ data|date:'Y-m-d' }}" data-carregando
-            class="rounded-cartao border border-borda bg-white p-5">
+            class="cartao p-5">
         {% csrf_token %}
         <input type="hidden" name="oferta" value="{{ oferta.pk }}">
         {{ form.data_aula }}
@@ -130,7 +130,7 @@
       </form>
     </div>
   {% else %}
-    <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
+    <section class="cartao mt-4 p-5">
       {% include "componentes/vazio.html" with titulo="Nenhum aluno ativo nesta turma" texto="Os alunos aparecerão aqui quando forem matriculados." icone="users" %}
     </section>
   {% endif %}

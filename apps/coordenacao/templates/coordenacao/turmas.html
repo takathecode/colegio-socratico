@@ -18,7 +18,7 @@
   {% if turmas %}
     <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {% for turma in turmas %}
-        <a href="{% url 'coordenacao:turma' turma.pk %}" class="flex flex-col rounded-cartao border border-borda bg-white p-5 hover:border-primaria">
+        <a href="{% url 'coordenacao:turma' turma.pk %}" class="cartao flex flex-col p-5 hover:border-primaria">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <h2 class="font-semibold">{{ turma.codigo }}</h2>
@@ -40,7 +40,7 @@
       {% endfor %}
     </div>
   {% else %}
-    <div class="mt-5 rounded-cartao border border-borda bg-white p-5">
+    <div class="cartao mt-5 p-5">
       {% include "componentes/vazio.html" with titulo="Nenhuma turma cadastrada" texto="Use o botão Nova turma para criar a primeira." icone="school" %}
     </div>
   {% endif %}

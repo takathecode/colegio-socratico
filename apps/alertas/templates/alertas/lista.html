@@ -18,7 +18,7 @@
     {% endif %}
   </div>
 
-  <section class="mt-5 rounded-cartao border border-borda bg-white p-5">
+  <section class="cartao mt-5 p-5">
     <div class="flex gap-4 text-sm">
       <a href="{% url 'alertas:lista' %}" {% if filtro == "todos" %}aria-current="page"{% endif %}
          class="{% if filtro == 'todos' %}font-semibold text-primaria{% else %}text-slate-500{% endif %}">Todas</a>

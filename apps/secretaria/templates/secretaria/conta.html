@@ -11,7 +11,7 @@
   <div class="mt-3 grid grid-cols-1 gap-4 xl:grid-cols-[1fr_380px]">
     <div class="space-y-4">
       {# Dados de acesso #}
-      <section class="rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="flex min-w-0 items-center gap-3">
             <span class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primaria-suave text-base font-semibold text-primaria" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=conta %}</span>
@@ -36,10 +36,10 @@
               {% if conta.is_active %}
                 {% include "componentes/selo.html" with situacao="Ativa" %}
               {% else %}
-                <span class="inline-flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-800"><i data-lucide="ban" class="size-3.5"></i>Desativada</span>
+                <span class="selo selo-risco"><i data-lucide="ban" class="size-3.5"></i>Desativada</span>
               {% endif %}
               {% if conta.precisa_trocar_senha %}
-                <span class="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900"><i data-lucide="key-round" class="size-3.5 text-amber-600"></i>Senha provisória: troca no próximo login</span>
+                <span class="selo selo-atencao"><i data-lucide="key-round" class="size-3.5 text-amber-600"></i>Senha provisória: troca no próximo login</span>
               {% endif %}
             </dd>
           </div>
@@ -55,7 +55,7 @@
       </section>
 
       {# Histórico de auditoria #}
-      <section class="rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao p-5">
         <h2 class="font-semibold">Histórico de acesso</h2>
         <p class="mt-1 text-sm text-slate-500">Ações sensíveis nesta conta. Senhas e links nunca são registrados.</p>
         {% if historico.object_list %}
@@ -69,7 +69,7 @@
 
     <div class="space-y-4">
       {# Redefinir a senha #}
-      <section class="rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao p-5">
         <h2 class="font-semibold">Redefinir a senha</h2>
         <p role="note" class="mt-3 flex gap-2 rounded-controle border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
           <i data-lucide="id-card" class="size-4 shrink-0 translate-y-0.5 text-amber-600"></i>
@@ -109,7 +109,7 @@
       </section>
 
       {# Bloqueio #}
-      <section class="rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao p-5">
         <h2 class="font-semibold">Bloqueio por senhas erradas</h2>
         {% if bloqueio %}
           <p class="mt-2 text-sm text-red-800">Login bloqueado até {{ bloqueio.bloqueado_ate|date:"H:i" }}, depois de 5 senhas erradas seguidas.</p>
@@ -125,7 +125,7 @@
       </section>
 
       {# Desativar ou reativar #}
-      <section class="rounded-cartao border border-borda bg-white p-5">
+      <section class="cartao p-5">
         <h2 class="font-semibold">{% if conta.is_active %}Desativar a conta{% else %}Reativar a conta{% endif %}</h2>
         <p class="mt-2 text-sm text-slate-500">
           {% if conta.is_active %}A pessoa deixa de entrar no portal e na API. Notas, frequência e mensagens continuam guardadas.{% else %}A pessoa volta a entrar com a senha que já tinha.{% endif %}

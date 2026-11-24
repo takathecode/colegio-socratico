@@ -1,5 +1,6 @@
-{# Card de indicador. Parâmetros: rotulo, valor, detalhe, icone. #}
-<div class="rounded-cartao border border-borda bg-white p-4">
+{# Card de indicador. Parâmetros: rotulo, valor, detalhe, icone e, opcional, classe (ex.: "sm:col-span-2"). #}
+{# Valor composto ("12/40", "2 de 5") vem pronto da view, porque o include não junta textos. #}
+<div class="cartao p-4 {{ classe|default:'' }}">
   <div class="flex items-start justify-between gap-2">
     <p class="text-xs text-slate-500">{{ rotulo }}</p>
     <i data-lucide="{{ icone }}" class="size-4 shrink-0 text-primaria"></i>

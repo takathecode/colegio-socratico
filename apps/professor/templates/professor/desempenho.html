@@ -41,7 +41,7 @@
   </div>
 
   <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
-    <section class="rounded-cartao border border-borda bg-white p-5 xl:col-span-2">
+    <section class="cartao p-5 xl:col-span-2">
       <h2 class="font-semibold">Distribuição das médias</h2>
       <p class="mt-1 text-sm text-slate-500">{{ oferta.disciplina.nome }} · Turma {{ oferta.turma.codigo }}</p>
       <div class="mt-3">
@@ -50,20 +50,20 @@
     </section>
 
     {# Os mesmos números do gráfico, em tabela: ajudam a ler valores exatos. #}
-    <section class="rounded-cartao border border-borda bg-white p-5">
+    <section class="cartao p-5">
       <h2 class="font-semibold">Alunos por faixa</h2>
-      <table class="mt-3 w-full text-sm">
+      <table class="tabela mt-3">
         <thead>
-          <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
-            <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
-            <th scope="col" class="px-3 py-2.5 text-right font-medium">Alunos</th>
+          <tr>
+            <th scope="col">Média</th>
+            <th scope="col" class="text-right">Alunos</th>
           </tr>
         </thead>
         <tbody>
           {% for faixa in faixas %}
-            <tr class="border-b border-borda">
-              <td class="px-3 py-2.5">{{ faixa.rotulo }} <span class="text-xs text-slate-500">· {{ faixa.grupo|lower }}</span></td>
-              <td class="px-3 py-2.5 text-right font-semibold">{{ faixa.quantidade }}</td>
+            <tr>
+              <td class="py-2.5">{{ faixa.rotulo }} <span class="text-xs text-slate-500">· {{ faixa.grupo|lower }}</span></td>
+              <td class="py-2.5 text-right font-semibold">{{ faixa.quantidade }}</td>
             </tr>
           {% endfor %}
         </tbody>

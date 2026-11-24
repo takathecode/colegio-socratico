@@ -10,7 +10,7 @@
   {% if resumos %}
     <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {% for resumo in resumos %}
-        <article class="flex flex-col rounded-cartao border border-borda bg-white p-5">
+        <article class="cartao flex flex-col p-5">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <h2 class="font-semibold">{{ resumo.oferta.disciplina.nome }}</h2>
@@ -58,7 +58,7 @@
       {% endfor %}
     </div>
   {% else %}
-    <div class="mt-5 rounded-cartao border border-borda bg-white p-5">
+    <div class="cartao mt-5 p-5">
       {% include "componentes/vazio.html" with titulo="Você ainda não leciona nenhuma disciplina" texto="Quando a coordenação ligar você a uma turma, ela aparecerá aqui." icone="book-open" %}
     </div>
   {% endif %}

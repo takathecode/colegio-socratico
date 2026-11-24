@@ -97,6 +97,14 @@
   input::-ms-clear {
     display: none;
   }
+
+  /* Foco do teclado igual em todo o portal: contorno azul afastado 2px do elemento.
+     O :where() tem peso zero, então uma tela ainda pode trocar o foco com classes do Tailwind.
+     Só aparece com o teclado (focus-visible), não no clique do mouse. */
+  :where(a, button, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-primaria);
+    outline-offset: 2px;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -202,5 +210,55 @@
   /* Modo de alto contraste do Windows: o sistema escolhe as cores; só garantimos a borda. */
   @media (forced-colors: active) {
     .vidro-barra, .botao-vidro, .botao-vidro-claro { border: 1px solid CanvasText; }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Componentes base: as peças que se repetem em todas as telas, com nome.
+   Ficam na camada "components", abaixo das classes do Tailwind; então um template
+   ainda pode completar ou trocar algo (ex.: class="cartao p-5 mt-4").
+   --------------------------------------------------------------------------- */
+@layer components {
+  /* Card branco e opaco (sem vidro). O espaço interno fica no template: p-4, p-5... */
+  .cartao {
+    @apply rounded-cartao border border-borda bg-white;
+  }
+
+  /* Tabela de dados: cabeçalho cinza em maiúsculas e uma linha fina entre os registros.
+     Cada célula já tem o espaço lateral; a altura (py-3) e o alinhamento ficam no template. */
+  .tabela {
+    @apply w-full text-sm;
+  }
+  .tabela thead tr {
+    @apply bg-fundo text-left text-xs text-slate-500 uppercase;
+  }
+  .tabela th {
+    @apply px-3 py-2.5 font-medium;
+  }
+  .tabela td {
+    @apply px-3;
+  }
+  .tabela tbody tr {
+    @apply border-b border-borda;
+  }
+
+  /* Selo de situação: a cor sempre vem com ícone e texto, nunca sozinha (daltonismo).
+     Verde = tudo certo, âmbar = atenção, vermelho = risco, azul = informação, cinza = neutro. */
+  .selo {
+    @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap;
+  }
+  .selo-ok { @apply bg-green-50 text-green-800; }
+  .selo-atencao { @apply bg-amber-50 text-amber-900; }
+  .selo-risco { @apply bg-red-50 text-red-800; }
+  .selo-info { @apply bg-primaria-suave text-primaria; }
+  .selo-neutro { @apply bg-slate-100 text-slate-700; }
+
+  /* Campo de formulário (input, select, textarea). A altura e a largura ficam no template
+     (h-10, py-2.5, w-full...). O foco mostra borda azul + anel claro, também nos filtros. */
+  .campo {
+    @apply rounded-controle border border-borda bg-white px-3 text-sm outline-none;
+    @apply focus:border-primaria focus:ring-2 focus:ring-primaria/30;
+    @apply aria-[invalid=true]:border-perigo;
+    @apply disabled:bg-fundo disabled:text-slate-500;
   }
 }

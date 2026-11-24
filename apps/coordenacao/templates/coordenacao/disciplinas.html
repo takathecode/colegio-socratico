@@ -15,39 +15,39 @@
     </a>
   </div>
 
-  <section class="mt-5 rounded-cartao border border-borda bg-white p-5">
+  <section class="cartao mt-5 p-5">
     <form method="get" role="search" class="relative sm:w-80">
       <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
       <label class="sr-only" for="busca">Buscar por nome ou código</label>
       <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou código"
-             class="h-10 w-full rounded-controle border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
+             class="campo h-10 w-full pl-9 pr-3">
     </form>
 
     {% if disciplinas %}
       <div class="mt-4 hidden overflow-x-auto md:block">
-        <table class="w-full text-sm">
+        <table class="tabela">
           <thead>
-            <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
-              <th scope="col" class="px-3 py-2.5 font-medium">Disciplina</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Curso</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Créditos</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Carga horária</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Turmas</th>
-              <th scope="col" class="px-3 py-2.5 font-medium"><span class="sr-only">Ações</span></th>
+            <tr>
+              <th scope="col">Disciplina</th>
+              <th scope="col">Curso</th>
+              <th scope="col">Créditos</th>
+              <th scope="col">Carga horária</th>
+              <th scope="col">Turmas</th>
+              <th scope="col"><span class="sr-only">Ações</span></th>
             </tr>
           </thead>
           <tbody>
             {% for disciplina in disciplinas %}
-              <tr class="border-b border-borda">
-                <td class="px-3 py-3">
+              <tr>
+                <td class="py-3">
                   <p class="font-medium">{{ disciplina.nome }}</p>
                   <p class="mt-0.5 text-xs text-slate-500">{{ disciplina.codigo }}</p>
                 </td>
-                <td class="px-3">{{ disciplina.curso.nome }}</td>
-                <td class="px-3">{{ disciplina.creditos }}</td>
-                <td class="px-3">{{ disciplina.carga_horaria }} h</td>
-                <td class="px-3">{{ disciplina.total_turmas }}</td>
-                <td class="px-3 text-right whitespace-nowrap">
+                <td>{{ disciplina.curso.nome }}</td>
+                <td>{{ disciplina.creditos }}</td>
+                <td>{{ disciplina.carga_horaria }} h</td>
+                <td>{{ disciplina.total_turmas }}</td>
+                <td class="text-right whitespace-nowrap">
                   <a href="{% url 'coordenacao:disciplina_editar' disciplina.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
                     <i data-lucide="pencil" class="size-4"></i> Editar
                   </a>

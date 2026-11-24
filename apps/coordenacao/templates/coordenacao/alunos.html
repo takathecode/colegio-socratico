@@ -18,17 +18,17 @@
     </div>
   </div>
 
-  <section class="mt-5 rounded-cartao border border-borda bg-white p-5">
+  <section class="cartao mt-5 p-5">
     <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_auto]">
       <div class="relative">
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca">Buscar por nome ou RA</label>
         <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou RA"
-               class="h-10 w-full rounded-controle border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
+               class="campo h-10 w-full pl-9 pr-3">
       </div>
       <div>
         <label class="sr-only" for="turma">Turma</label>
-        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+        <select id="turma" name="turma" data-enviar-ao-mudar class="campo h-10 w-full">
           <option value="">Todas as turmas</option>
           {% for item in turmas %}
             <option value="{{ item.pk }}" {% if turma == item.pk|stringformat:"d" %}selected{% endif %}>{{ item.codigo }} · {{ item.semestre }}</option>
@@ -37,7 +37,7 @@
       </div>
       <div>
         <label class="sr-only" for="situacao">Situação</label>
-        <select id="situacao" name="situacao" data-enviar-ao-mudar class="h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+        <select id="situacao" name="situacao" data-enviar-ao-mudar class="campo h-10 w-full">
           <option value="">Todas as situações</option>
           {% for item in situacoes %}
             <option value="{{ item }}" {% if situacao == item %}selected{% endif %}>{{ item }}</option>
@@ -56,28 +56,28 @@
 
     {% if pagina.object_list %}
       <div class="mt-2 hidden overflow-x-auto md:block">
-        <table class="w-full text-sm">
+        <table class="tabela">
           <thead>
-            <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
-              <th scope="col" class="px-3 py-2.5 font-medium">Aluno</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Turma</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Frequência</th>
-              <th scope="col" class="px-3 py-2.5 font-medium">Situação</th>
-              <th scope="col" class="px-3 py-2.5 font-medium"><span class="sr-only">Ações</span></th>
+            <tr>
+              <th scope="col">Aluno</th>
+              <th scope="col">Turma</th>
+              <th scope="col">Média</th>
+              <th scope="col">Frequência</th>
+              <th scope="col">Situação</th>
+              <th scope="col"><span class="sr-only">Ações</span></th>
             </tr>
           </thead>
           <tbody>
             {% for linha in pagina %}
-              <tr class="border-b border-borda">
-                <td class="px-3 py-3">
+              <tr>
+                <td class="py-3">
                   <p class="font-medium">{{ linha.aluno.get_full_name|default:linha.aluno.matricula }}</p>
                   <p class="mt-0.5 text-xs text-slate-500">RA {{ linha.aluno.matricula }}{% if not linha.aluno.is_active %} · <span class="font-medium text-red-800">conta desativada</span>{% endif %}</p>
                 </td>
-                <td class="px-3">{{ linha.matricula.turma.codigo|default:"—" }}</td>
-                <td class="px-3 font-semibold">{{ linha.media|floatformat:1|default:"—" }}</td>
-                <td class="px-3">{% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}</td>
-                <td class="px-3">
+                <td>{{ linha.matricula.turma.codigo|default:"—" }}</td>
+                <td class="font-semibold">{{ linha.media|floatformat:1|default:"—" }}</td>
+                <td>{% if linha.frequencia is None %}—{% else %}{{ linha.frequencia|floatformat:0 }}%{% endif %}</td>
+                <td>
                   {% if linha.ativa %}
                     {% include "componentes/selo.html" with situacao=linha.situacao %}
                   {% elif linha.matricula %}
@@ -86,7 +86,7 @@
                     <span class="text-xs text-slate-500">Sem matrícula</span>
                   {% endif %}
                 </td>
-                <td class="whitespace-nowrap px-3 text-right">
+                <td class="whitespace-nowrap text-right">
                   {% if linha.matricula %}
                     <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="mr-3 inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
                       <i data-lucide="file-text" class="size-4"></i> Boletim

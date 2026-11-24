@@ -19,7 +19,7 @@
     {% endif %}
   </div>
 
-  <div class="mt-5 grid overflow-hidden rounded-cartao border border-borda bg-white lg:h-[calc(100vh-13rem)] lg:min-h-[560px] lg:grid-cols-[340px_1fr]">
+  <div class="cartao mt-5 grid overflow-hidden lg:h-[calc(100vh-13rem)] lg:min-h-[560px] lg:grid-cols-[340px_1fr]">
     {# Lista de conversas. No celular, some quando uma conversa foi aberta. #}
     <section class="flex min-h-0 flex-col border-borda lg:border-r {% if conversa_foi_pedida %}max-lg:hidden{% endif %}">
       <div class="p-4">
@@ -36,7 +36,7 @@
           <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
           <label class="sr-only" for="busca-conversa">Buscar uma conversa</label>
           <input id="busca-conversa" type="search" name="q" value="{{ busca }}" placeholder="Buscar uma conversa"
-                 class="h-10 w-full rounded-controle border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
+                 class="campo h-10 w-full pl-9 pr-3">
         </form>
         <div class="mt-3 flex gap-4 text-sm">
           <a href="{% url 'mensagens:caixa' %}?filtro=todas" class="{% if filtro == 'todas' %}font-semibold text-primaria{% else %}text-slate-500{% endif %}">Todas</a>
