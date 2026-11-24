@@ -15,15 +15,15 @@
     </div>
     <div class="flex flex-wrap gap-2">
       <a href="{% url 'professor:desempenho' %}?oferta={{ oferta.pk }}"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
         <i data-lucide="chart-no-axes-column" class="size-4"></i> Desempenho
       </a>
       <a href="{% url 'professor:notas' %}?oferta={{ oferta.pk }}"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
         <i data-lucide="square-pen" class="size-4"></i> Lançar notas
       </a>
       <a href="{% url 'professor:chamada' %}?oferta={{ oferta.pk }}"
-         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
+         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-white">
         <i data-lucide="fingerprint" class="size-4"></i> Fazer chamada
       </a>
     </div>
@@ -40,7 +40,7 @@
     {% include "componentes/card_kpi.html" with rotulo="Em risco" valor=indicadores.risco detalhe="Média abaixo de 6 ou frequência abaixo de 75%" icone="triangle-alert" %}
   </div>
 
-  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="font-semibold">Alunos</h2>
@@ -50,7 +50,7 @@
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca-aluno">Buscar aluno por nome ou matrícula</label>
         <input id="busca-aluno" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou matrícula"
-               class="h-10 w-full rounded-lg border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
+               class="h-10 w-full rounded-controle border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
       </form>
     </div>
 

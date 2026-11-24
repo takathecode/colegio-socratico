@@ -11,31 +11,31 @@
     </div>
     <div class="flex flex-wrap gap-2">
       <a href="{% url 'secretaria:conta_nova' 'aluno' %}"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
         <i data-lucide="graduation-cap" class="size-4"></i> Aluno
       </a>
       <a href="{% url 'secretaria:conta_nova' 'professor' %}"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
         <i data-lucide="users" class="size-4"></i> Professor
       </a>
       <a href="{% url 'secretaria:conta_nova' 'coordenacao' %}"
-         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
+         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-white">
         <i data-lucide="user-plus" class="size-4"></i> Coordenação
       </a>
     </div>
   </div>
 
-  <section class="mt-5 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-5 rounded-cartao border border-borda bg-white p-5">
     <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_220px_auto]">
       <div class="relative">
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca">Buscar por nome ou matrícula</label>
         <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou matrícula"
-               class="h-10 w-full rounded-lg border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30">
+               class="h-10 w-full rounded-controle border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30">
       </div>
       <div>
         <label class="sr-only" for="perfil">Perfil</label>
-        <select id="perfil" name="perfil" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+        <select id="perfil" name="perfil" data-enviar-ao-mudar class="h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todos os perfis</option>
           {% for valor, rotulo in perfis %}
             <option value="{{ valor }}" {% if perfil == valor %}selected{% endif %}>{{ rotulo }}</option>
@@ -44,7 +44,7 @@
       </div>
       <div>
         <label class="sr-only" for="estado">Situação da conta</label>
-        <select id="estado" name="estado" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+        <select id="estado" name="estado" data-enviar-ao-mudar class="h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Ativas e desativadas</option>
           <option value="ativas" {% if estado == "ativas" %}selected{% endif %}>Só ativas</option>
           <option value="inativas" {% if estado == "inativas" %}selected{% endif %}>Só desativadas</option>
@@ -53,7 +53,7 @@
         </select>
       </div>
       <div class="flex gap-2">
-        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Filtrar</button>
+        <button type="submit" class="botao-vidro-claro h-10 rounded-controle px-4 text-sm font-semibold text-primaria">Filtrar</button>
         {% if filtrando %}
           <a href="{% url 'secretaria:contas' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
         {% endif %}
@@ -95,7 +95,7 @@
                   <i data-lucide="ban" class="size-3.5"></i>Desativada
                 </span>
               {% endif %}
-              <a href="{% url 'secretaria:conta' conta.pk %}" class="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primaria hover:bg-fundo">
+              <a href="{% url 'secretaria:conta' conta.pk %}" class="inline-flex h-9 items-center gap-1 rounded-controle px-2 text-sm font-semibold text-primaria hover:bg-fundo">
                 Gerenciar <i data-lucide="arrow-right" class="size-4"></i>
               </a>
             </div>

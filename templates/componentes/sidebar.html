@@ -3,13 +3,13 @@
 <div data-fundo-menu class="fixed inset-0 z-30 hidden bg-marinho/40 menu-aberto:block lg:menu-aberto:hidden"></div>
 
 <aside id="barra-lateral"
-       class="vidro-barra fixed inset-y-barra left-barra z-40 flex w-[235px] flex-col rounded-barra px-4 py-6 transition-all duration-200
+       class="vidro-barra fixed inset-y-barra left-barra z-40 flex w-menu flex-col rounded-barra px-4 py-6 transition-all duration-200
               max-lg:invisible max-lg:-translate-x-[calc(100%+1.5rem)] max-lg:menu-aberto:visible max-lg:menu-aberto:translate-x-0
-              lg:recolhida:w-[86px] lg:recolhida:px-3">
+              lg:recolhida:w-menu-recolhido lg:recolhida:px-3">
   {# Só o nome, sem o quadrado do "S". Com a barra recolhida, o nome some e o menu sobe. #}
   <a href="{% url 'contas:inicio' %}" class="block leading-tight lg:recolhida:hidden">
-    <span class="block text-[15px] font-bold whitespace-nowrap">Instituto Socrático</span>
-    <span class="block text-[10px] tracking-wide text-slate-500">PORTAL ACADÊMICO</span>
+    <span class="block text-marca font-bold whitespace-nowrap">Instituto Socrático</span>
+    <span class="block text-micro tracking-wide text-slate-500">PORTAL ACADÊMICO</span>
   </a>
 
   <p class="mt-8 text-xs font-medium uppercase tracking-wide text-slate-500 lg:recolhida:hidden">{{ menu_area }}</p>
@@ -18,14 +18,14 @@
     {% for item in menu_itens %}
       {% if item.url %}
         <a href="{{ item.url }}" title="{{ item.nome }}" aria-label="{{ item.nome }}" {% if item.ativo %}aria-current="page"{% endif %}
-           class="flex h-12 items-center gap-2.5 whitespace-nowrap rounded-lg px-2.5 text-sm lg:recolhida:justify-center {% if item.ativo %}bg-primaria-suave font-semibold text-primaria{% else %}text-slate-600 hover:bg-white/70{% endif %}">
+           class="flex h-12 items-center gap-2.5 whitespace-nowrap rounded-controle px-2.5 text-sm lg:recolhida:justify-center {% if item.ativo %}bg-primaria-suave font-semibold text-primaria{% else %}text-slate-600 hover:bg-white/70{% endif %}">
           <i data-lucide="{{ item.icone }}" class="size-5 shrink-0"></i>
           <span class="lg:recolhida:hidden">{{ item.nome }}</span>
         </a>
       {% else %}
         {# Tela ainda não criada: sem link, para não existir caminho quebrado. #}
         <span aria-disabled="true" title="{{ item.nome }}: em breve"
-              class="flex h-12 cursor-not-allowed items-center gap-2.5 whitespace-nowrap rounded-lg px-2.5 text-sm text-slate-400 lg:recolhida:justify-center">
+              class="flex h-12 cursor-not-allowed items-center gap-2.5 whitespace-nowrap rounded-controle px-2.5 text-sm text-slate-400 lg:recolhida:justify-center">
           <i data-lucide="{{ item.icone }}" class="size-5 shrink-0"></i>
           <span class="lg:recolhida:hidden">{{ item.nome }}</span>
         </span>
@@ -35,7 +35,7 @@
 
   {# A própria Secretaria não vê este card. O endereço vem do context processor (menu_lateral). #}
   {% if ajuda_url %}
-    <div class="mt-4 rounded-xl bg-fundo/70 p-4 lg:recolhida:hidden">
+    <div class="mt-4 rounded-cartao bg-fundo/70 p-4 lg:recolhida:hidden">
       <i data-lucide="headphones" class="size-5 text-slate-500"></i>
       <p class="mt-3 text-sm font-semibold">Precisa de ajuda?</p>
       <p class="mt-2 text-xs text-slate-500">A Secretaria cuida do seu acesso ao portal.</p>
@@ -48,7 +48,7 @@
   <form method="post" action="{% url 'contas:sair' %}" class="mt-4">
     {% csrf_token %}
     <button type="submit" title="Sair do portal" aria-label="Sair do portal"
-            class="flex h-10 w-full items-center gap-3 rounded-lg px-1 text-sm text-slate-600 hover:text-marinho lg:recolhida:justify-center">
+            class="flex h-10 w-full items-center gap-3 rounded-controle px-1 text-sm text-slate-600 hover:text-marinho lg:recolhida:justify-center">
       <i data-lucide="log-out" class="size-5"></i>
       <span class="lg:recolhida:hidden">Sair do portal</span>
     </button>

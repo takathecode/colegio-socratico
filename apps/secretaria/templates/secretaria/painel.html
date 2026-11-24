@@ -10,7 +10,7 @@
       <p class="mt-1 text-sm text-slate-500">Contas, senhas e bloqueios de alunos, professores e coordenação.</p>
     </div>
     <a href="{% url 'secretaria:contas' %}"
-       class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
+       class="botao-vidro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-white">
       <i data-lucide="key-round" class="size-4"></i> Ver contas
     </a>
   </div>
@@ -23,14 +23,14 @@
   </div>
 
   {% if sem_email %}
-    <p class="mt-4 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+    <p class="mt-4 flex gap-2 rounded-controle border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
       <i data-lucide="triangle-alert" class="size-4 shrink-0 translate-y-0.5 text-amber-600"></i>
       {{ sem_email }} conta{{ sem_email|pluralize }} ativa{{ sem_email|pluralize }} sem e-mail: essas pessoas não conseguem recuperar a senha sozinhas.
     </p>
   {% endif %}
 
   <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-    <section class="rounded-xl border border-borda bg-white p-5">
+    <section class="rounded-cartao border border-borda bg-white p-5">
       <h2 class="font-semibold">Logins bloqueados agora</h2>
       <p class="mt-1 text-sm text-slate-500">5 senhas erradas seguidas bloqueiam a matrícula por 15 minutos.</p>
       {% if bloqueadas %}
@@ -47,7 +47,7 @@
       {% endif %}
     </section>
 
-    <section class="rounded-xl border border-borda bg-white p-5">
+    <section class="rounded-cartao border border-borda bg-white p-5">
       <h2 class="font-semibold">Aguardando a primeira senha</h2>
       <p class="mt-1 text-sm text-slate-500">Receberam senha provisória e ainda não criaram a própria.</p>
       {% if troca_pendente %}
@@ -65,7 +65,7 @@
     </section>
   </div>
 
-  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
     <h2 class="font-semibold">Últimas ações nas contas</h2>
     <p class="mt-1 text-sm text-slate-500">Registro de auditoria: quem fez, em qual conta e quando.</p>
     {% if ultimas_acoes %}

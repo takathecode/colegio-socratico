@@ -3,13 +3,13 @@
 <div class="flex flex-wrap gap-2">
   {% if pdf %}
     <button type="submit" name="formato" value="pdf"
-            class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
+            class="botao-vidro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-white">
       <i data-lucide="file-text" class="size-4"></i> Baixar PDF
     </button>
   {% endif %}
   {% if excel %}
     <button type="submit" {% if pdf %}name="formato" value="xlsx"{% endif %}
-            class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+            class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
       <i data-lucide="file-spreadsheet" class="size-4"></i> Baixar Excel
     </button>
   {% endif %}

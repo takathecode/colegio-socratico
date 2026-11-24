@@ -3,7 +3,7 @@
 {# campo do arquivo depois da confirmação, e o servidor também recusa o envio sem ela.     #}
 {# Formatos e limite repetem apps/contas/foto.py (TIPOS_FOTO e TAMANHO_MAXIMO_FOTO).        #}
 <div class="mt-6 space-y-5">
-  <section aria-labelledby="regras-foto-titulo" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+  <section aria-labelledby="regras-foto-titulo" class="rounded-cartao border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
     <h3 id="regras-foto-titulo" class="flex items-center gap-2 font-semibold">
       <i data-lucide="shield-alert" class="size-4 shrink-0 text-amber-700"></i>
       Antes de escolher a sua foto
@@ -20,7 +20,7 @@
     {% csrf_token %}
     <input type="hidden" name="proxima" value="{{ request.get_full_path }}">
 
-    <label class="flex cursor-pointer items-start gap-3 rounded-lg text-sm">
+    <label class="flex cursor-pointer items-start gap-3 rounded-controle text-sm">
       <input type="checkbox" name="aceite" required data-foto-aceite
              class="mt-0.5 size-4 shrink-0 cursor-pointer accent-primaria">
       <span>Li as regras acima e declaro que a foto escolhida as respeita.</span>
@@ -37,7 +37,7 @@
         <label for="campo-foto" class="text-sm font-semibold">Nova foto</label>
         <input id="campo-foto" type="file" name="foto" required accept="image/jpeg,image/png,image/webp"
                data-limite="2097152" aria-describedby="ajuda-foto erro-foto"
-               class="mt-1 block w-full text-sm text-slate-600 file:mr-3 file:h-9 file:cursor-pointer file:rounded-lg file:border file:border-borda file:bg-white file:px-3 file:text-sm file:font-semibold file:text-primaria disabled:cursor-not-allowed disabled:opacity-50 disabled:file:cursor-not-allowed">
+               class="mt-1 block w-full text-sm text-slate-600 file:mr-3 file:h-9 file:cursor-pointer file:rounded-controle file:border file:border-borda file:bg-white file:px-3 file:text-sm file:font-semibold file:text-primaria disabled:cursor-not-allowed disabled:opacity-50 disabled:file:cursor-not-allowed">
         <p id="ajuda-foto" class="mt-1 text-xs text-slate-500">
           JPG, PNG ou WebP, até 2 MB. A foto é recortada em quadrado.
           <span data-foto-dica>Marque a confirmação acima para liberar a escolha.</span>
@@ -48,7 +48,7 @@
 
     <div class="flex flex-wrap justify-end gap-3">
       <button type="button" data-fechar-modal
-              class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Cancelar</button>
+              class="botao-vidro-claro h-10 rounded-controle px-4 text-sm font-semibold text-primaria">Cancelar</button>
       {% include "componentes/botao_enviar.html" with texto="Salvar foto" texto_carregando="Enviando..." icone="upload" compacto=True %}
     </div>
   </form>
@@ -57,7 +57,7 @@
     <form method="post" action="{% url 'contas:foto_remover' %}" class="border-t border-borda pt-4">
       {% csrf_token %}
       <input type="hidden" name="proxima" value="{{ request.get_full_path }}">
-      <button type="submit" class="inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-perigo hover:underline">
+      <button type="submit" class="inline-flex items-center gap-2 rounded-controle text-sm font-semibold text-perigo hover:underline">
         <i data-lucide="trash-2" class="size-4"></i> Remover foto atual
       </button>
     </form>

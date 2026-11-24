@@ -19,12 +19,12 @@
 
   <div class="mt-6 grid grid-cols-2 gap-3">
     <button type="button" data-chamada-recusar
-            class="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-perigo px-4 text-sm font-semibold text-white hover:bg-perigo-escuro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-perigo disabled:cursor-wait disabled:opacity-60">
+            class="inline-flex h-12 items-center justify-center gap-2 rounded-controle bg-perigo px-4 text-sm font-semibold text-white hover:bg-perigo-escuro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-perigo disabled:cursor-wait disabled:opacity-60">
       <i data-lucide="phone-off" class="size-4" aria-hidden="true"></i> Recusar
     </button>
     {# autofocus: ao abrir, o foco vai para "Atender" (Enter atende). #}
     <a data-chamada-atender href="{% url 'videochamadas:inicio' %}" autofocus
-       class="botao-vidro inline-flex h-12 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
+       class="botao-vidro inline-flex h-12 items-center justify-center gap-2 rounded-controle px-4 text-sm font-semibold text-white">
       <i data-lucide="phone" class="size-4" aria-hidden="true"></i> Atender
     </a>
   </div>

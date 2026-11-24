@@ -1,16 +1,16 @@
 {# Sino de notificações do topo. Os dados vêm de apps/alertas/context_processors.py. #}
 {# <details> abre e fecha sem JavaScript; o portal.js só fecha ao clicar fora ou apertar Esc. #}
 <details data-sino class="relative">
-  <summary class="relative flex size-10 cursor-pointer list-none items-center justify-center rounded-lg text-slate-600 hover:bg-white/70 [&::-webkit-details-marker]:hidden"
+  <summary class="relative flex size-10 cursor-pointer list-none items-center justify-center rounded-controle text-slate-600 hover:bg-white/70 [&::-webkit-details-marker]:hidden"
            aria-label="Notificações{% if sino_nao_lidos %}: {{ sino_nao_lidos }} não lida{{ sino_nao_lidos|pluralize }}{% endif %}">
     <i data-lucide="bell" class="size-5"></i>
     {% if sino_nao_lidos %}
-      <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white" aria-hidden="true">{% if sino_nao_lidos > 9 %}9+{% else %}{{ sino_nao_lidos }}{% endif %}</span>
+      <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-micro font-semibold text-white" aria-hidden="true">{% if sino_nao_lidos > 9 %}9+{% else %}{{ sino_nao_lidos }}{% endif %}</span>
     {% endif %}
   </summary>
 
   {# No celular, a lista abre logo abaixo do topo flutuante (12px de margem + 64px de altura + 8px). #}
-  <div class="fixed inset-x-4 top-[84px] z-30 overflow-hidden rounded-xl border border-borda bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
+  <div class="fixed inset-x-4 top-abaixo-do-topo z-30 overflow-hidden rounded-cartao border border-borda bg-white shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
     <div class="flex items-center justify-between gap-2 border-b border-borda px-4 py-3">
       <p class="font-semibold">Notificações</p>
       {% if sino_nao_lidos %}
@@ -36,7 +36,7 @@
                     {% if not alerta.lido %}<span class="mt-1.5 size-2 shrink-0 rounded-full bg-primaria"><span class="sr-only">Não lida</span></span>{% endif %}
                   </span>
                   <span class="mt-0.5 line-clamp-2 block text-xs text-slate-500">{{ alerta.texto }}</span>
-                  <span class="mt-1 block text-[11px] text-slate-500">há {{ alerta.criado_em|timesince }}</span>
+                  <span class="mt-1 block text-mini text-slate-500">há {{ alerta.criado_em|timesince }}</span>
                 </span>
               </button>
             </form>

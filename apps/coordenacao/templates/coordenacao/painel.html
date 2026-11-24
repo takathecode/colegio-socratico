@@ -11,7 +11,7 @@
     </div>
     <div class="flex flex-wrap gap-2">
       <a href="{% url 'coordenacao:turma_nova' %}"
-         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
+         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-white">
         <i data-lucide="plus" class="size-4"></i> Nova turma
       </a>
     </div>
@@ -25,7 +25,7 @@
   </div>
 
   {# Gráfico de linhas gerado com matplotlib (apps/analytics/graficos.py). #}
-  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
     <h2 class="font-semibold">Evolução da frequência</h2>
     <p class="mt-1 text-sm text-slate-500">Frequência de cada turma do semestre, mês a mês, só com os alunos ativos.</p>
     <div class="mx-auto mt-3 max-w-4xl">
@@ -34,7 +34,7 @@
   </section>
 
   <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
-    <section class="rounded-xl border border-borda bg-white p-5 xl:col-span-2">
+    <section class="rounded-cartao border border-borda bg-white p-5 xl:col-span-2">
       <div class="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 class="font-semibold">Turmas do semestre</h2>
@@ -82,7 +82,7 @@
     </section>
 
     {# Alunos com risco médio ou alto, segundo o modelo preditivo (apps/analytics/evasao.py). #}
-    <section class="rounded-xl border border-borda bg-white p-5">
+    <section class="rounded-cartao border border-borda bg-white p-5">
       <div class="mb-2 flex items-center justify-between gap-3">
         <div>
           <h2 class="font-semibold">Risco de evasão</h2>

@@ -46,6 +46,21 @@
   /* Espaço das barras flutuantes até a borda da tela (12px). */
   --spacing-barra: 0.75rem;
 
+  /* Largura da barra lateral (aberta e recolhida) e o recuo do conteúdo ao lado dela:
+     a barra + o espaço até a borda da tela + o mesmo espaço até o conteúdo. */
+  --spacing-menu: 235px;
+  --spacing-menu-recolhido: 86px;
+  --spacing-conteudo: calc(var(--spacing-menu) + 2 * var(--spacing-barra));                /* 259px */
+  --spacing-conteudo-recolhido: calc(var(--spacing-menu-recolhido) + 2 * var(--spacing-barra)); /* 110px */
+
+  /* Logo abaixo da barra do topo (espaço + 64px da barra + 8px de folga): lista do sino no celular. */
+  --spacing-abaixo-do-topo: calc(var(--spacing-barra) + 4.5rem); /* 84px */
+
+  /* Textos menores que o text-xs (12px) do Tailwind. */
+  --text-micro: 10px;  /* contadores (sino, mensagens não lidas) e "PORTAL ACADÊMICO" */
+  --text-mini: 11px;   /* horários, etiqueta "Nova", itens do calendário */
+  --text-marca: 15px;  /* nome "Instituto Socrático" na barra lateral */
+
   /* Sombras do vidro (usadas em .vidro-barra, .botao-vidro e .botao-vidro-claro). */
   --shadow-barra:
     inset 0 1px 0 rgb(255 255 255 / 0.9),

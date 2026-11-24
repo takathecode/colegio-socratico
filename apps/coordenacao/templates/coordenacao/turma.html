@@ -15,20 +15,20 @@
     </div>
     <div class="flex flex-wrap gap-2">
       <a href="{% url 'relatorios:turma' %}?turma={{ turma.pk }}&formato=pdf"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
         <i data-lucide="file-text" class="size-4"></i> PDF
       </a>
       <a href="{% url 'relatorios:turma' %}?turma={{ turma.pk }}&formato=xlsx"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
         <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
       </a>
       <a href="{% url 'coordenacao:turma_editar' turma.pk %}"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
         <i data-lucide="pencil" class="size-4"></i> Editar
       </a>
       {% if not linhas and not ofertas %}
         <a href="{% url 'coordenacao:turma_excluir' turma.pk %}"
-           class="inline-flex h-10 items-center gap-2 rounded-lg border border-borda bg-white px-4 text-sm font-semibold text-red-800 hover:border-red-800">
+           class="inline-flex h-10 items-center gap-2 rounded-controle border border-borda bg-white px-4 text-sm font-semibold text-red-800 hover:border-red-800">
           <i data-lucide="trash-2" class="size-4"></i> Excluir
         </a>
       {% endif %}
@@ -46,7 +46,7 @@
     {% include "componentes/card_kpi.html" with rotulo="Em risco" valor=indicadores.risco detalhe="Em pelo menos uma disciplina" icone="triangle-alert" %}
   </div>
 
-  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="font-semibold">Disciplinas e professores</h2>
@@ -54,7 +54,7 @@
       </div>
       {% if pode_adicionar %}
         <button type="button" data-abrir-modal="modal-oferta"
-                class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
+                class="botao-vidro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-white">
           <i data-lucide="plus" class="size-4"></i> Adicionar disciplina
         </button>
       {% endif %}
@@ -92,7 +92,7 @@
     {% endif %}
   </section>
 
-  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <h2 class="font-semibold">Alunos matriculados</h2>

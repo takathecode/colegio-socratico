@@ -11,7 +11,7 @@
     Enviamos o link de redefinição{% if email_mascarado %} para <strong class="break-all font-semibold text-marinho">{{ email_mascarado }}</strong>{% endif %}.
   </p>
 
-  <dl class="mt-6 space-y-3 rounded-lg border border-borda bg-fundo p-4 text-sm">
+  <dl class="mt-6 space-y-3 rounded-controle border border-borda bg-fundo p-4 text-sm">
     <div class="flex gap-3">
       <i data-lucide="clock" class="mt-0.5 size-4 shrink-0 text-primaria"></i>
       <div>
@@ -31,7 +31,7 @@
   {# Reenviar: o mesmo envio da etapa anterior, com o mesmo limite de pedidos por hora. #}
   <form method="post" action="{% url 'contas:senha_confirmar' %}" data-carregando class="mt-6">
     {% csrf_token %}
-    <button type="submit" class="botao-vidro-claro flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-primaria disabled:cursor-wait">
+    <button type="submit" class="botao-vidro-claro flex h-12 w-full items-center justify-center gap-2 rounded-controle text-sm font-semibold text-primaria disabled:cursor-wait">
       <span data-estado="normal" class="flex items-center gap-2"><i data-lucide="rotate-cw" class="size-4"></i>Reenviar link</span>
       <span data-estado="carregando" class="hidden items-center gap-2"><i data-lucide="loader-circle" class="size-4 animate-spin"></i>Reenviando…</span>
     </button>

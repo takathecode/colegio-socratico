@@ -4,7 +4,7 @@
   e escolha dos aparelhos), os vídeos, os botões, a conversa, o estado da conexão e os avisos. O {% csrf_token %} daqui vai no cabeçalho
   X-CSRFToken dos POSTs.
 {% endcomment %}
-<section class="mt-4 rounded-xl border border-borda bg-white p-4 sm:p-5"
+<section class="mt-4 rounded-cartao border border-borda bg-white p-4 sm:p-5"
          aria-labelledby="titulo-sala"
          data-sala-propria
          data-url-sinal="{% url 'videochamadas:sinal' chamada.pk %}"
@@ -38,7 +38,7 @@
   {# e confere se o microfone está ouvindo. O outro só recebe a imagem depois de "Entrar na sala". #}
   <div data-pre-sala class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
     {# No celular, a prévia é mais baixa que o vídeo da sala, para o botão "Entrar" aparecer sem rolar muito. #}
-    <div class="relative aspect-[4/3] max-h-[45vh] w-full overflow-hidden rounded-xl bg-marinho sm:aspect-video sm:max-h-[60vh]">
+    <div class="relative aspect-[4/3] max-h-[45vh] w-full overflow-hidden rounded-cartao bg-marinho sm:aspect-video sm:max-h-[60vh]">
       {# Espelhada (-scale-x-100), como num espelho. #}
       <video data-previa autoplay playsinline muted aria-label="Prévia da sua câmera" class="size-full -scale-x-100 object-cover"></video>
       <div data-previa-sem-video class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-marinho p-4 text-center text-white">
@@ -59,20 +59,20 @@
       </div>
     </div>
 
-    <div class="flex flex-col gap-4 rounded-xl border border-borda p-4">
+    <div class="flex flex-col gap-4 rounded-cartao border border-borda p-4">
       <div>
         <h2 class="text-base font-semibold text-marinho">Antes de entrar</h2>
         <p class="mt-1 text-sm text-slate-500">Confira a imagem e o som. {{ nome_do_outro }} só vê e ouve você depois que você entrar.</p>
       </div>
       <div>
         <label for="escolha-camera" class="mb-1 block text-sm font-medium">Câmera</label>
-        <select id="escolha-camera" data-escolha-camera disabled class="w-full rounded-lg border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30 disabled:bg-fundo disabled:text-slate-500">
+        <select id="escolha-camera" data-escolha-camera disabled class="w-full rounded-controle border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30 disabled:bg-fundo disabled:text-slate-500">
           <option>Procurando...</option>
         </select>
       </div>
       <div>
         <label for="escolha-microfone" class="mb-1 block text-sm font-medium">Microfone</label>
-        <select id="escolha-microfone" data-escolha-microfone disabled class="w-full rounded-lg border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30 disabled:bg-fundo disabled:text-slate-500">
+        <select id="escolha-microfone" data-escolha-microfone disabled class="w-full rounded-controle border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30 disabled:bg-fundo disabled:text-slate-500">
           <option>Procurando...</option>
         </select>
         {# A barra verde acompanha o volume do microfone: se ela mexe, o microfone está ouvindo. #}
@@ -82,7 +82,7 @@
         <p class="mt-1 text-xs text-slate-500">Fale alguma coisa: a barra verde mexe quando o microfone está ouvindo.</p>
       </div>
       <button type="button" data-entrar disabled
-              class="botao-vidro mt-auto inline-flex h-12 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60">
+              class="botao-vidro mt-auto inline-flex h-12 items-center justify-center gap-2 rounded-controle px-5 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60">
         <i data-lucide="log-in" class="size-4" aria-hidden="true"></i> Entrar na sala
       </button>
     </div>
@@ -94,7 +94,7 @@
   <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
     {# "Palco": o vídeo do outro em tamanho grande, o seu em miniatura e os botões. É ele que #}
     {# ocupa a tela inteira no botão "Tela cheia". Altura limitada para caber no notebook. #}
-    <div data-palco class="relative aspect-[4/5] max-h-[65vh] w-full overflow-hidden rounded-xl bg-marinho sm:aspect-video [&:fullscreen]:aspect-auto [&:fullscreen]:max-h-none [&:fullscreen]:rounded-none">
+    <div data-palco class="relative aspect-[4/5] max-h-[65vh] w-full overflow-hidden rounded-cartao bg-marinho sm:aspect-video [&:fullscreen]:aspect-auto [&:fullscreen]:max-h-none [&:fullscreen]:rounded-none">
       <video data-video-remoto autoplay playsinline class="size-full object-contain"></video>
 
       {# O outro desligou a câmera (ou está sem câmera): mostra a foto dele no lugar do vídeo. #}
@@ -121,11 +121,11 @@
 
       {# Só aparece se o navegador bloquear o som automático. #}
       <button type="button" data-ativar-som
-              class="botao-vidro absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white">
+              class="botao-vidro absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-controle px-4 py-2 text-sm font-semibold text-white">
         <i data-lucide="volume-2" class="size-4"></i> Ativar o som
       </button>
 
-      <div class="absolute right-3 top-3 w-24 overflow-hidden rounded-lg bg-slate-800 ring-2 ring-white/80 sm:w-40">
+      <div class="absolute right-3 top-3 w-24 overflow-hidden rounded-controle bg-slate-800 ring-2 ring-white/80 sm:w-40">
         {# A câmera aparece espelhada (-scale-x-100), como num espelho; o outro vê a imagem normal. #}
         {# A tela compartilhada aparece sem espelhar (o chamada.js tira a classe). #}
         <video data-video-local autoplay playsinline muted aria-label="Sua imagem" class="aspect-[3/4] w-full -scale-x-100 object-cover sm:aspect-video"></video>
@@ -133,7 +133,7 @@
       </div>
 
       {# Recado do chat, só na tela cheia (fora dela, a conversa fica ao lado). #}
-      <p data-recado class="absolute inset-x-3 bottom-20 mx-auto hidden w-fit max-w-md break-words rounded-lg bg-black/70 px-3 py-2 text-sm text-white" aria-hidden="true"></p>
+      <p data-recado class="absolute inset-x-3 bottom-20 mx-auto hidden w-fit max-w-md break-words rounded-controle bg-black/70 px-3 py-2 text-sm text-white" aria-hidden="true"></p>
 
       {# Botões da chamada. O chamada.js troca o ícone, o texto e o atributo data-desligado/data-ativo. #}
       <div class="absolute inset-x-0 bottom-3 flex justify-center gap-2 px-3">
@@ -164,7 +164,7 @@
     {# Conversa: vai direto entre os dois navegadores (canal de dados do WebRTC) e não é gravada. #}
     {# Na tela grande, o card tem a altura do vídeo (position absolute) e a lista rola por dentro. #}
     <div class="relative xl:min-h-0">
-      <aside class="flex flex-col rounded-xl border border-borda bg-white xl:absolute xl:inset-0" aria-labelledby="titulo-conversa">
+      <aside class="flex flex-col rounded-cartao border border-borda bg-white xl:absolute xl:inset-0" aria-labelledby="titulo-conversa">
         <h2 id="titulo-conversa" class="flex items-center gap-2 border-b border-borda px-4 py-3 text-sm font-semibold text-marinho">
           <i data-lucide="message-square" class="size-4" aria-hidden="true"></i> Conversa
         </h2>
@@ -177,9 +177,9 @@
           <label for="campo-conversa" class="sr-only">Mensagem para {{ nome_do_outro }}</label>
           <input id="campo-conversa" data-campo-conversa type="text" maxlength="500" disabled
                  placeholder="A conversa abre quando o outro entrar"
-                 class="h-11 min-w-0 flex-1 rounded-lg border border-borda px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primaria focus:outline-none disabled:bg-fundo">
+                 class="h-11 min-w-0 flex-1 rounded-controle border border-borda px-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primaria focus:outline-none disabled:bg-fundo">
           <button type="submit" data-enviar-conversa disabled
-                  class="botao-vidro flex size-11 shrink-0 items-center justify-center rounded-lg text-white disabled:opacity-50">
+                  class="botao-vidro flex size-11 shrink-0 items-center justify-center rounded-controle text-white disabled:opacity-50">
             <i data-lucide="send" class="size-4" aria-hidden="true"></i><span class="sr-only">Enviar</span>
           </button>
         </form>
@@ -189,19 +189,19 @@
   </div>{# fim de data-dentro-da-sala #}
 
   {# Avisos de câmera, microfone e conexão, em português. #}
-  <div data-aviso role="alert" class="mt-4 hidden items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+  <div data-aviso role="alert" class="mt-4 hidden items-start gap-2 rounded-controle border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
     <i data-lucide="triangle-alert" class="mt-0.5 size-4 shrink-0" aria-hidden="true"></i>
     <p data-aviso-texto></p>
   </div>
 
   <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
     <button type="button" data-sair
-            class="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-perigo px-5 text-sm font-semibold text-white hover:bg-perigo-escuro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-perigo">
+            class="inline-flex h-12 items-center justify-center gap-2 rounded-controle bg-perigo px-5 text-sm font-semibold text-white hover:bg-perigo-escuro focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-perigo">
       <i data-lucide="phone-off" class="size-4"></i> Sair da chamada
     </button>
     <form method="post" action="{% url 'videochamadas:encerrar' chamada.pk %}" data-carregando>
       {% csrf_token %}
-      <button type="submit" class="botao-vidro-claro inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold text-primaria disabled:cursor-wait sm:w-auto">
+      <button type="submit" class="botao-vidro-claro inline-flex h-12 w-full items-center justify-center gap-2 rounded-controle px-5 text-sm font-semibold text-primaria disabled:cursor-wait sm:w-auto">
         <span data-estado="normal" class="flex items-center gap-2"><i data-lucide="circle-stop" class="size-4"></i> Encerrar para os dois</span>
         <span data-estado="carregando" class="hidden items-center gap-2"><i data-lucide="loader-circle" class="size-4 animate-spin"></i> Encerrando...</span>
       </button>

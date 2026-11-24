@@ -1,5 +1,5 @@
 {# Área para escolher um anexo. Mostra o nome e o tamanho do arquivo (portal.js). Parâmetro: campo. #}
-<div data-anexo class="rounded-xl border border-dashed border-borda-forte p-4 focus-within:border-primaria">
+<div data-anexo class="rounded-cartao border border-dashed border-borda-forte p-4 focus-within:border-primaria">
   <div class="flex items-center gap-3">
     <i data-lucide="file-text" class="size-5 shrink-0 text-primaria"></i>
     <label for="{{ campo.id_for_label }}" class="min-w-0 flex-1 cursor-pointer">
@@ -8,7 +8,7 @@
     </label>
     {{ campo }}
     <button type="button" data-anexo-remover aria-label="Remover arquivo"
-            class="hidden size-9 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-fundo">
+            class="hidden size-9 shrink-0 items-center justify-center rounded-controle text-slate-500 hover:bg-fundo">
       <i data-lucide="trash-2" class="size-4"></i>
     </button>
   </div>

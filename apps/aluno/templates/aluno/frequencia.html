@@ -11,17 +11,17 @@
     </div>
     {# O relatório é criado na etapa 10. #}
     <button type="button" disabled title="O relatório estará disponível em breve"
-            class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-borda bg-white px-4 text-sm font-semibold text-slate-400">
+            class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-controle border border-borda bg-white px-4 text-sm font-semibold text-slate-400">
       <i data-lucide="download" class="size-4"></i> Exportar relatório
     </button>
   </div>
 
   <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
     <form method="get" class="flex flex-wrap items-center gap-3">
-      <span class="inline-flex h-10 items-center rounded-lg border border-borda bg-white px-4 text-sm font-semibold text-primaria">Semestre {{ matricula.turma.semestre }}</span>
+      <span class="inline-flex h-10 items-center rounded-controle border border-borda bg-white px-4 text-sm font-semibold text-primaria">Semestre {{ matricula.turma.semestre }}</span>
       <label class="sr-only" for="filtro-disciplina">Filtrar o calendário por disciplina</label>
       <select id="filtro-disciplina" name="disciplina" data-enviar-ao-mudar
-              class="h-10 rounded-lg border border-borda bg-white px-3 text-sm font-semibold text-primaria">
+              class="h-10 rounded-controle border border-borda bg-white px-3 text-sm font-semibold text-primaria">
         <option value="">Todas as disciplinas</option>
         {% for linha in linhas %}
           <option value="{{ linha.oferta.pk }}" {% if linha.oferta.pk == oferta_id %}selected{% endif %}>{{ linha.oferta.disciplina.nome }}</option>
@@ -31,33 +31,33 @@
     </form>
 
     <button type="button" data-abrir-modal="modal-justificar" {% if not falta_recente %}disabled title="Você não tem faltas para justificar"{% endif %}
-            class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">
+            class="botao-vidro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300">
       <i data-lucide="plus" class="size-4"></i> Justificar ausência
     </button>
   </div>
 
   <div class="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-[1fr_1.2fr_1.3fr]">
-    <section class="rounded-xl border border-borda bg-white p-5">
+    <section class="rounded-cartao border border-borda bg-white p-5">
       <h2 class="font-semibold">Frequência global</h2>
       <p class="mt-1 text-xs text-slate-500">Semestre {{ matricula.turma.semestre }}</p>
       {% include "componentes/frequencia_global.html" %}
     </section>
 
-    <section class="rounded-xl border border-borda bg-white p-5">
+    <section class="rounded-cartao border border-borda bg-white p-5">
       <div class="flex items-center justify-between gap-2">
         <h2 class="font-semibold">{{ mes|date:"F \d\e Y"|capfirst }}</h2>
         <div class="flex items-center gap-1">
           <a href="?mes={{ mes_anterior|date:'Y-m' }}{% if oferta_id %}&disciplina={{ oferta_id }}{% endif %}" aria-label="Mês anterior"
-             class="flex size-8 items-center justify-center rounded-lg text-slate-500 hover:bg-fundo"><i data-lucide="chevron-left" class="size-4"></i></a>
+             class="flex size-8 items-center justify-center rounded-controle text-slate-500 hover:bg-fundo"><i data-lucide="chevron-left" class="size-4"></i></a>
           <a href="?mes={{ mes_seguinte|date:'Y-m' }}{% if oferta_id %}&disciplina={{ oferta_id }}{% endif %}" aria-label="Mês seguinte"
-             class="flex size-8 items-center justify-center rounded-lg text-slate-500 hover:bg-fundo"><i data-lucide="chevron-right" class="size-4"></i></a>
+             class="flex size-8 items-center justify-center rounded-controle text-slate-500 hover:bg-fundo"><i data-lucide="chevron-right" class="size-4"></i></a>
         </div>
       </div>
       <p class="mb-3 mt-1 text-xs text-slate-500">Presenças registradas até {{ hoje|date:"d/m" }}</p>
       {% include "componentes/calendario_frequencia.html" %}
     </section>
 
-    <section class="rounded-xl border border-borda bg-white p-5 lg:col-span-2 xl:col-span-1">
+    <section class="rounded-cartao border border-borda bg-white p-5 lg:col-span-2 xl:col-span-1">
       <h2 class="font-semibold">Justificativa pendente</h2>
       {% if falta_recente %}
         <p class="mt-3">{% include "componentes/selo.html" with situacao="Ação necessária" %}</p>
@@ -76,13 +76,13 @@
     </section>
   </div>
 
-  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
     <h2 class="font-semibold">Frequência por disciplina</h2>
     <p class="mb-4 mt-1 text-sm text-slate-500">Aulas e faltas em horas-aula · mínimo exigido de {{ frequencia.minimo }}%</p>
     {% include "aluno/_disciplinas.html" with coluna="aulas" %}
   </section>
 
-  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
     <h2 class="font-semibold">Minhas justificativas</h2>
     <p class="mb-3 mt-1 text-sm text-slate-500">Acompanhe a análise dos pedidos enviados.</p>
     <ul class="divide-y divide-borda">

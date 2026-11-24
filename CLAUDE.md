@@ -109,8 +109,12 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
 ## Padrão visual (protótipo Figma)
 - O nome é sempre **Instituto Socrático** e a logo é um "S", mesmo onde o protótipo mostrar outro
   nome ou outra letra.
-- Fonte Inter. Fundo da página `#F5F7FA`, cards brancos com borda `#E5E9F0` e cantos arredondados.
-- Azul-marinho da marca `#0B2545` (painel lateral do login, logo "S"); botão primário `#1F4E8C`.
+- Cores, raios, sombras, espaços e tamanhos de texto ficam como **tokens** no `@theme` de
+  `assets/tailwind.css` (ex.: `bg-fundo`, `border-borda`, `text-marinho`, `text-primaria`, `rounded-cartao`,
+  `rounded-controle`, `w-menu`). Nos templates, nada de hex solto; hex só onde o Tailwind não chega
+  (e-mails em `templates/contas/email/`, `apps/analytics/graficos.py` e `apps/relatorios/pdf.py`).
+- Fonte Inter. Fundo da página `fundo` (#F5F7FA), cards brancos com borda `borda` (#E5E9F0) e cantos `rounded-cartao`.
+- Azul-marinho da marca `marinho` (#0B2545: painel lateral do login, logo "S"); botão primário `primaria` (#1F4E8C).
 - Selos: verde "Regular", âmbar "Em atenção", vermelho "Em risco".
 - Layout das áreas internas: barra lateral à esquerda (nome do instituto sem o quadrado do "S", menu,
   card "Precisa de ajuda?", "Sair do portal"), topo com breadcrumb, sino de notificações e avatar (a busca geral do topo foi retirada por não ter função; as listas têm busca própria).

@@ -10,25 +10,25 @@
   {% if resumos %}
     <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {% for resumo in resumos %}
-        <article class="flex flex-col rounded-xl border border-borda bg-white p-5">
+        <article class="flex flex-col rounded-cartao border border-borda bg-white p-5">
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0">
               <h2 class="font-semibold">{{ resumo.oferta.disciplina.nome }}</h2>
               <p class="mt-0.5 text-xs text-slate-500">{{ resumo.oferta.disciplina.codigo }} · Turma {{ resumo.oferta.turma.codigo }} · {{ resumo.oferta.turma.semestre }}</p>
             </div>
-            <span class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primaria-suave text-primaria"><i data-lucide="book-open" class="size-5"></i></span>
+            <span class="flex size-10 shrink-0 items-center justify-center rounded-controle bg-primaria-suave text-primaria"><i data-lucide="book-open" class="size-5"></i></span>
           </div>
 
           <dl class="mt-4 grid grid-cols-3 gap-2 text-center">
-            <div class="rounded-lg bg-fundo p-2">
+            <div class="rounded-controle bg-fundo p-2">
               <dt class="text-xs text-slate-500">Alunos</dt>
               <dd class="mt-0.5 text-lg font-semibold">{{ resumo.indicadores.alunos }}</dd>
             </div>
-            <div class="rounded-lg bg-fundo p-2">
+            <div class="rounded-controle bg-fundo p-2">
               <dt class="text-xs text-slate-500">Média</dt>
               <dd class="mt-0.5 text-lg font-semibold">{{ resumo.indicadores.media|floatformat:1|default:"—" }}</dd>
             </div>
-            <div class="rounded-lg bg-fundo p-2">
+            <div class="rounded-controle bg-fundo p-2">
               <dt class="text-xs text-slate-500">Frequência</dt>
               <dd class="mt-0.5 text-lg font-semibold">{% if resumo.indicadores.frequencia is None %}—{% else %}{{ resumo.indicadores.frequencia|floatformat:0 }}%{% endif %}</dd>
             </div>
@@ -42,15 +42,15 @@
 
           <div class="mt-5 flex flex-wrap gap-2 border-t border-borda pt-4">
             <a href="{% url 'professor:turma' resumo.oferta.pk %}"
-               class="botao-vidro inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-white">
+               class="botao-vidro inline-flex h-9 items-center gap-1.5 rounded-controle px-3 text-sm font-semibold text-white">
               <i data-lucide="users" class="size-4"></i> Ver alunos
             </a>
             <a href="{% url 'professor:notas' %}?oferta={{ resumo.oferta.pk }}"
-               class="botao-vidro-claro inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-primaria">
+               class="botao-vidro-claro inline-flex h-9 items-center gap-1.5 rounded-controle px-3 text-sm font-semibold text-primaria">
               <i data-lucide="square-pen" class="size-4"></i> Notas
             </a>
             <a href="{% url 'professor:chamada' %}?oferta={{ resumo.oferta.pk }}"
-               class="botao-vidro-claro inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-primaria">
+               class="botao-vidro-claro inline-flex h-9 items-center gap-1.5 rounded-controle px-3 text-sm font-semibold text-primaria">
               <i data-lucide="fingerprint" class="size-4"></i> Chamada
             </a>
           </div>
@@ -58,7 +58,7 @@
       {% endfor %}
     </div>
   {% else %}
-    <div class="mt-5 rounded-xl border border-borda bg-white p-5">
+    <div class="mt-5 rounded-cartao border border-borda bg-white p-5">
       {% include "componentes/vazio.html" with titulo="Você ainda não leciona nenhuma disciplina" texto="Quando a coordenação ligar você a uma turma, ela aparecerá aqui." icone="book-open" %}
     </div>
   {% endif %}

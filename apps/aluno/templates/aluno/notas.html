@@ -10,14 +10,14 @@
       <p class="mt-1 text-sm text-slate-500">Seu desempenho, avaliação por avaliação.</p>
     </div>
     <a href="{% url 'relatorios:meu_boletim' %}"
-       class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+       class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
       <i data-lucide="download" class="size-4"></i> Baixar boletim (PDF)
     </a>
   </div>
 
   <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
     {% include "componentes/card_kpi.html" with rotulo="Coeficiente de rendimento" valor=matricula.coeficiente_rendimento|floatformat:1 detalhe="Acumulado do curso" icone="graduation-cap" %}
-    <div class="rounded-xl border border-borda bg-white p-4">
+    <div class="rounded-cartao border border-borda bg-white p-4">
       <div class="flex items-start justify-between gap-2">
         <p class="text-xs text-slate-500">Créditos concluídos</p>
         <i data-lucide="book-open" class="size-4 shrink-0 text-primaria"></i>
@@ -25,7 +25,7 @@
       <p class="mt-1 text-2xl font-semibold">{{ creditos.concluidos }}/{{ creditos.total }}</p>
       <p class="mt-1 text-xs text-slate-500">{{ creditos.percentual }}% de integralização</p>
     </div>
-    <div class="rounded-xl border border-borda bg-white p-4 sm:col-span-2 xl:col-span-1">
+    <div class="rounded-cartao border border-borda bg-white p-4 sm:col-span-2 xl:col-span-1">
       <div class="flex items-start justify-between gap-2">
         <p class="text-xs text-slate-500">Disciplinas em atenção</p>
         <i data-lucide="info" class="size-4 shrink-0 text-primaria"></i>
@@ -35,7 +35,7 @@
     </div>
   </div>
 
-  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-4 rounded-cartao border border-borda bg-white p-5">
     <div class="mb-4 flex items-start justify-between gap-3">
       <div>
         <h2 class="font-semibold">Boletim do semestre</h2>
@@ -53,7 +53,7 @@
   </section>
 
   {% for linha in em_atencao %}
-    <section class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-5">
+    <section class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-cartao border border-amber-200 bg-amber-50 p-5">
       <div class="flex min-w-0 flex-1 items-start gap-3">
         <i data-lucide="triangle-alert" class="mt-0.5 size-5 shrink-0 text-amber-600"></i>
         <div>
@@ -65,7 +65,7 @@
         </div>
       </div>
       <a href="{% url 'mensagens:caixa' %}?para={{ linha.oferta.professor_id }}&assunto={{ linha.oferta.disciplina.nome|urlencode }}"
-         class="botao-vidro-claro inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center rounded-controle px-4 text-sm font-semibold text-primaria">
         Falar com professor
       </a>
     </section>

@@ -2,7 +2,7 @@
 <form method="post" action="?oferta={{ oferta.pk }}" data-carregando class="mt-5 space-y-4">
   {% csrf_token %}
   <input type="hidden" name="acao" value="nova_avaliacao">
-  <p class="rounded-lg bg-fundo px-3 py-2 text-sm">{{ oferta.disciplina.nome }} · Turma {{ oferta.turma.codigo }}</p>
+  <p class="rounded-controle bg-fundo px-3 py-2 text-sm">{{ oferta.disciplina.nome }} · Turma {{ oferta.turma.codigo }}</p>
 
   <div class="grid gap-4 sm:grid-cols-2">
     {% include "componentes/campo_form.html" with campo=form_avaliacao.nome %}
@@ -13,7 +13,7 @@
 
   <div class="flex justify-end gap-3">
     <button type="button" data-fechar-modal
-            class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Cancelar</button>
+            class="botao-vidro-claro h-10 rounded-controle px-4 text-sm font-semibold text-primaria">Cancelar</button>
     {% include "componentes/botao_enviar.html" with texto="Criar avaliação" texto_carregando="Criando..." compacto=True %}
   </div>
 </form>

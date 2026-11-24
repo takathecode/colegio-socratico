@@ -12,23 +12,23 @@
     <div class="flex flex-wrap gap-2">
       {# Exporta com a mesma busca e os mesmos filtros da lista (uma linha por matrícula). #}
       <a href="{% url 'relatorios:alunos' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=xlsx"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-controle px-4 text-sm font-semibold text-primaria">
         <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
       </a>
     </div>
   </div>
 
-  <section class="mt-5 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-5 rounded-cartao border border-borda bg-white p-5">
     <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_auto]">
       <div class="relative">
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca">Buscar por nome ou RA</label>
         <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou RA"
-               class="h-10 w-full rounded-lg border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
+               class="h-10 w-full rounded-controle border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
       </div>
       <div>
         <label class="sr-only" for="turma">Turma</label>
-        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todas as turmas</option>
           {% for item in turmas %}
             <option value="{{ item.pk }}" {% if turma == item.pk|stringformat:"d" %}selected{% endif %}>{{ item.codigo }} · {{ item.semestre }}</option>
@@ -37,7 +37,7 @@
       </div>
       <div>
         <label class="sr-only" for="situacao">Situação</label>
-        <select id="situacao" name="situacao" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
+        <select id="situacao" name="situacao" data-enviar-ao-mudar class="h-10 w-full rounded-controle border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todas as situações</option>
           {% for item in situacoes %}
             <option value="{{ item }}" {% if situacao == item %}selected{% endif %}>{{ item }}</option>
@@ -45,7 +45,7 @@
         </select>
       </div>
       <div class="flex gap-2">
-        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Filtrar</button>
+        <button type="submit" class="botao-vidro-claro h-10 rounded-controle px-4 text-sm font-semibold text-primaria">Filtrar</button>
         {% if filtrando %}
           <a href="{% url 'coordenacao:alunos' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
         {% endif %}
@@ -120,7 +120,7 @@
                 {% include "componentes/selo.html" with situacao=linha.matricula.get_situacao_display %}
               {% endif %}
               {% if linha.matricula %}
-                <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="botao-vidro-claro flex size-9 items-center justify-center rounded-lg text-primaria">
+                <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="botao-vidro-claro flex size-9 items-center justify-center rounded-controle text-primaria">
                   <i data-lucide="file-text" class="size-4"></i><span class="sr-only">Boletim de {{ linha.aluno.get_full_name|default:linha.aluno.matricula }} (PDF)</span>
                 </a>
               {% endif %}

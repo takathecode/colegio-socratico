@@ -8,7 +8,7 @@
   <div>
     <label for="disciplina-da-falta" class="text-sm font-medium">Disciplina</label>
     <select id="disciplina-da-falta" data-disciplina-da-falta
-            class="mt-2 w-full rounded-lg border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30">
+            class="mt-2 w-full rounded-controle border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30">
       {% for linha in disciplinas_com_falta %}
         <option value="{{ linha.oferta.pk }}">{{ linha.oferta.disciplina.nome }}</option>
       {% endfor %}
@@ -26,7 +26,7 @@
 
   <div class="flex justify-end gap-3">
     <button type="button" data-fechar-modal
-            class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Cancelar</button>
+            class="botao-vidro-claro h-10 rounded-controle px-4 text-sm font-semibold text-primaria">Cancelar</button>
     {% include "componentes/botao_enviar.html" with texto="Enviar justificativa" texto_carregando="Enviando..." compacto=True %}
   </div>
 </form>

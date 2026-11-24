@@ -13,7 +13,7 @@
   </div>
 
   <div class="mt-5 grid gap-5 lg:grid-cols-3">
-    <section class="rounded-xl border border-borda bg-white p-5" aria-labelledby="titulo-nova">
+    <section class="rounded-cartao border border-borda bg-white p-5" aria-labelledby="titulo-nova">
       <h2 id="titulo-nova" class="text-base font-semibold text-marinho">Nova chamada</h2>
       {% if tem_quem_chamar %}
         <p class="mt-1 text-sm text-slate-500">A pessoa recebe o convite no sino de notificações.</p>
@@ -31,7 +31,7 @@
       {% endif %}
     </section>
 
-    <section class="rounded-xl border border-borda bg-white p-5 lg:col-span-2" aria-labelledby="titulo-historico">
+    <section class="rounded-cartao border border-borda bg-white p-5 lg:col-span-2" aria-labelledby="titulo-historico">
       <h2 id="titulo-historico" class="text-base font-semibold text-marinho">Histórico</h2>
       {% if pagina.object_list %}
         <ul class="mt-3 divide-y divide-borda border-t border-borda">

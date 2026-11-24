@@ -18,7 +18,7 @@
     {% endif %}
   </div>
 
-  <section class="mt-5 rounded-xl border border-borda bg-white p-5">
+  <section class="mt-5 rounded-cartao border border-borda bg-white p-5">
     <div class="flex gap-4 text-sm">
       <a href="{% url 'alertas:lista' %}" {% if filtro == "todos" %}aria-current="page"{% endif %}
          class="{% if filtro == 'todos' %}font-semibold text-primaria{% else %}text-slate-500{% endif %}">Todas</a>
@@ -35,7 +35,7 @@
               <div class="min-w-0">
                 <p class="flex flex-wrap items-center gap-2 text-sm {% if not alerta.lido %}font-semibold{% else %}font-medium{% endif %}">
                   {{ alerta.titulo }}
-                  {% if not alerta.lido %}<span class="rounded-md bg-primaria-suave px-1.5 py-0.5 text-[11px] font-semibold text-primaria">Nova</span>{% endif %}
+                  {% if not alerta.lido %}<span class="rounded-md bg-primaria-suave px-1.5 py-0.5 text-mini font-semibold text-primaria">Nova</span>{% endif %}
                 </p>
                 <p class="mt-1 text-sm text-slate-600">{{ alerta.texto }}</p>
                 <p class="mt-1 text-xs text-slate-500">
@@ -46,7 +46,7 @@
             {% if alerta.link or not alerta.lido %}
               <form method="post" action="{% url 'alertas:abrir' alerta.pk %}" class="shrink-0 pl-11 sm:pl-0">
                 {% csrf_token %}
-                <button type="submit" class="botao-vidro-claro inline-flex h-9 items-center gap-1 rounded-lg px-3 text-sm font-semibold text-primaria">
+                <button type="submit" class="botao-vidro-claro inline-flex h-9 items-center gap-1 rounded-controle px-3 text-sm font-semibold text-primaria">
                   {% if alerta.link %}Ver detalhes <i data-lucide="arrow-right" class="size-4"></i>{% else %}Marcar como lida{% endif %}
                 </button>
               </form>

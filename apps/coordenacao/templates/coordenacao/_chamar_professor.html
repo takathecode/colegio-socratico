@@ -4,7 +4,7 @@
 {% if risco.chamar_professores %}
   <details class="group">
     <summary title="Chamar professor sobre este aluno"
-             class="inline-flex cursor-pointer list-none items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-sm font-semibold text-primaria hover:bg-primaria-suave focus-visible:outline-2 focus-visible:outline-primaria [&::-webkit-details-marker]:hidden">
+             class="inline-flex cursor-pointer list-none items-center gap-1.5 whitespace-nowrap rounded-controle px-2 py-1 text-sm font-semibold text-primaria hover:bg-primaria-suave focus-visible:outline-2 focus-visible:outline-primaria [&::-webkit-details-marker]:hidden">
       <i data-lucide="video" class="size-4" aria-hidden="true"></i> Chamar professor
       <span class="sr-only">sobre {{ risco.matricula.aluno.get_full_name|default:risco.matricula.aluno.matricula }}</span>
       <i data-lucide="chevron-down" class="size-4 transition-transform group-open:rotate-180" aria-hidden="true"></i>

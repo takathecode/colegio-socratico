@@ -7,7 +7,7 @@
   <p class="mt-2 text-sm text-slate-500">Matrícula <span class="font-semibold text-marinho">{{ matricula }}</span></p>
 
   {% if email_mascarado %}
-    <div class="mt-6 flex gap-3 rounded-lg border border-borda bg-fundo p-4">
+    <div class="mt-6 flex gap-3 rounded-controle border border-borda bg-fundo p-4">
       <i data-lucide="mail" class="mt-0.5 size-5 shrink-0 text-primaria"></i>
       <p class="text-sm leading-relaxed">Vamos enviar um link de redefinição para <strong class="break-all font-semibold">{{ email_mascarado }}</strong></p>
     </div>
@@ -21,11 +21,11 @@
       Não reconhece este e-mail ou não usa mais esse endereço? Vá à Secretaria da escola com um documento com foto.
     </p>
   {% else %}
-    <div role="alert" class="mt-6 flex gap-3 rounded-lg border border-perigo bg-red-50 p-4 text-perigo-texto">
+    <div role="alert" class="mt-6 flex gap-3 rounded-controle border border-perigo bg-red-50 p-4 text-perigo-texto">
       <i data-lucide="circle-alert" class="mt-0.5 size-5 shrink-0"></i>
       <p class="text-sm leading-relaxed">{{ mensagem_neutra }}</p>
     </div>
-    <a href="{% url 'contas:atendimento' %}" class="botao-vidro-claro mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-primaria">
+    <a href="{% url 'contas:atendimento' %}" class="botao-vidro-claro mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-controle text-sm font-semibold text-primaria">
       <i data-lucide="headphones" class="size-4"></i> Central de Atendimento
     </a>
   {% endif %}

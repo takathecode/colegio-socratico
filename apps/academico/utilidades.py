@@ -8,7 +8,7 @@ from django.utils.dateparse import parse_date
 
 # Aparência dos campos de formulário. O Tailwind encontra estas classes porque também lê os .py.
 CLASSES_CAMPO = (
-    "w-full rounded-lg border border-borda bg-white px-3 py-2.5 text-sm outline-none "
+    "w-full rounded-controle border border-borda bg-white px-3 py-2.5 text-sm outline-none "
     "focus:border-primaria focus:ring-2 focus:ring-primaria/30 "
     "aria-[invalid=true]:border-perigo"
 )

@@ -7,7 +7,7 @@ from apps.academico.utilidades import CLASSES_CAMPO
 
 # Campo de nota pequeno, para caber na tabela.
 CLASSES_NOTA = (
-    "h-10 w-24 rounded-lg border border-borda bg-white px-3 text-center text-sm outline-none "
+    "h-10 w-24 rounded-controle border border-borda bg-white px-3 text-center text-sm outline-none "
     "focus:border-primaria focus:ring-2 focus:ring-primaria/30 "
     "aria-[invalid=true]:border-perigo aria-[invalid=true]:bg-red-50"
 )
