@@ -11,10 +11,10 @@
            {% if tipo != "password" %}autocapitalize="none" spellcheck="false"{% endif %}
            {% if invalido or campo.errors %}aria-invalid="true"{% endif %}
            {% if campo.errors or descrito_por %}aria-describedby="{% if campo.errors %}{{ campo.id_for_label }}-erros{% endif %}{% if campo.errors and descrito_por %} {% endif %}{{ descrito_por|default:'' }}"{% endif %}
-           class="h-12 w-full rounded-lg border bg-white pl-12 pr-12 text-sm outline-none focus:ring-2 focus:ring-[#1F4E8C]/30 {% if invalido or campo.errors %}border-[#C62828]{% else %}border-[#E5E9F0] focus:border-[#1F4E8C]{% endif %}">
+           class="h-12 w-full rounded-lg border bg-white pl-12 pr-12 text-sm outline-none focus:ring-2 focus:ring-primaria/30 {% if invalido or campo.errors %}border-perigo{% else %}border-borda focus:border-primaria{% endif %}">
     {% if tipo == "password" %}
       <button type="button" data-mostrar-senha aria-label="Mostrar senha" aria-pressed="false"
-              class="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:text-[#0B2545] focus-visible:outline-2 focus-visible:outline-[#1F4E8C]">
+              class="absolute right-2 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:text-marinho focus-visible:outline-2 focus-visible:outline-primaria">
         <span data-olho="fechado"><i data-lucide="eye-off" class="size-5"></i></span>
         <span data-olho="aberto" class="hidden"><i data-lucide="eye" class="size-5"></i></span>
       </button>
@@ -23,7 +23,7 @@
   {% if campo.errors %}
     <div id="{{ campo.id_for_label }}-erros" role="alert">
       {% for erro in campo.errors %}
-        <p class="mt-1 text-sm text-[#C62828]">{{ erro }}</p>
+        <p class="mt-1 text-sm text-perigo">{{ erro }}</p>
       {% endfor %}
     </div>
   {% endif %}

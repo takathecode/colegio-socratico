@@ -6,29 +6,29 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-[#0B2545]">Alunos</h1>
+      <h1 class="text-2xl font-semibold text-marinho">Alunos</h1>
       <p class="mt-1 text-sm text-slate-500">Matrículas e situação acadêmica de cada aluno. As contas de acesso são criadas pela Secretaria.</p>
     </div>
     <div class="flex flex-wrap gap-2">
       {# Exporta com a mesma busca e os mesmos filtros da lista (uma linha por matrícula). #}
       <a href="{% url 'relatorios:alunos' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=xlsx"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
         <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
       </a>
     </div>
   </div>
 
-  <section class="mt-5 rounded-xl border border-[#E5E9F0] bg-white p-5">
+  <section class="mt-5 rounded-xl border border-borda bg-white p-5">
     <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_auto]">
       <div class="relative">
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca">Buscar por nome ou RA</label>
         <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou RA"
-               class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C]">
+               class="h-10 w-full rounded-lg border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
       </div>
       <div>
         <label class="sr-only" for="turma">Turma</label>
-        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todas as turmas</option>
           {% for item in turmas %}
             <option value="{{ item.pk }}" {% if turma == item.pk|stringformat:"d" %}selected{% endif %}>{{ item.codigo }} · {{ item.semestre }}</option>
@@ -37,7 +37,7 @@
       </div>
       <div>
         <label class="sr-only" for="situacao">Situação</label>
-        <select id="situacao" name="situacao" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+        <select id="situacao" name="situacao" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todas as situações</option>
           {% for item in situacoes %}
             <option value="{{ item }}" {% if situacao == item %}selected{% endif %}>{{ item }}</option>
@@ -45,7 +45,7 @@
         </select>
       </div>
       <div class="flex gap-2">
-        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Filtrar</button>
+        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Filtrar</button>
         {% if filtrando %}
           <a href="{% url 'coordenacao:alunos' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
         {% endif %}
@@ -58,7 +58,7 @@
       <div class="mt-2 hidden overflow-x-auto md:block">
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+            <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
               <th scope="col" class="px-3 py-2.5 font-medium">Aluno</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Turma</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
@@ -69,7 +69,7 @@
           </thead>
           <tbody>
             {% for linha in pagina %}
-              <tr class="border-b border-[#E5E9F0]">
+              <tr class="border-b border-borda">
                 <td class="px-3 py-3">
                   <p class="font-medium">{{ linha.aluno.get_full_name|default:linha.aluno.matricula }}</p>
                   <p class="mt-0.5 text-xs text-slate-500">RA {{ linha.aluno.matricula }}{% if not linha.aluno.is_active %} · <span class="font-medium text-red-800">conta desativada</span>{% endif %}</p>
@@ -88,11 +88,11 @@
                 </td>
                 <td class="whitespace-nowrap px-3 text-right">
                   {% if linha.matricula %}
-                    <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="mr-3 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+                    <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="mr-3 inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
                       <i data-lucide="file-text" class="size-4"></i> Boletim
                     </a>
                   {% endif %}
-                  <a href="{% url 'coordenacao:aluno_editar' linha.aluno.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+                  <a href="{% url 'coordenacao:aluno_editar' linha.aluno.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
                     {% if linha.matricula %}<i data-lucide="pencil" class="size-4"></i> Matrícula{% else %}<i data-lucide="user-plus" class="size-4"></i> Matricular{% endif %}
                   </a>
                 </td>
@@ -102,7 +102,7 @@
         </table>
       </div>
 
-      <ul class="mt-2 divide-y divide-[#E5E9F0] md:hidden">
+      <ul class="mt-2 divide-y divide-borda md:hidden">
         {% for linha in pagina %}
           <li class="flex items-center justify-between gap-3 py-3">
             <a href="{% url 'coordenacao:aluno_editar' linha.aluno.pk %}" class="min-w-0">
@@ -120,7 +120,7 @@
                 {% include "componentes/selo.html" with situacao=linha.matricula.get_situacao_display %}
               {% endif %}
               {% if linha.matricula %}
-                <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="botao-vidro-claro flex size-9 items-center justify-center rounded-lg text-[#1F4E8C]">
+                <a href="{% url 'relatorios:boletim' linha.matricula.pk %}" class="botao-vidro-claro flex size-9 items-center justify-center rounded-lg text-primaria">
                   <i data-lucide="file-text" class="size-4"></i><span class="sr-only">Boletim de {{ linha.aluno.get_full_name|default:linha.aluno.matricula }} (PDF)</span>
                 </a>
               {% endif %}

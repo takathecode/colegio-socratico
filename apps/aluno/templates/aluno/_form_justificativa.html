@@ -2,13 +2,13 @@
 <form method="post" enctype="multipart/form-data" action="{% url 'aluno:frequencia' %}" data-carregando data-filtro-faltas class="mt-5 space-y-4">
   {% csrf_token %}
   {% for erro in form.non_field_errors %}
-    <p class="text-sm text-[#C62828]">{{ erro }}</p>
+    <p class="text-sm text-perigo">{{ erro }}</p>
   {% endfor %}
 
   <div>
     <label for="disciplina-da-falta" class="text-sm font-medium">Disciplina</label>
     <select id="disciplina-da-falta" data-disciplina-da-falta
-            class="mt-2 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F4E8C] focus:ring-2 focus:ring-[#1F4E8C]/30">
+            class="mt-2 w-full rounded-lg border border-borda bg-white px-3 py-2.5 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30">
       {% for linha in disciplinas_com_falta %}
         <option value="{{ linha.oferta.pk }}">{{ linha.oferta.disciplina.nome }}</option>
       {% endfor %}
@@ -26,7 +26,7 @@
 
   <div class="flex justify-end gap-3">
     <button type="button" data-fechar-modal
-            class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Cancelar</button>
+            class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Cancelar</button>
     {% include "componentes/botao_enviar.html" with texto="Enviar justificativa" texto_carregando="Enviando..." compacto=True %}
   </div>
 </form>

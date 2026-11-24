@@ -414,7 +414,7 @@ document.querySelectorAll("[data-chamada]").forEach((area) => {
 
     for (const [indice, linha] of fila.entries()) {
       status.textContent = `Lendo a digital de ${linha.dataset.aluno} (${indice + 1} de ${fila.length})...`;
-      linha.classList.add("bg-[#EAF0F8]");
+      linha.classList.add("bg-primaria-suave");
       linha.scrollIntoView({ block: "nearest", behavior: "smooth" });
       await esperar(TEMPO_DE_LEITURA);
 
@@ -424,7 +424,7 @@ document.querySelectorAll("[data-chamada]").forEach((area) => {
       } else {
         marcar(linha, "falta", "MANUAL");
       }
-      linha.classList.remove("bg-[#EAF0F8]");
+      linha.classList.remove("bg-primaria-suave");
     }
 
     leitor.classList.remove("animate-pulse");

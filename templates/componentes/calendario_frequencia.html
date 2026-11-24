@@ -9,21 +9,21 @@
         <span aria-hidden="true"></span>
       {% elif dia.status == "falta" %}
         <span title="{{ dia.data|date:'d/m/Y' }}: ausência"
-              class="flex h-8 items-center justify-center gap-0.5 rounded-md bg-amber-50 text-amber-900 {% if dia.hoje %}ring-1 ring-[#1F4E8C]{% endif %}">
+              class="flex h-8 items-center justify-center gap-0.5 rounded-md bg-amber-50 text-amber-900 {% if dia.hoje %}ring-1 ring-primaria{% endif %}">
           <i data-lucide="circle-alert" class="size-3"></i>{{ dia.numero }}
         </span>
       {% elif dia.status == "presenca" %}
         <span title="{{ dia.data|date:'d/m/Y' }}: presença"
-              class="flex h-8 items-center justify-center gap-0.5 rounded-md bg-[#EAF0F8] text-[#1F4E8C] {% if dia.hoje %}ring-1 ring-[#1F4E8C]{% endif %}">
+              class="flex h-8 items-center justify-center gap-0.5 rounded-md bg-primaria-suave text-primaria {% if dia.hoje %}ring-1 ring-primaria{% endif %}">
           <i data-lucide="check" class="size-3"></i>{{ dia.numero }}
         </span>
       {% else %}
-        <span class="flex h-8 items-center justify-center rounded-md text-slate-500 {% if dia.hoje %}ring-1 ring-[#1F4E8C]{% endif %}">{{ dia.numero }}</span>
+        <span class="flex h-8 items-center justify-center rounded-md text-slate-500 {% if dia.hoje %}ring-1 ring-primaria{% endif %}">{{ dia.numero }}</span>
       {% endif %}
     {% endfor %}
   {% endfor %}
 </div>
 <div class="mt-3 flex items-center gap-4 text-xs">
-  <span class="flex items-center gap-1 text-[#1F4E8C]"><i data-lucide="check" class="size-3"></i> Presença</span>
+  <span class="flex items-center gap-1 text-primaria"><i data-lucide="check" class="size-3"></i> Presença</span>
   <span class="flex items-center gap-1 text-amber-900"><i data-lucide="circle-alert" class="size-3"></i> Ausência</span>
 </div>

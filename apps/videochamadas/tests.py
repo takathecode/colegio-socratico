@@ -521,7 +521,7 @@ class SinalizacaoTests(TestCase):
         for controle in ("data-botao-microfone", "data-botao-camera", "data-botao-tela", "data-botao-tela-cheia"):
             self.assertContains(resposta, controle)
         # A conversa vai pelo canal de dados do WebRTC: o formulário não aponta para o portal.
-        self.assertContains(resposta, '<form data-form-conversa class="flex gap-2 border-t border-[#E5E9F0] p-3" autocomplete="off">')
+        self.assertContains(resposta, '<form data-form-conversa class="flex gap-2 border-t border-borda p-3" autocomplete="off">')
         self.assertContains(resposta, "não são gravadas")
         self.assertContains(resposta, f'data-nome-do-outro="{nome_na_chamada(self.coordenador)}"')
 

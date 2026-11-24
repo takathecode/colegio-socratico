@@ -6,7 +6,7 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-[#0B2545]">Central de alertas</h1>
+      <h1 class="text-2xl font-semibold text-marinho">Central de alertas</h1>
       <p class="mt-1 text-sm text-slate-500">Avisos enviados automaticamente para alunos, professores e coordenação.</p>
     </div>
     <form method="post" action="{% url 'coordenacao:alertas_rotina' %}" data-carregando>
@@ -16,9 +16,9 @@
   </div>
 
   {% if sem_redis %}
-    <section class="mt-5 flex gap-3 rounded-xl border border-[#E5E9F0] bg-white p-5 text-sm text-slate-600">
-      <i data-lucide="info" class="mt-0.5 size-5 shrink-0 text-[#1F4E8C]"></i>
-      <p>Modo sem Redis (<code class="rounded bg-[#F5F7FA] px-1.5 py-0.5 font-mono text-xs">CELERY_SEM_REDIS=True</code>): as tarefas rodam na hora, dentro do próprio servidor, sem passar pela fila. A rotina agendada das 6h só funciona com o Redis, o worker e o beat no ar.</p>
+    <section class="mt-5 flex gap-3 rounded-xl border border-borda bg-white p-5 text-sm text-slate-600">
+      <i data-lucide="info" class="mt-0.5 size-5 shrink-0 text-primaria"></i>
+      <p>Modo sem Redis (<code class="rounded bg-fundo px-1.5 py-0.5 font-mono text-xs">CELERY_SEM_REDIS=True</code>): as tarefas rodam na hora, dentro do próprio servidor, sem passar pela fila. A rotina agendada das 6h só funciona com o Redis, o worker e o beat no ar.</p>
     </section>
   {% endif %}
 
@@ -29,17 +29,17 @@
     {% include "componentes/card_kpi.html" with rotulo="Ainda não lidos" valor=indicadores.nao_lidos detalhe="Dos alertas dos últimos 7 dias" icone="eye-off" %}
   </div>
 
-  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
     <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_240px_180px_auto]">
       <div class="relative">
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca">Buscar por destinatário ou título</label>
         <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por destinatário ou título"
-               class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C]">
+               class="h-10 w-full rounded-lg border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
       </div>
       <div>
         <label class="sr-only" for="tipo">Tipo de alerta</label>
-        <select id="tipo" name="tipo" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+        <select id="tipo" name="tipo" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todos os tipos</option>
           {% for valor, rotulo in tipos %}
             <option value="{{ valor }}" {% if tipo == valor %}selected{% endif %}>{{ rotulo }}</option>
@@ -48,14 +48,14 @@
       </div>
       <div>
         <label class="sr-only" for="leitura">Leitura</label>
-        <select id="leitura" name="leitura" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+        <select id="leitura" name="leitura" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Lidos e não lidos</option>
           <option value="nao_lidos" {% if leitura == "nao_lidos" %}selected{% endif %}>Não lidos</option>
           <option value="lidos" {% if leitura == "lidos" %}selected{% endif %}>Lidos</option>
         </select>
       </div>
       <div class="flex gap-2">
-        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Filtrar</button>
+        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Filtrar</button>
         {% if filtrando %}
           <a href="{% url 'coordenacao:alertas' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
         {% endif %}
@@ -68,7 +68,7 @@
       <div class="mt-2 hidden overflow-x-auto md:block">
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+            <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
               <th scope="col" class="px-3 py-2.5 font-medium">Quando</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Destinatário</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Alerta</th>
@@ -79,7 +79,7 @@
           </thead>
           <tbody>
             {% for alerta in pagina %}
-              <tr class="border-b border-[#E5E9F0] align-top">
+              <tr class="border-b border-borda align-top">
                 <td class="whitespace-nowrap px-3 py-3 text-xs text-slate-500">{{ alerta.criado_em|date:"d/m/Y H:i" }}</td>
                 <td class="px-3 py-3">
                   <p class="font-medium">{{ alerta.destinatario.get_full_name|default:alerta.destinatario.matricula }}</p>
@@ -94,7 +94,7 @@
                   {% if alerta.email_enviado_em %}Enviado {{ alerta.email_enviado_em|date:"d/m H:i" }}{% elif alerta.por_email %}Aguardando envio{% else %}<span class="text-slate-500">Só no sistema</span>{% endif %}
                 </td>
                 <td class="whitespace-nowrap px-3 py-3 text-xs">
-                  {% if alerta.lido %}<span class="text-slate-600">Lido {{ alerta.lido_em|date:"d/m H:i" }}</span>{% else %}<span class="font-semibold text-[#1F4E8C]">Não lido</span>{% endif %}
+                  {% if alerta.lido %}<span class="text-slate-600">Lido {{ alerta.lido_em|date:"d/m H:i" }}</span>{% else %}<span class="font-semibold text-primaria">Não lido</span>{% endif %}
                 </td>
               </tr>
             {% endfor %}
@@ -102,7 +102,7 @@
         </table>
       </div>
 
-      <ul class="mt-2 divide-y divide-[#E5E9F0] md:hidden">
+      <ul class="mt-2 divide-y divide-borda md:hidden">
         {% for alerta in pagina %}
           <li class="py-3">
             <div class="flex items-start justify-between gap-3">
@@ -112,7 +112,7 @@
             <p class="mt-1 text-xs text-slate-500">Para {{ alerta.destinatario.get_full_name|default:alerta.destinatario.matricula }} ({{ alerta.destinatario.get_perfil_display|lower }}) · {{ alerta.criado_em|date:"d/m/Y H:i" }}</p>
             <p class="mt-1 line-clamp-3 text-xs text-slate-600">{{ alerta.texto }}</p>
             <p class="mt-1 text-xs text-slate-500">
-              {% if alerta.email_enviado_em %}E-mail enviado{% elif alerta.por_email %}E-mail aguardando envio{% else %}Só no sistema{% endif %} · {% if alerta.lido %}lido{% else %}<span class="font-semibold text-[#1F4E8C]">não lido</span>{% endif %}
+              {% if alerta.email_enviado_em %}E-mail enviado{% elif alerta.por_email %}E-mail aguardando envio{% else %}Só no sistema{% endif %} · {% if alerta.lido %}lido{% else %}<span class="font-semibold text-primaria">não lido</span>{% endif %}
             </p>
           </li>
         {% endfor %}
@@ -127,8 +127,8 @@
   </section>
 
   {# Explicação para a coordenação (e para a apresentação). As regras estão em apps/alertas/regras.py. #}
-  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
-    <h2 class="flex items-center gap-2 font-semibold"><i data-lucide="workflow" class="size-5 text-[#1F4E8C]"></i> Como os alertas funcionam</h2>
+  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+    <h2 class="flex items-center gap-2 font-semibold"><i data-lucide="workflow" class="size-5 text-primaria"></i> Como os alertas funcionam</h2>
     <div class="mt-3 grid gap-4 text-sm text-slate-600 md:grid-cols-2 xl:grid-cols-4">
       <div>
         <p class="font-semibold text-slate-800">1. Rotina diária</p>

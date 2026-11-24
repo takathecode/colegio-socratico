@@ -6,11 +6,11 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-[#0B2545]">Financeiro</h1>
+      <h1 class="text-2xl font-semibold text-marinho">Financeiro</h1>
       <p class="mt-1 text-sm text-slate-500">Organize seus pagamentos com tranquilidade e transparência.</p>
     </div>
     <button type="button" disabled title="Módulo de demonstração: não há pagamento real"
-            class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-slate-400">
+            class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-borda bg-white px-4 text-sm font-semibold text-slate-400">
       <i data-lucide="download" class="size-4"></i> Extrato financeiro
     </button>
   </div>
@@ -29,7 +29,7 @@
     {% endif %}
 
     <div class="mt-4 grid gap-4 lg:grid-cols-[2.2fr_1fr]">
-      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <section class="rounded-xl border border-borda bg-white p-5">
         <h2 class="font-semibold">Próxima mensalidade</h2>
         {% if proxima %}
           <p class="mt-1 text-xs text-slate-500">{{ proxima.competencia|date:"F \d\e Y"|capfirst }} · Parcela {{ proxima.parcela }} de {{ proxima.total_parcelas }}</p>
@@ -46,7 +46,7 @@
               <i data-lucide="download" class="size-4"></i> Baixar boleto
             </button>
             <button type="button" disabled title="Módulo de demonstração: não há pagamento real"
-                    class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-[#E5E9F0] bg-white px-4 text-sm font-semibold text-slate-400">
+                    class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-borda bg-white px-4 text-sm font-semibold text-slate-400">
               <i data-lucide="copy" class="size-4"></i> Copiar código de barras
             </button>
           </div>
@@ -56,10 +56,10 @@
         {% endif %}
       </section>
 
-      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <section class="rounded-xl border border-borda bg-white p-5">
         <h2 class="font-semibold">Seu contrato</h2>
         <p class="mt-3 text-sm font-semibold">{{ matricula.turma.curso.nome }}<br>Semestre {{ matricula.turma.semestre }}</p>
-        <div class="mt-3 flex items-center justify-between border-t border-[#E5E9F0] pt-3 text-sm">
+        <div class="mt-3 flex items-center justify-between border-t border-borda pt-3 text-sm">
           <span class="text-slate-500">Bolsa institucional</span>
           <span class="font-semibold">{{ bolsa }}%</span>
         </div>
@@ -67,13 +67,13 @@
       </section>
     </div>
 
-    <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <section class="mt-4 rounded-xl border border-borda bg-white p-5">
       <h2 class="font-semibold">Histórico de mensalidades</h2>
       <p class="mb-4 mt-1 text-sm text-slate-500">Valores líquidos · semestre {{ matricula.turma.semestre }}</p>
       <div class="overflow-x-auto">
         <table class="w-full min-w-[640px] text-sm">
           <thead>
-            <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+            <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
               <th scope="col" class="px-3 py-2.5 font-medium">Competência</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Vencimento</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Valor</th>
@@ -83,7 +83,7 @@
           </thead>
           <tbody>
             {% for parcela in mensalidades %}
-              <tr class="border-b border-[#E5E9F0]">
+              <tr class="border-b border-borda">
                 <td class="px-3 py-3 font-medium">{{ parcela.competencia|date:"F \d\e Y"|capfirst }}</td>
                 <td class="px-3 py-3 text-slate-500">{{ parcela.vencimento|date:"d/m/Y" }}</td>
                 <td class="px-3 py-3 whitespace-nowrap">R$ {{ parcela.valor|floatformat:"2g" }}</td>
@@ -102,12 +102,12 @@
       </div>
     </section>
   {% else %}
-    <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <section class="mt-4 rounded-xl border border-borda bg-white p-5">
       {% include "componentes/vazio.html" with titulo="Nenhuma mensalidade cadastrada" texto="Quando houver parcelas no seu contrato, elas aparecerão aqui." icone="wallet" %}
     </section>
   {% endif %}
 
-  <section class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E5E9F0] bg-white p-4">
+  <section class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-borda bg-white p-4">
     <div class="flex items-center gap-3">
       <i data-lucide="headphones" class="size-5 shrink-0 text-slate-500"></i>
       <div>
@@ -117,7 +117,7 @@
     </div>
     {% if secretaria %}
       <a href="{% url 'mensagens:caixa' %}?para={{ secretaria.pk }}&assunto=Mensalidade"
-         class="botao-vidro-claro inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold text-primaria">
         Falar com a Secretaria
       </a>
     {% endif %}

@@ -4,7 +4,7 @@
   <div class="hidden md:block">
     <table class="w-full text-sm">
       <thead>
-        <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+        <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
           <th scope="col" class="px-3 py-2.5 font-medium">Disciplina</th>
           {% if coluna == "avaliacoes" %}<th scope="col" class="px-3 py-2.5 font-medium">Avaliações</th>{% endif %}
           {% if coluna == "aulas" %}<th scope="col" class="px-3 py-2.5 font-medium">Aulas / faltas</th>{% endif %}
@@ -15,7 +15,7 @@
       </thead>
       <tbody>
         {% for linha in linhas %}
-          <tr class="border-b border-[#E5E9F0]">
+          <tr class="border-b border-borda">
             <td class="px-3 {% if coluna %}py-3{% else %}py-2{% endif %}">
               <p class="font-medium">{{ linha.oferta.disciplina.nome }}</p>
               {% if coluna %}
@@ -25,7 +25,7 @@
             {% if coluna == "avaliacoes" %}
               <td class="px-3 py-3 text-slate-500">
                 {# A nota mais recente (a última) vai em destaque. #}
-                {% for nome, nota in linha.notas_nomeadas %}<span class="mr-3 inline-block whitespace-nowrap {% if forloop.last %}font-semibold text-[#0B2545]{% endif %}">{{ nome }}&nbsp;{{ nota|floatformat:1 }}</span>{% empty %}—{% endfor %}
+                {% for nome, nota in linha.notas_nomeadas %}<span class="mr-3 inline-block whitespace-nowrap {% if forloop.last %}font-semibold text-marinho{% endif %}">{{ nome }}&nbsp;{{ nota|floatformat:1 }}</span>{% empty %}—{% endfor %}
               </td>
             {% endif %}
             {% if coluna == "aulas" %}
@@ -40,7 +40,7 @@
     </table>
   </div>
 
-  <ul class="divide-y divide-[#E5E9F0] md:hidden">
+  <ul class="divide-y divide-borda md:hidden">
     {% for linha in linhas %}
       <li class="flex items-center justify-between gap-3 py-3">
         <div class="min-w-0">
@@ -51,7 +51,7 @@
             {% if coluna == "aulas" %}· {{ linha.horas_dadas }} / {{ linha.horas_faltas }} h{% endif %}
           </p>
           {% if coluna == "avaliacoes" and linha.notas_nomeadas %}
-            <p class="mt-0.5 text-xs text-slate-500">{% for nome, nota in linha.notas_nomeadas %}<span class="mr-2 inline-block whitespace-nowrap {% if forloop.last %}font-semibold text-[#0B2545]{% endif %}">{{ nome }}&nbsp;{{ nota|floatformat:1 }}</span>{% endfor %}</p>
+            <p class="mt-0.5 text-xs text-slate-500">{% for nome, nota in linha.notas_nomeadas %}<span class="mr-2 inline-block whitespace-nowrap {% if forloop.last %}font-semibold text-marinho{% endif %}">{{ nome }}&nbsp;{{ nota|floatformat:1 }}</span>{% endfor %}</p>
           {% endif %}
         </div>
         {% include "componentes/selo.html" with situacao=linha.situacao %}

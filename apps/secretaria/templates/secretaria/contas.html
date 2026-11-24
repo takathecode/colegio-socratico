@@ -6,16 +6,16 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-[#0B2545]">Contas de acesso</h1>
+      <h1 class="text-2xl font-semibold text-marinho">Contas de acesso</h1>
       <p class="mt-1 text-sm text-slate-500">Só a Secretaria cria contas. Uma conta desativada não entra no portal, mas o histórico é mantido.</p>
     </div>
     <div class="flex flex-wrap gap-2">
       <a href="{% url 'secretaria:conta_nova' 'aluno' %}"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
         <i data-lucide="graduation-cap" class="size-4"></i> Aluno
       </a>
       <a href="{% url 'secretaria:conta_nova' 'professor' %}"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
         <i data-lucide="users" class="size-4"></i> Professor
       </a>
       <a href="{% url 'secretaria:conta_nova' 'coordenacao' %}"
@@ -25,17 +25,17 @@
     </div>
   </div>
 
-  <section class="mt-5 rounded-xl border border-[#E5E9F0] bg-white p-5">
+  <section class="mt-5 rounded-xl border border-borda bg-white p-5">
     <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_220px_auto]">
       <div class="relative">
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca">Buscar por nome ou matrícula</label>
         <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou matrícula"
-               class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C] focus:ring-2 focus:ring-[#1F4E8C]/30">
+               class="h-10 w-full rounded-lg border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria focus:ring-2 focus:ring-primaria/30">
       </div>
       <div>
         <label class="sr-only" for="perfil">Perfil</label>
-        <select id="perfil" name="perfil" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+        <select id="perfil" name="perfil" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todos os perfis</option>
           {% for valor, rotulo in perfis %}
             <option value="{{ valor }}" {% if perfil == valor %}selected{% endif %}>{{ rotulo }}</option>
@@ -44,7 +44,7 @@
       </div>
       <div>
         <label class="sr-only" for="estado">Situação da conta</label>
-        <select id="estado" name="estado" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+        <select id="estado" name="estado" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Ativas e desativadas</option>
           <option value="ativas" {% if estado == "ativas" %}selected{% endif %}>Só ativas</option>
           <option value="inativas" {% if estado == "inativas" %}selected{% endif %}>Só desativadas</option>
@@ -53,7 +53,7 @@
         </select>
       </div>
       <div class="flex gap-2">
-        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Filtrar</button>
+        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Filtrar</button>
         {% if filtrando %}
           <a href="{% url 'secretaria:contas' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
         {% endif %}
@@ -63,11 +63,11 @@
     <p class="mt-4 text-sm text-slate-500">{{ total }} conta{{ total|pluralize }}</p>
 
     {% if pagina.object_list %}
-      <ul class="mt-2 divide-y divide-[#E5E9F0]">
+      <ul class="mt-2 divide-y divide-borda">
         {% for conta in pagina %}
           <li class="flex flex-wrap items-center justify-between gap-3 py-3">
             <div class="flex min-w-0 items-center gap-3">
-              <span class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C]" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=conta %}</span>
+              <span class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primaria-suave text-sm font-semibold text-primaria" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=conta %}</span>
               <div class="min-w-0">
                 <p class="truncate text-sm font-medium">{{ conta.get_full_name|default:conta.matricula }}</p>
                 <p class="mt-0.5 truncate text-xs text-slate-500">
@@ -95,7 +95,7 @@
                   <i data-lucide="ban" class="size-3.5"></i>Desativada
                 </span>
               {% endif %}
-              <a href="{% url 'secretaria:conta' conta.pk %}" class="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-[#1F4E8C] hover:bg-[#F5F7FA]">
+              <a href="{% url 'secretaria:conta' conta.pk %}" class="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primaria hover:bg-fundo">
                 Gerenciar <i data-lucide="arrow-right" class="size-4"></i>
               </a>
             </div>

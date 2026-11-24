@@ -4,11 +4,11 @@
 
 {% block conteudo %}
   <h1 class="text-3xl font-semibold">Esqueci minha senha</h1>
-  <p class="mt-2 text-sm text-slate-500">Matrícula <span class="font-semibold text-[#0B2545]">{{ matricula }}</span></p>
+  <p class="mt-2 text-sm text-slate-500">Matrícula <span class="font-semibold text-marinho">{{ matricula }}</span></p>
 
   {% if email_mascarado %}
-    <div class="mt-6 flex gap-3 rounded-lg border border-[#E5E9F0] bg-[#F5F7FA] p-4">
-      <i data-lucide="mail" class="mt-0.5 size-5 shrink-0 text-[#1F4E8C]"></i>
+    <div class="mt-6 flex gap-3 rounded-lg border border-borda bg-fundo p-4">
+      <i data-lucide="mail" class="mt-0.5 size-5 shrink-0 text-primaria"></i>
       <p class="text-sm leading-relaxed">Vamos enviar um link de redefinição para <strong class="break-all font-semibold">{{ email_mascarado }}</strong></p>
     </div>
 
@@ -21,18 +21,18 @@
       Não reconhece este e-mail ou não usa mais esse endereço? Vá à Secretaria da escola com um documento com foto.
     </p>
   {% else %}
-    <div role="alert" class="mt-6 flex gap-3 rounded-lg border border-[#C62828] bg-red-50 p-4 text-[#B71C1C]">
+    <div role="alert" class="mt-6 flex gap-3 rounded-lg border border-perigo bg-red-50 p-4 text-perigo-texto">
       <i data-lucide="circle-alert" class="mt-0.5 size-5 shrink-0"></i>
       <p class="text-sm leading-relaxed">{{ mensagem_neutra }}</p>
     </div>
-    <a href="{% url 'contas:atendimento' %}" class="botao-vidro-claro mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-[#1F4E8C]">
+    <a href="{% url 'contas:atendimento' %}" class="botao-vidro-claro mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-primaria">
       <i data-lucide="headphones" class="size-4"></i> Central de Atendimento
     </a>
   {% endif %}
 
   <div class="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm">
-    <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-[#1F4E8C] hover:underline">Digitar outra matrícula</a>
-    <a href="{% url 'contas:entrar' %}" class="inline-flex items-center gap-1 font-semibold text-[#1F4E8C] hover:underline">
+    <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-primaria hover:underline">Digitar outra matrícula</a>
+    <a href="{% url 'contas:entrar' %}" class="inline-flex items-center gap-1 font-semibold text-primaria hover:underline">
       <i data-lucide="arrow-left" class="size-4"></i> Voltar para o login
     </a>
   </div>

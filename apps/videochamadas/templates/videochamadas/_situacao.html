@@ -2,7 +2,7 @@
 {# A cor sempre vem com ícone e texto, para não depender só da cor. #}
 {% with situacao=chamada.situacao %}
   {% if situacao == "chamando" %}
-    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-[#EAF0F8] px-2 py-1 text-xs font-medium text-[#1F4E8C]">
+    <span class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-primaria-suave px-2 py-1 text-xs font-medium text-primaria">
       <i data-lucide="phone-call" class="size-3.5"></i>{{ situacao.label }}
     </span>
   {% elif situacao == "em_andamento" %}

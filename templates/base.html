@@ -21,7 +21,7 @@
   {# Espaço da barra lateral flutuante: 12px de margem + largura da barra + 12px de respiro (235 → 259; recolhida 86 → 110). #}
   <div class="lg:pl-[259px] lg:recolhida:pl-[110px] transition-[padding] duration-200">
     {# Topo flutuante: descolado 12px das bordas (mx-3, mt-3) e preso a 12px do alto ao rolar (top-3). #}
-    <header class="vidro-barra sticky top-3 z-20 mx-3 mt-3 flex h-16 items-center gap-3 rounded-2xl px-3 sm:px-5 lg:ml-0">
+    <header class="vidro-barra sticky top-barra z-20 mx-barra mt-barra flex h-16 items-center gap-3 rounded-barra px-3 sm:px-5 lg:ml-0">
       <button type="button" data-alternar-menu aria-label="Abrir ou recolher o menu" aria-controls="barra-lateral"
               class="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-600 hover:bg-white/70">
         <i data-lucide="menu" class="size-5"></i>
@@ -37,8 +37,8 @@
         {# Menu do usuário: o avatar abre as opções da conta (foto de perfil e senha). #}
         {# <details> abre e fecha sem JavaScript; o portal.js fecha ao clicar fora ou apertar Esc. #}
         <details data-menu-usuario class="relative">
-          <summary aria-label="Menu da conta" class="flex cursor-pointer list-none items-center gap-3 rounded-lg p-1 hover:bg-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F4E8C] [&::-webkit-details-marker]:hidden">
-            <span class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C] ring-2 ring-white/80" aria-hidden="true">
+          <summary aria-label="Menu da conta" class="flex cursor-pointer list-none items-center gap-3 rounded-lg p-1 hover:bg-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primaria [&::-webkit-details-marker]:hidden">
+            <span class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primaria-suave text-sm font-semibold text-primaria ring-2 ring-white/80" aria-hidden="true">
               {% include "componentes/avatar.html" %}
             </span>
             <span class="hidden leading-tight sm:block">
@@ -48,13 +48,13 @@
             <i data-lucide="chevron-down" class="hidden size-4 text-slate-500 sm:block" aria-hidden="true"></i>
           </summary>
 
-          <div class="absolute right-0 top-12 z-30 w-60 overflow-hidden rounded-xl border border-[#E5E9F0] bg-white py-1 shadow-lg">
+          <div class="absolute right-0 top-12 z-30 w-60 overflow-hidden rounded-xl border border-borda bg-white py-1 shadow-lg">
             <button type="button" data-abrir-modal="janela-foto" aria-haspopup="dialog"
-                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-[#F5F7FA] focus-visible:bg-[#F5F7FA] focus-visible:outline-none">
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-fundo focus-visible:bg-fundo focus-visible:outline-none">
               <i data-lucide="camera" class="size-4 text-slate-500"></i> Foto de perfil
             </button>
             <a href="{% url 'contas:senha_alterar' %}"
-               class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#F5F7FA] focus-visible:bg-[#F5F7FA] focus-visible:outline-none">
+               class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-fundo focus-visible:bg-fundo focus-visible:outline-none">
               <i data-lucide="key-round" class="size-4 text-slate-500"></i> Alterar minha senha
             </a>
           </div>

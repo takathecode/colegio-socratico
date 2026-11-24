@@ -6,7 +6,7 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-[#0B2545]">Lançar notas</h1>
+      <h1 class="text-2xl font-semibold text-marinho">Lançar notas</h1>
       <p class="mt-1 text-sm text-slate-500">Escolha a disciplina e a avaliação. As notas aparecem no boletim do aluno assim que forem salvas.</p>
     </div>
     <button type="button" data-abrir-modal="modal-nova-avaliacao"
@@ -24,13 +24,13 @@
     <nav aria-label="Avaliações" class="mt-4 flex gap-2 overflow-x-auto pb-1">
       {% for item in avaliacoes %}
         <a href="?oferta={{ oferta.pk }}&avaliacao={{ item.pk }}" {% if item.pk == avaliacao.pk %}aria-current="page"{% endif %}
-           class="inline-flex h-9 shrink-0 items-center rounded-lg border px-3 text-sm font-semibold {% if item.pk == avaliacao.pk %}border-[#1F4E8C] bg-[#EAF0F8] text-[#1F4E8C]{% else %}border-[#E5E9F0] bg-white text-slate-600 hover:border-[#1F4E8C]{% endif %}">
+           class="inline-flex h-9 shrink-0 items-center rounded-lg border px-3 text-sm font-semibold {% if item.pk == avaliacao.pk %}border-primaria bg-primaria-suave text-primaria{% else %}border-borda bg-white text-slate-600 hover:border-primaria{% endif %}">
           {{ item.nome }}
         </a>
       {% endfor %}
     </nav>
 
-    <section class="mt-3 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <section class="mt-3 rounded-xl border border-borda bg-white p-5">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 class="font-semibold">{{ avaliacao.nome }} · {{ oferta.disciplina.nome }}</h2>
@@ -38,7 +38,7 @@
             {{ avaliacao.get_tipo_display }} · Turma {{ oferta.turma.codigo }} · {{ avaliacao.data_hora|date:"d/m/Y, H\hi" }}{% if avaliacao.local %} · {{ avaliacao.local }}{% endif %}
           </p>
         </div>
-        <a href="{% url 'professor:turma' oferta.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+        <a href="{% url 'professor:turma' oferta.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
           Ver médias da turma <i data-lucide="arrow-right" class="size-4"></i>
         </a>
       </div>
@@ -47,7 +47,7 @@
         <form method="post" action="?oferta={{ oferta.pk }}&avaliacao={{ avaliacao.pk }}" data-carregando class="mt-4" novalidate>
           {% csrf_token %}
           <input type="hidden" name="acao" value="salvar_notas">
-          <ul class="divide-y divide-[#E5E9F0] border-y border-[#E5E9F0]">
+          <ul class="divide-y divide-borda border-y border-borda">
             {% for linha in linhas %}
               <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5">
                 <label for="{{ linha.campo.id_for_label }}" class="min-w-0 flex-1">
@@ -58,7 +58,7 @@
                   {# Com erro, o Django marca o campo com aria-invalid e a borda fica vermelha. #}
                   {{ linha.campo }}
                   {% for erro in linha.campo.errors %}
-                    <p class="mt-1 text-xs text-[#C62828]">{{ erro }}</p>
+                    <p class="mt-1 text-xs text-perigo">{{ erro }}</p>
                   {% endfor %}
                 </div>
               </li>
@@ -77,7 +77,7 @@
       {% endif %}
     </section>
   {% else %}
-    <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <section class="mt-4 rounded-xl border border-borda bg-white p-5">
       {% include "componentes/vazio.html" with titulo="Nenhuma avaliação nesta disciplina" texto="Crie a primeira prova ou entrega no botão Nova avaliação." icone="clipboard-list" %}
     </section>
   {% endif %}

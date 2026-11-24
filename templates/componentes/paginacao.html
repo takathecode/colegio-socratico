@@ -5,13 +5,13 @@
     <div class="flex gap-2">
       {% if pagina.has_previous %}
         <a href="{% querystring pagina=pagina.previous_page_number %}"
-           class="botao-vidro-claro inline-flex h-9 items-center gap-1 rounded-lg px-3 font-semibold text-[#1F4E8C]">
+           class="botao-vidro-claro inline-flex h-9 items-center gap-1 rounded-lg px-3 font-semibold text-primaria">
           <i data-lucide="chevron-left" class="size-4"></i> Anterior
         </a>
       {% endif %}
       {% if pagina.has_next %}
         <a href="{% querystring pagina=pagina.next_page_number %}"
-           class="botao-vidro-claro inline-flex h-9 items-center gap-1 rounded-lg px-3 font-semibold text-[#1F4E8C]">
+           class="botao-vidro-claro inline-flex h-9 items-center gap-1 rounded-lg px-3 font-semibold text-primaria">
           Próxima <i data-lucide="chevron-right" class="size-4"></i>
         </a>
       {% endif %}

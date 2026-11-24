@@ -2,11 +2,11 @@
 {% load static %}
 {# Layout das telas públicas: painel azul à esquerda e conteúdo à direita. #}
 
-{% block classes_body %}min-h-screen bg-white text-[#0B2545] antialiased{% endblock %}
+{% block classes_body %}min-h-screen bg-white text-marinho antialiased{% endblock %}
 
 {% block corpo %}
   <div class="min-h-screen lg:grid lg:grid-cols-[41%_1fr]">
-    <aside class="hidden flex-col bg-[#0B2545] px-12 py-12 text-white lg:flex xl:px-16">
+    <aside class="hidden flex-col bg-marinho px-12 py-12 text-white lg:flex xl:px-16">
       <img src="{% static 'img/socrates.png' %}" alt="" class="mx-auto h-[clamp(150px,34vh,330px)] w-auto">
       <div class="mt-auto pt-8">
         <p class="text-xs font-medium tracking-wide text-slate-300">CONHECIMENTO QUE ABRE CAMINHOS</p>
@@ -18,7 +18,7 @@
     </aside>
 
     <div class="flex min-h-screen flex-col">
-      <div class="flex items-center gap-3 bg-[#0B2545] px-6 py-4 text-white lg:hidden">
+      <div class="flex items-center gap-3 bg-marinho px-6 py-4 text-white lg:hidden">
         {% include "componentes/logo.html" with claro=True %}
         <span class="font-bold">Instituto Socrático</span>
       </div>

@@ -6,7 +6,7 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-[#0B2545]">{{ saudacao }}, {{ user.first_name|default:user.matricula }}</h1>
+      <h1 class="text-2xl font-semibold text-marinho">{{ saudacao }}, {{ user.first_name|default:user.matricula }}</h1>
       <p class="mt-1 text-sm text-slate-500">Situação acadêmica da instituição{% if semestre %} · semestre {{ semestre }}{% endif %}.</p>
     </div>
     <div class="flex flex-wrap gap-2">
@@ -25,7 +25,7 @@
   </div>
 
   {# Gráfico de linhas gerado com matplotlib (apps/analytics/graficos.py). #}
-  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
     <h2 class="font-semibold">Evolução da frequência</h2>
     <p class="mt-1 text-sm text-slate-500">Frequência de cada turma do semestre, mês a mês, só com os alunos ativos.</p>
     <div class="mx-auto mt-3 max-w-4xl">
@@ -34,13 +34,13 @@
   </section>
 
   <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
-    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5 xl:col-span-2">
+    <section class="rounded-xl border border-borda bg-white p-5 xl:col-span-2">
       <div class="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 class="font-semibold">Turmas do semestre</h2>
           <p class="mt-1 text-sm text-slate-500">Média e frequência dos alunos ativos.</p>
         </div>
-        <a href="{% url 'coordenacao:turmas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+        <a href="{% url 'coordenacao:turmas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
           Ver todas <i data-lucide="arrow-right" class="size-4"></i>
         </a>
       </div>
@@ -49,7 +49,7 @@
         <div class="overflow-x-auto">
           <table class="w-full min-w-[560px] text-sm">
             <thead>
-              <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+              <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
                 <th scope="col" class="px-3 py-2.5 font-medium">Turma</th>
                 <th scope="col" class="px-3 py-2.5 font-medium">Alunos</th>
                 <th scope="col" class="px-3 py-2.5 font-medium">Média</th>
@@ -59,9 +59,9 @@
             </thead>
             <tbody>
               {% for turma in turmas %}
-                <tr class="border-b border-[#E5E9F0]">
+                <tr class="border-b border-borda">
                   <td class="px-3 py-3">
-                    <a href="{% url 'coordenacao:turma' turma.pk %}" class="font-medium text-[#1F4E8C] hover:underline">{{ turma.codigo }}</a>
+                    <a href="{% url 'coordenacao:turma' turma.pk %}" class="font-medium text-primaria hover:underline">{{ turma.codigo }}</a>
                     <p class="mt-0.5 text-xs text-slate-500">{{ turma.curso.nome }} · {{ turma.periodo }}º período</p>
                   </td>
                   <td class="px-3">{{ turma.total_alunos }}</td>
@@ -82,18 +82,18 @@
     </section>
 
     {# Alunos com risco médio ou alto, segundo o modelo preditivo (apps/analytics/evasao.py). #}
-    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <section class="rounded-xl border border-borda bg-white p-5">
       <div class="mb-2 flex items-center justify-between gap-3">
         <div>
           <h2 class="font-semibold">Risco de evasão</h2>
           <p class="mt-1 text-sm text-slate-500">Maiores probabilidades do modelo preditivo.</p>
         </div>
-        <a href="{% url 'coordenacao:risco' %}" class="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+        <a href="{% url 'coordenacao:risco' %}" class="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-primaria hover:underline">
           Ver todos <i data-lucide="arrow-right" class="size-4"></i>
         </a>
       </div>
       {% if maiores_riscos %}
-        <ul class="divide-y divide-[#E5E9F0]">
+        <ul class="divide-y divide-borda">
           {% for risco in maiores_riscos %}
             <li class="flex items-center justify-between gap-3 py-3">
               <div class="min-w-0">

@@ -6,7 +6,7 @@
 {% block conteudo %}
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h1 class="text-2xl font-semibold text-[#0B2545]">Alunos em risco</h1>
+      <h1 class="text-2xl font-semibold text-marinho">Alunos em risco</h1>
       <p class="mt-1 text-sm text-slate-500">
         Probabilidade de evasão estimada pelo modelo preditivo{% if calculado_em %} · atualizada em {{ calculado_em|date:"d/m/Y \à\s H:i" }}{% endif %}.
       </p>
@@ -15,11 +15,11 @@
       {% if total_calculado %}
         {# Os mesmos filtros da lista vão para o relatório: o arquivo traz os alunos que estão na tela. #}
         <a href="{% url 'relatorios:risco' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=pdf"
-           class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+           class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
           <i data-lucide="file-text" class="size-4"></i> PDF
         </a>
         <a href="{% url 'relatorios:risco' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=xlsx"
-           class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+           class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-primaria">
           <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
         </a>
       {% endif %}
@@ -49,17 +49,17 @@
     {% include "componentes/card_kpi.html" with rotulo="Sem dados suficientes" valor=sem_dados detalhe="Alunos ativos ainda sem notas ou chamadas" icone="circle-help" %}
   </div>
 
-  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
     <form method="get" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_auto]">
       <div class="relative">
         <i data-lucide="search" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400"></i>
         <label class="sr-only" for="busca">Buscar por nome ou RA</label>
         <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Buscar por nome ou RA"
-               class="h-10 w-full rounded-lg border border-[#E5E9F0] pl-9 pr-3 text-sm outline-none focus:border-[#1F4E8C]">
+               class="h-10 w-full rounded-lg border border-borda pl-9 pr-3 text-sm outline-none focus:border-primaria">
       </div>
       <div>
         <label class="sr-only" for="turma">Turma</label>
-        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+        <select id="turma" name="turma" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todas as turmas</option>
           {% for item in turmas %}
             <option value="{{ item.pk }}" {% if turma == item.pk|stringformat:"d" %}selected{% endif %}>{{ item.codigo }} · {{ item.semestre }}</option>
@@ -68,7 +68,7 @@
       </div>
       <div>
         <label class="sr-only" for="nivel">Nível de risco</label>
-        <select id="nivel" name="nivel" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-[#E5E9F0] bg-white px-3 text-sm outline-none focus:border-[#1F4E8C]">
+        <select id="nivel" name="nivel" data-enviar-ao-mudar class="h-10 w-full rounded-lg border border-borda bg-white px-3 text-sm outline-none focus:border-primaria">
           <option value="">Todos os níveis</option>
           {% for valor, rotulo in niveis %}
             <option value="{{ valor }}" {% if nivel == valor %}selected{% endif %}>{{ rotulo }}</option>
@@ -76,7 +76,7 @@
         </select>
       </div>
       <div class="flex gap-2">
-        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">Filtrar</button>
+        <button type="submit" class="botao-vidro-claro h-10 rounded-lg px-4 text-sm font-semibold text-primaria">Filtrar</button>
         {% if filtrando %}
           <a href="{% url 'coordenacao:risco' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
         {% endif %}
@@ -89,7 +89,7 @@
       <div class="mt-2 hidden overflow-x-auto md:block">
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-[#F5F7FA] text-left text-xs uppercase text-slate-500">
+            <tr class="bg-fundo text-left text-xs uppercase text-slate-500">
               <th scope="col" class="px-3 py-2.5 font-medium">Aluno</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Turma</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Probabilidade</th>
@@ -100,7 +100,7 @@
           </thead>
           <tbody>
             {% for risco in pagina %}
-              <tr class="border-b border-[#E5E9F0] align-top">
+              <tr class="border-b border-borda align-top">
                 <td class="px-3 py-3">
                   <a href="{% url 'coordenacao:aluno_editar' risco.matricula.aluno.pk %}" class="font-medium hover:underline">{{ risco.matricula.aluno.get_full_name|default:risco.matricula.aluno.matricula }}</a>
                   <p class="mt-0.5 text-xs text-slate-500">RA {{ risco.matricula.aluno.matricula }} · média {{ risco.media|floatformat:1 }} · freq. {{ risco.frequencia|floatformat:0 }}%</p>
@@ -126,7 +126,7 @@
         </table>
       </div>
 
-      <ul class="mt-2 divide-y divide-[#E5E9F0] md:hidden">
+      <ul class="mt-2 divide-y divide-borda md:hidden">
         {% for risco in pagina %}
           <li class="py-3">
             <div class="flex items-start justify-between gap-3">
@@ -158,8 +158,8 @@
   </section>
 
   {# Explicação para a coordenação (e para a apresentação). Detalhes em docs/MODELO_EVASAO.md. #}
-  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
-    <h2 class="flex items-center gap-2 font-semibold"><i data-lucide="brain" class="size-5 text-[#1F4E8C]"></i> Como o modelo funciona</h2>
+  <section class="mt-4 rounded-xl border border-borda bg-white p-5">
+    <h2 class="flex items-center gap-2 font-semibold"><i data-lucide="brain" class="size-5 text-primaria"></i> Como o modelo funciona</h2>
     <div class="mt-3 grid gap-4 text-sm text-slate-600 md:grid-cols-2 xl:grid-cols-4">
       <div>
         <p class="font-semibold text-slate-800">1. O que ele olha</p>

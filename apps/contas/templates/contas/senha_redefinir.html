@@ -10,7 +10,7 @@
     <form method="post" data-carregando novalidate class="mt-6 space-y-5">
       {% csrf_token %}
       {% for erro in form.non_field_errors %}
-        <p role="alert" class="rounded-lg border border-[#C62828] bg-red-50 px-4 py-3 text-sm text-[#B71C1C]">{{ erro }}</p>
+        <p role="alert" class="rounded-lg border border-perigo bg-red-50 px-4 py-3 text-sm text-perigo-texto">{{ erro }}</p>
       {% endfor %}
 
       {# Só para mostrar: o campo não tem "name", então nada dele vai no envio. A conta é sempre a do link. #}
@@ -33,7 +33,7 @@
     </a>
   {% endif %}
 
-  <a href="{% url 'contas:entrar' %}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+  <a href="{% url 'contas:entrar' %}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-primaria hover:underline">
     <i data-lucide="arrow-left" class="size-4"></i> Voltar para o login
   </a>
 {% endblock %}
