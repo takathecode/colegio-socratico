@@ -361,3 +361,44 @@ class BloqueioEAtivacaoTests(BaseSecretariaMixin, TestCase):
         self.assertContains(tela, "Conta desativada")
         self.assertContains(tela, "Por Sônia")
         self.assertContains(tela, "IP 127.0.0.1")
+
+
+CONSOLE = "django.core.mail.backends.console.EmailBackend"
+
+
+@override_settings(PASSWORD_HASHERS=HASH_RAPIDO)
+class EmailSemSmtpTests(BaseSecretariaMixin, TestCase):
+    """Sem SMTP no servidor publicado, a tela não pode dizer que o link foi enviado."""
+
+    def enviar_link(self):
+        url = self.url("conta_redefinir", self.aluno)
+        return self.client.post(url, {"acao": "link", **IDENTIDADE}, follow=True)
+
+    @override_settings(EMAIL_BACKEND=CONSOLE, DEBUG=False)
+    def test_servidor_sem_smtp_avisa_e_sugere_a_senha_provisoria(self):
+        tela = self.client.get(self.url("conta", self.aluno))
+        self.assertContains(tela, "O envio de e-mails ainda não está configurado neste servidor")
+        resposta = self.enviar_link()
+        self.assertContains(resposta, "o link não chega à pessoa")
+        self.assertNotContains(resposta, "Link enviado para")
+
+    @override_settings(EMAIL_BACKEND=CONSOLE, DEBUG=True)
+    def test_em_desenvolvimento_lembra_do_terminal(self):
+        self.assertNotContains(
+            self.client.get(self.url("conta", self.aluno)), "ainda não está configurado"
+        )
+        self.assertContains(self.enviar_link(), "o e-mail aparece no terminal do runserver")
+
+    def test_com_smtp_confirma_o_envio(self):
+        # Nos testes o backend é o locmem (mail.outbox), que conta como entrega de verdade.
+        self.assertContains(self.enviar_link(), "Link enviado para b*a@e******.com")
+
+    def test_check_avisa_no_servidor_publicado(self):
+        from apps.contas.envio_de_email import conferir_envio_de_email
+
+        with self.settings(EMAIL_BACKEND=CONSOLE, DEBUG=False):
+            self.assertEqual([aviso.id for aviso in conferir_envio_de_email(None)], ["contas.W001"])
+        with self.settings(EMAIL_BACKEND=CONSOLE, DEBUG=True):
+            self.assertEqual(conferir_envio_de_email(None), [])
+        with self.settings(EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend", DEBUG=False):
+            self.assertEqual(conferir_envio_de_email(None), [])

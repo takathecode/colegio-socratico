@@ -122,7 +122,7 @@ assinatura feita com a `SECRET_KEY`, sem nada guardado no banco. Ele deixa de va
 Outros cuidados:
 
 - O `PasswordResetConfirmView` do Django guarda o código na sessão e troca o endereço por um
-  sem o código (`.../set-password/`). As telas mandam `Referrer-Policy: no-referrer`, para o
+  sem o código (`.../set-password/`). As telas mandam `Referrer-Policy: same-origin`, para o
   endereço nunca vazar a outro site.
 - A tela não tem campo de matrícula para enviar: a conta é **sempre a do link**. Uma matrícula
   colocada à mão no envio é ignorada.

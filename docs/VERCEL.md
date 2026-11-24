@@ -85,6 +85,9 @@ versão no computador e na Vercel, e o arquivo só abre na mesma versão.
   aparecem no log da função, em *Deployments > Logs*. Com o prazo de 10 minutos do link, o SMTP é
   necessário para o "Esqueci minha senha" funcionar de verdade. Na Vercel (`CELERY_SEM_REDIS=True`)
   o e-mail sai na hora, dentro do pedido, com limite de 10 segundos (`EMAIL_TIMEOUT`).
+- **Conferência:** com `DEBUG=False` e sem SMTP, o `python manage.py check` mostra o aviso
+  `contas.W001`, e a tela da conta na Secretaria avisa que o link não chega (sugerindo a senha
+  provisória).
 - **Limite de pedidos de link:** fica no banco (tabela `PedidoDeSenha`), e não na memória, porque
   cada pedido pode cair numa cópia diferente da função.
 - **Tamanho do pacote:** o limite da função Python é de 500 MB. pandas, scikit-learn, scipy e
