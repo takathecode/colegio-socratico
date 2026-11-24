@@ -113,6 +113,9 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
   `assets/tailwind.css` (ex.: `bg-fundo`, `border-borda`, `text-marinho`, `text-primaria`, `rounded-cartao`,
   `rounded-controle`, `w-menu`). Nos templates, nada de hex solto; hex só onde o Tailwind não chega
   (e-mails em `templates/contas/email/`, `apps/analytics/graficos.py` e `apps/relatorios/pdf.py`).
+- Componentes base em `assets/tailwind.css`: `.cartao`, `.tabela`, `.campo` e `.selo` (+ `selo-ok`,
+  `selo-atencao`, `selo-risco`, `selo-info`, `selo-neutro`); KPI sempre pelo `componentes/card_kpi.html`.
+  Foco do teclado padrão (contorno azul de 2px) para links, botões e `<summary>`.
 - Fonte Inter. Fundo da página `fundo` (#F5F7FA), cards brancos com borda `borda` (#E5E9F0) e cantos `rounded-cartao`.
 - Azul-marinho da marca `marinho` (#0B2545: painel lateral do login, logo "S"); botão primário `primaria` (#1F4E8C).
 - Selos: verde "Regular", âmbar "Em atenção", vermelho "Em risco".
