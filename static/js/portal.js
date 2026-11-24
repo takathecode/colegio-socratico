@@ -57,6 +57,62 @@ document.querySelectorAll("[data-mostrar-senha]").forEach((botao) => {
   });
 });
 
+// --- Requisitos da senha nova (componentes/checklist_senha.html) ---
+// Só ajuda a pessoa enquanto digita: quem aceita ou recusa a senha é o servidor
+// (AUTH_PASSWORD_VALIDATORS). Cada item troca de ícone e de texto escondido, não só de cor.
+const REGRAS_DA_SENHA = {
+  tamanho: (senha) => senha.length >= 10 && senha.length <= 128,
+  maiuscula: (senha) => /[A-Z]/.test(senha),
+  minuscula: (senha) => /[a-z]/.test(senha),
+  numero: (senha) => /[0-9]/.test(senha),
+  especial: (senha) => /[^A-Za-z0-9]/.test(senha),
+  iguais: (senha, confirmacao) => senha.length > 0 && senha === confirmacao,
+};
+
+document.querySelectorAll("[data-checklist-senha]").forEach((lista) => {
+  const campo = document.getElementById(lista.dataset.checklistSenha);
+  const confirmacao = document.getElementById(lista.dataset.confirmacao);
+  const resumo = lista.querySelector("[data-resumo]");
+  if (!campo) return;
+
+  function atualizar() {
+    const itens = lista.querySelectorAll("[data-regra]");
+    let atendidos = 0;
+    itens.forEach((item) => {
+      const ok = REGRAS_DA_SENHA[item.dataset.regra](campo.value, confirmacao?.value ?? "");
+      if (ok) atendidos += 1;
+      item.classList.toggle("text-green-800", ok);
+      item.classList.toggle("text-slate-600", !ok);
+      item.querySelector("[data-ok]").classList.toggle("hidden", !ok);
+      item.querySelector("[data-pendente]").classList.toggle("hidden", ok);
+      item.querySelector("[data-estado]").textContent = ok ? "(atendido)" : "(não atendido)";
+    });
+    // Lido pelo leitor de tela (aria-live="polite") sem interromper a digitação.
+    resumo.textContent = `${atendidos} de ${itens.length} requisitos da senha atendidos.`;
+  }
+
+  campo.addEventListener("input", atualizar);
+  confirmacao?.addEventListener("input", atualizar);
+});
+
+// --- Menu do avatar (topo) ---
+// O <details> abre e fecha sozinho; aqui ele fecha ao clicar fora, ao apertar Esc e ao abrir a foto.
+const menuDoUsuario = document.querySelector("details[data-menu-usuario]");
+if (menuDoUsuario) {
+  document.addEventListener("click", (evento) => {
+    if (menuDoUsuario.open && !menuDoUsuario.contains(evento.target)) menuDoUsuario.open = false;
+  });
+  document.addEventListener("keydown", (evento) => {
+    if (evento.key === "Escape" && menuDoUsuario.open) {
+      menuDoUsuario.open = false;
+      menuDoUsuario.querySelector("summary").focus();
+    }
+  });
+  menuDoUsuario.querySelectorAll("[data-abrir-modal]").forEach((botao) => {
+    botao.addEventListener("click", () => (menuDoUsuario.open = false));
+  });
+}
+
 // --- Botão "carregando" ---
 function marcarCarregando(formulario, carregando) {
   const botao = formulario.querySelector('button[type="submit"]');
@@ -388,6 +444,18 @@ document.querySelectorAll("[data-chamada]").forEach((area) => {
 document.querySelectorAll("form[data-confirmar]").forEach((formulario) => {
   formulario.addEventListener("submit", (evento) => {
     if (!window.confirm(formulario.dataset.confirmar)) evento.preventDefault();
+  });
+});
+
+// Formulários com mais de um botão (ex.: "Enviar link" e "Gerar senha provisória"): todos os
+// botões ficam desativados depois do clique, para o pedido não ser enviado duas vezes.
+// O setTimeout espera o navegador montar o envio, que leva o "name" do botão clicado.
+document.querySelectorAll("form[data-enviar-uma-vez]").forEach((formulario) => {
+  formulario.addEventListener("submit", (evento) => {
+    setTimeout(() => {
+      if (evento.defaultPrevented) return; // a pessoa cancelou na confirmação
+      formulario.querySelectorAll("button[type='submit']").forEach((botao) => (botao.disabled = true));
+    }, 0);
   });
 });
 

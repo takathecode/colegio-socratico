@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ conta.get_full_name|default:conta.matricula }}{% endblock %}
+{% block breadcrumb %}<a href="{% url 'secretaria:contas' %}" class="hover:underline">Contas</a> / {{ conta.get_full_name|default:conta.matricula }}{% endblock %}
+
+{% block conteudo %}
+  <a href="{% url 'secretaria:contas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+    <i data-lucide="arrow-left" class="size-4"></i> Voltar para as contas
+  </a>
+
+  <div class="mt-3 grid grid-cols-1 gap-4 xl:grid-cols-[1fr_380px]">
+    <div class="space-y-4">
+      {# Dados de acesso #}
+      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-3">
+            <span class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EAF0F8] text-base font-semibold text-[#1F4E8C]" aria-hidden="true">{% include "componentes/avatar.html" with pessoa=conta %}</span>
+            <div class="min-w-0">
+              <h1 class="truncate text-xl font-semibold text-[#0B2545]">{{ conta.nome_com_tratamento|default:conta.matricula }}</h1>
+              <p class="mt-0.5 text-sm text-slate-500">{{ conta.get_perfil_display }} · matrícula {{ conta.matricula }}</p>
+            </div>
+          </div>
+          <a href="{% url 'secretaria:conta_editar' conta.pk %}" class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
+            <i data-lucide="pencil" class="size-4"></i> Editar dados
+          </a>
+        </div>
+
+        <dl class="mt-5 grid gap-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-xs text-slate-500">E-mail (recebe os links de nova senha)</dt>
+            <dd class="mt-0.5 break-all font-medium">{{ conta.email|default:"Sem e-mail cadastrado" }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-slate-500">Situação</dt>
+            <dd class="mt-1 flex flex-wrap gap-2">
+              {% if conta.is_active %}
+                {% include "componentes/selo.html" with situacao="Ativa" %}
+              {% else %}
+                <span class="inline-flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-800"><i data-lucide="ban" class="size-3.5"></i>Desativada</span>
+              {% endif %}
+              {% if conta.precisa_trocar_senha %}
+                <span class="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900"><i data-lucide="key-round" class="size-3.5 text-amber-600"></i>Senha provisória: troca no próximo login</span>
+              {% endif %}
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs text-slate-500">Último acesso</dt>
+            <dd class="mt-0.5 font-medium">{% if conta.last_login %}{{ conta.last_login|date:"d/m/Y \à\s H:i" }}{% else %}Nunca entrou{% endif %}</dd>
+          </div>
+          <div>
+            <dt class="text-xs text-slate-500">Conta criada em</dt>
+            <dd class="mt-0.5 font-medium">{{ conta.date_joined|date:"d/m/Y" }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      {# Histórico de auditoria #}
+      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <h2 class="font-semibold">Histórico de acesso</h2>
+        <p class="mt-1 text-sm text-slate-500">Ações sensíveis nesta conta. Senhas e links nunca são registrados.</p>
+        {% if historico.object_list %}
+          {% include "secretaria/_historico.html" with registros=historico %}
+          {% include "componentes/paginacao.html" with pagina=historico %}
+        {% else %}
+          {% include "componentes/vazio.html" with titulo="Nenhuma ação registrada" icone="history" %}
+        {% endif %}
+      </section>
+    </div>
+
+    <div class="space-y-4">
+      {# Redefinir a senha #}
+      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <h2 class="font-semibold">Redefinir a senha</h2>
+        <p role="note" class="mt-3 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-900">
+          <i data-lucide="id-card" class="size-4 shrink-0 translate-y-0.5 text-amber-600"></i>
+          {{ aviso_de_identidade }}
+        </p>
+
+        {% if conta.is_active %}
+          <form method="post" action="{% url 'secretaria:conta_redefinir' conta.pk %}" data-enviar-uma-vez class="mt-4 space-y-3">
+            {% csrf_token %}
+            <label class="flex items-start gap-2 text-sm">
+              <input type="checkbox" name="identidade" value="conferida" required class="mt-0.5 size-4 rounded border-[#E5E9F0] accent-[#1F4E8C]">
+              Conferi o documento com foto da pessoa.
+            </label>
+            <button type="submit" name="acao" value="link" {% if not conta.email %}disabled{% endif %}
+                    class="botao-vidro flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
+              <i data-lucide="send" class="size-4"></i> Enviar link de redefinição
+            </button>
+            <p class="text-xs text-slate-500">
+              {% if conta.email %}Recomendado. O link vai para o e-mail da conta e vale por 10 minutos.{% else %}Sem e-mail cadastrado: edite a conta ou gere uma senha provisória.{% endif %}
+            </p>
+            <button type="submit" name="acao" value="provisoria"
+                    class="botao-vidro-claro flex h-11 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-[#1F4E8C]">
+              <i data-lucide="key-round" class="size-4"></i> Gerar senha provisória
+            </button>
+            <p class="text-xs text-slate-500">Para entregar pessoalmente. A senha atual deixa de funcionar e a pessoa cria a própria no próximo login.</p>
+          </form>
+        {% else %}
+          <p class="mt-3 text-sm text-slate-500">Reative a conta para redefinir a senha.</p>
+        {% endif %}
+      </section>
+
+      {# Bloqueio #}
+      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <h2 class="font-semibold">Bloqueio por senhas erradas</h2>
+        {% if bloqueio %}
+          <p class="mt-2 text-sm text-red-800">Login bloqueado até {{ bloqueio.bloqueado_ate|date:"H:i" }}, depois de 5 senhas erradas seguidas.</p>
+          <form method="post" action="{% url 'secretaria:conta_desbloquear' conta.pk %}" data-enviar-uma-vez class="mt-3">
+            {% csrf_token %}
+            <button type="submit" class="botao-vidro-claro flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-[#1F4E8C]">
+              <i data-lucide="lock-open" class="size-4"></i> Desbloquear agora
+            </button>
+          </form>
+        {% else %}
+          <p class="mt-2 text-sm text-slate-500">O login desta matrícula não está bloqueado.</p>
+        {% endif %}
+      </section>
+
+      {# Desativar ou reativar #}
+      <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+        <h2 class="font-semibold">{% if conta.is_active %}Desativar a conta{% else %}Reativar a conta{% endif %}</h2>
+        <p class="mt-2 text-sm text-slate-500">
+          {% if conta.is_active %}A pessoa deixa de entrar no portal e na API. Notas, frequência e mensagens continuam guardadas.{% else %}A pessoa volta a entrar com a senha que já tinha.{% endif %}
+        </p>
+        <form method="post" action="{% url 'secretaria:conta_alternar_ativa' conta.pk %}" data-enviar-uma-vez
+              {% if conta.is_active %}data-confirmar="Desativar a conta de {{ conta.get_full_name|default:conta.matricula }}? A pessoa não vai mais conseguir entrar."{% endif %} class="mt-3">
+          {% csrf_token %}
+          {% if conta.is_active %}
+            <button type="submit" class="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-red-200 text-sm font-semibold text-red-800 hover:bg-red-50">
+              <i data-lucide="user-x" class="size-4"></i> Desativar conta
+            </button>
+          {% else %}
+            <button type="submit" class="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-green-200 text-sm font-semibold text-green-800 hover:bg-green-50">
+              <i data-lucide="user-check" class="size-4"></i> Reativar conta
+            </button>
+          {% endif %}
+        </form>
+      </section>
+    </div>
+  </div>
+{% endblock %}

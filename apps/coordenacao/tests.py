@@ -1,4 +1,7 @@
-"""Testes da área da coordenação: permissões, contas, CRUDs e cálculos da visão geral."""
+"""Testes da área da coordenação: permissões, matrículas, CRUDs e cálculos da visão geral.
+
+As contas de acesso (criar, senha, desativar) são da Secretaria: testes em apps/secretaria.
+"""
 
 from datetime import timedelta
 from decimal import Decimal
@@ -23,7 +26,7 @@ from apps.academico.models import (
 
 Usuario = get_user_model()
 
-TELAS = ("painel", "risco", "alunos", "professores", "contas", "turmas", "disciplinas")
+TELAS = ("painel", "risco", "alunos", "professores", "turmas", "disciplinas")
 HASH_RAPIDO = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 
@@ -93,7 +96,6 @@ class PermissoesTests(BaseCoordenacaoMixin, TestCase):
         for rota, pk in (
             ("turma", self.turma.pk),
             ("aluno_editar", self.aluno.pk),
-            ("professor_editar", self.professor.pk),
             ("oferta_editar", self.oferta.pk),
             ("disciplina_editar", self.matematica.pk),
         ):
@@ -119,12 +121,14 @@ class PermissoesTests(BaseCoordenacaoMixin, TestCase):
         resposta = self.client.get(reverse("coordenacao:aluno_editar", args=[self.professor.pk]))
         self.assertEqual(resposta.status_code, 404)
 
-    def test_conta_admin_nao_e_gerenciada(self):
-        admin = Usuario.objects.create_superuser("admin", "senha", email="a@x.com")
-        resposta = self.client.post(reverse("coordenacao:conta_alternar_ativa", args=[admin.pk]))
-        self.assertEqual(resposta.status_code, 404)
-        admin.refresh_from_db()
-        self.assertTrue(admin.is_active)
+    def test_telas_nao_oferecem_criar_conta(self):
+        # Criar contas é da Secretaria; a coordenação só matricula.
+        for tela in ("painel", "alunos", "professores"):
+            with self.subTest(tela=tela):
+                resposta = self.client.get(reverse(f"coordenacao:{tela}"))
+                self.assertNotContains(resposta, "Novo aluno")
+                self.assertNotContains(resposta, "Novo professor")
+                self.assertNotContains(resposta, "Nova senha")
 
 
 class ResumoDasMatriculasTests(BaseCoordenacaoMixin, TestCase):
@@ -160,56 +164,15 @@ class ResumoDasMatriculasTests(BaseCoordenacaoMixin, TestCase):
 
 
 @override_settings(PASSWORD_HASHERS=HASH_RAPIDO)
-class ContasTests(BaseCoordenacaoMixin, TestCase):
-    def dados_aluno(self, **extra):
-        return {
-            "matricula": "2026001",
-            "first_name": "Davi",
-            "last_name": "Souza",
-            "email": "Davi@X.com",
-            "turma": self.turma_vazia.pk,
-            **extra,
-        }
+class MatriculaDoAlunoTests(BaseCoordenacaoMixin, TestCase):
+    """A coordenação cuida só da matrícula (turma e situação), nunca da conta."""
 
-    def test_criar_aluno_cria_conta_e_matricula_e_mostra_a_senha_uma_vez(self):
-        resposta = self.client.post(reverse("coordenacao:aluno_novo"), self.dados_aluno())
-        # fetch_redirect_response=False: abrir a página agora tiraria a senha da sessão.
-        self.assertRedirects(
-            resposta, reverse("coordenacao:senha_provisoria"), fetch_redirect_response=False
-        )
-
-        aluno = Usuario.objects.get(matricula="2026001")
-        self.assertEqual(aluno.perfil, Usuario.Perfil.ALUNO)
-        self.assertEqual(aluno.email, "davi@x.com")
-        self.assertEqual(aluno.matriculas.get().turma, self.turma_vazia)
-
-        tela = self.client.get(reverse("coordenacao:senha_provisoria"))
-        senha = tela.context["dados"]["senha"]
-        self.assertTrue(aluno.check_password(senha))
-        # Ao abrir de novo, a senha já saiu da sessão.
-        self.assertRedirects(
-            self.client.get(reverse("coordenacao:senha_provisoria")), reverse("coordenacao:contas")
-        )
-
-        # A conta nova consegue entrar com a senha provisória.
-        self.client.logout()
-        self.assertTrue(self.client.login(matricula="2026001", password=senha))
-
-    def test_matricula_e_email_repetidos_sao_recusados(self):
-        resposta = self.client.post(
-            reverse("coordenacao:aluno_novo"),
-            self.dados_aluno(matricula="aluno", email="BIA@x.com"),
-        )
-        self.assertEqual(resposta.status_code, 200)
-        form = resposta.context["form"]
-        self.assertIn("Já existe uma conta com esta matrícula.", form.errors["matricula"])
-        self.assertIn("Este e-mail já está em uso por outra conta.", form.errors["email"])
+    def url(self, aluno):
+        return reverse("coordenacao:aluno_editar", args=[aluno.pk])
 
     def test_aluno_com_historico_nao_troca_de_turma(self):
-        dados = self.dados_aluno(
-            matricula="aluno", email="bia@x.com", turma=self.turma_vazia.pk, situacao="TRANCADA"
-        )
-        self.client.post(reverse("coordenacao:aluno_editar", args=[self.aluno.pk]), dados)
+        dados = {"turma": self.turma_vazia.pk, "situacao": "TRANCADA"}
+        self.client.post(self.url(self.aluno), dados)
         self.matricula.refresh_from_db()
         self.assertEqual(self.matricula.turma, self.turma)  # campo travado: turma ignorada
         self.assertEqual(self.matricula.situacao, Matricula.Situacao.TRANCADA)
@@ -217,62 +180,43 @@ class ContasTests(BaseCoordenacaoMixin, TestCase):
     def test_aluno_sem_historico_troca_de_turma(self):
         novo = Usuario.objects.create_user("novo", "senha", first_name="Eva", email="eva@x.com")
         matricula = Matricula.objects.create(aluno=novo, turma=self.turma)
-        dados = self.dados_aluno(
-            matricula="novo", email="eva@x.com", turma=self.turma_vazia.pk, situacao="ATIVA"
-        )
-        self.client.post(reverse("coordenacao:aluno_editar", args=[novo.pk]), dados)
+        self.client.post(self.url(novo), {"turma": self.turma_vazia.pk, "situacao": "ATIVA"})
         matricula.refresh_from_db()
         self.assertEqual(matricula.turma, self.turma_vazia)
 
-    def test_criar_professor(self):
-        resposta = self.client.post(
-            reverse("coordenacao:professor_novo"),
+    def test_conta_criada_pela_secretaria_e_matriculada_aqui(self):
+        novo = Usuario.objects.create_user("2026001", "senha", first_name="Davi")
+        lista = self.client.get(reverse("coordenacao:alunos"))
+        self.assertContains(lista, "Matricular")
+
+        tela = self.client.get(self.url(novo))
+        self.assertContains(tela, "Matricular aluno")
+        resposta = self.client.post(self.url(novo), {"turma": self.turma_vazia.pk})
+        self.assertRedirects(resposta, reverse("coordenacao:alunos"))
+        self.assertEqual(novo.matriculas.get().turma, self.turma_vazia)
+        self.assertEqual(novo.matriculas.get().situacao, Matricula.Situacao.ATIVA)
+
+    def test_nome_email_e_senha_enviados_sao_ignorados(self):
+        """Mesmo montando o pedido à mão, a coordenação não muda os dados da conta."""
+        senha_antes = self.aluno.password
+        self.client.post(
+            self.url(self.aluno),
             {
-                "matricula": "prof9",
-                "tratamento": "Profa.",
-                "first_name": "Rita",
-                "last_name": "Melo",
-                "email": "rita@x.com",
+                "turma": self.turma.pk,
+                "situacao": "ATIVA",
+                "first_name": "Outro",
+                "email": "invasor@x.com",
+                "password": "x",
+                "perfil": "ADMIN",
+                "is_superuser": "on",
             },
         )
-        self.assertRedirects(resposta, reverse("coordenacao:senha_provisoria"))
-        professor = Usuario.objects.get(matricula="prof9")
-        self.assertEqual(professor.perfil, Usuario.Perfil.PROFESSOR)
-        self.assertEqual(professor.nome_com_tratamento, "Profa. Rita Melo")
-
-    def test_desativar_e_reativar_conta(self):
-        url = reverse("coordenacao:conta_alternar_ativa", args=[self.aluno.pk])
-        self.client.post(url)
         self.aluno.refresh_from_db()
-        self.assertFalse(self.aluno.is_active)
-        self.client.post(url)
-        self.aluno.refresh_from_db()
-        self.assertTrue(self.aluno.is_active)
-
-    def test_nao_desativa_a_propria_conta(self):
-        self.client.post(reverse("coordenacao:conta_alternar_ativa", args=[self.coordenador.pk]))
-        self.coordenador.refresh_from_db()
-        self.assertTrue(self.coordenador.is_active)
-
-    def test_acoes_de_conta_so_aceitam_post(self):
-        for rota in ("conta_alternar_ativa", "conta_nova_senha"):
-            with self.subTest(rota=rota):
-                resposta = self.client.get(reverse(f"coordenacao:{rota}", args=[self.aluno.pk]))
-                self.assertEqual(resposta.status_code, 405)
-
-    def test_nova_senha_troca_a_senha(self):
-        self.client.post(reverse("coordenacao:conta_nova_senha", args=[self.aluno.pk]))
-        senha = self.client.get(reverse("coordenacao:senha_provisoria")).context["dados"]["senha"]
-        self.aluno.refresh_from_db()
-        self.assertFalse(self.aluno.check_password("senha"))
-        self.assertTrue(self.aluno.check_password(senha))
-
-    def test_proxima_externa_e_ignorada(self):
-        resposta = self.client.post(
-            reverse("coordenacao:conta_alternar_ativa", args=[self.aluno.pk]),
-            {"proxima": "https://site-malicioso.example/"},
-        )
-        self.assertRedirects(resposta, reverse("coordenacao:contas"))
+        self.assertEqual(self.aluno.first_name, "Bia")
+        self.assertEqual(self.aluno.email, "bia@x.com")
+        self.assertEqual(self.aluno.password, senha_antes)
+        self.assertEqual(self.aluno.perfil, Usuario.Perfil.ALUNO)
+        self.assertFalse(self.aluno.is_superuser)
 
 
 @override_settings(PASSWORD_HASHERS=HASH_RAPIDO)

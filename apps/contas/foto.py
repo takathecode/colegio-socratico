@@ -58,7 +58,7 @@ VALIDADORES_FOTO = [
 def pode_ver_foto(quem, dono):
     """Diz se `quem` pode ver a foto de `dono`.
 
-    Sem hierarquia: aluno, professor e coordenação veem a foto de qualquer conta do portal.
+    Sem hierarquia: aluno, professor, coordenação e Secretaria veem a foto de qualquer conta do portal.
     Quem chega até aqui já passou pelo login e pelo @perfil_requerido da view, então um
     visitante nunca vê foto nenhuma. A única exceção é a conta ADMIN, que não usa o portal.
     """

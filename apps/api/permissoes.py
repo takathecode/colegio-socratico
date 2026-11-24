@@ -34,6 +34,7 @@ def so_perfis(*perfis):
     return PerfilPermitido
 
 
-# Os três perfis que usam o portal. PerfilDoPortal é a permissão padrão de toda a API.
+# Os três perfis acadêmicos. PerfilDoPortal é a permissão padrão de toda a API.
+# A Secretaria fica de fora (403): ela só administra acessos, e a API só traz dados acadêmicos.
 PERFIS_DO_PORTAL = (ALUNO, PROFESSOR, COORDENADOR)
 PerfilDoPortal = so_perfis(*PERFIS_DO_PORTAL)

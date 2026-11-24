@@ -1,0 +1,6 @@
+{% autoescape off %}Olá, {{ nome }}.
+
+Sua senha foi alterada em {{ quando|date:"d/m/Y" }} às {{ quando|date:"H:i" }}. Se não foi você, procure a Secretaria imediatamente.
+
+Instituto Socrático · e-mail automático, não responda.
+{% endautoescape %}

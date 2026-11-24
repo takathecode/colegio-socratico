@@ -1,0 +1,42 @@
+{# Requisitos da senha forte, conferidos enquanto a pessoa digita (static/js/portal.js). #}
+{# Parâmetros: campo (id do campo da senha nova) e confirmacao (id do campo "Confirmar"). #}
+{# Sem JavaScript, a lista aparece como texto de ajuda. Quem decide é o servidor (apps/contas/senhas.py). #}
+{# Cada item muda de ícone e de texto escondido (não só de cor), e o resumo é lido pelo leitor de tela. #}
+<div id="requisitos-senha" data-checklist-senha="{{ campo }}" data-confirmacao="{{ confirmacao }}"
+     class="rounded-lg border border-[#E5E9F0] bg-[#F5F7FA] p-4 text-sm">
+  <p class="font-semibold">A senha precisa ter:</p>
+  <ul class="mt-2 space-y-1.5">
+    <li data-regra="tamanho" class="flex items-center gap-2 text-slate-600">
+      <span data-pendente aria-hidden="true"><i data-lucide="circle" class="size-4"></i></span>
+      <span data-ok class="hidden" aria-hidden="true"><i data-lucide="circle-check" class="size-4"></i></span>
+      De 10 a 128 caracteres <span data-estado class="sr-only">(não atendido)</span>
+    </li>
+    <li data-regra="maiuscula" class="flex items-center gap-2 text-slate-600">
+      <span data-pendente aria-hidden="true"><i data-lucide="circle" class="size-4"></i></span>
+      <span data-ok class="hidden" aria-hidden="true"><i data-lucide="circle-check" class="size-4"></i></span>
+      Uma letra maiúscula <span data-estado class="sr-only">(não atendido)</span>
+    </li>
+    <li data-regra="minuscula" class="flex items-center gap-2 text-slate-600">
+      <span data-pendente aria-hidden="true"><i data-lucide="circle" class="size-4"></i></span>
+      <span data-ok class="hidden" aria-hidden="true"><i data-lucide="circle-check" class="size-4"></i></span>
+      Uma letra minúscula <span data-estado class="sr-only">(não atendido)</span>
+    </li>
+    <li data-regra="numero" class="flex items-center gap-2 text-slate-600">
+      <span data-pendente aria-hidden="true"><i data-lucide="circle" class="size-4"></i></span>
+      <span data-ok class="hidden" aria-hidden="true"><i data-lucide="circle-check" class="size-4"></i></span>
+      Um número <span data-estado class="sr-only">(não atendido)</span>
+    </li>
+    <li data-regra="especial" class="flex items-center gap-2 text-slate-600">
+      <span data-pendente aria-hidden="true"><i data-lucide="circle" class="size-4"></i></span>
+      <span data-ok class="hidden" aria-hidden="true"><i data-lucide="circle-check" class="size-4"></i></span>
+      Um caractere especial (como ! @ # $ %) <span data-estado class="sr-only">(não atendido)</span>
+    </li>
+    <li data-regra="iguais" class="flex items-center gap-2 text-slate-600">
+      <span data-pendente aria-hidden="true"><i data-lucide="circle" class="size-4"></i></span>
+      <span data-ok class="hidden" aria-hidden="true"><i data-lucide="circle-check" class="size-4"></i></span>
+      As duas senhas iguais <span data-estado class="sr-only">(não atendido)</span>
+    </li>
+  </ul>
+  <p class="mt-2 text-xs text-slate-600">Não use sua matrícula, seu nome, seu e-mail nem uma senha comum, e não repita a senha atual.</p>
+  <p data-resumo aria-live="polite" class="sr-only"></p>
+</div>

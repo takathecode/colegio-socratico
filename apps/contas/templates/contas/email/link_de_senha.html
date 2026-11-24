@@ -1,0 +1,13 @@
+{% extends "contas/email/base.html" %}
+{% block titulo %}Criar nova senha{% endblock %}
+{% block conteudo %}
+  <p style="margin:0 0 12px;font-size:20px;font-weight:600;">Olá, {{ nome }}.</p>
+  <p style="margin:0 0 20px;">Recebemos um pedido para criar uma nova senha para a matrícula <strong>{{ matricula }}</strong>.</p>
+  <p style="margin:0 0 20px;">
+    <a href="{{ link }}" style="display:inline-block;background:#1F4E8C;color:#FFFFFF;text-decoration:none;font-weight:600;padding:12px 24px;border-radius:8px;">Criar nova senha</a>
+  </p>
+  <p style="margin:0 0 20px;">O link vale por {{ minutos }} minutos, até as <strong>{{ valido_ate|date:"H:i" }}</strong> de {{ valido_ate|date:"d/m/Y" }}, e funciona uma única vez.</p>
+  <p style="margin:0 0 6px;font-size:13px;color:#64748B;">Se o botão não funcionar, copie este endereço no navegador:</p>
+  <p style="margin:0 0 20px;font-size:13px;word-break:break-all;"><a href="{{ link }}" style="color:#1F4E8C;">{{ link }}</a></p>
+  <p style="margin:0;padding:12px 16px;background:#F5F7FA;border-radius:8px;font-size:13px;">Se você não pediu, ignore este e-mail. Sua senha continua a mesma.</p>
+{% endblock %}

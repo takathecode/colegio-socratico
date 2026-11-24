@@ -34,21 +34,31 @@
       <div class="ml-auto flex items-center gap-2 sm:gap-4">
         {% include "componentes/sino.html" %}
 
-        <div class="flex items-center gap-3">
-          {# Avatar: abre a janela da foto de perfil (componentes/foto_perfil.html). #}
-          <button type="button" data-abrir-modal="janela-foto" aria-haspopup="dialog" title="Alterar foto de perfil"
-                  class="group relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C] ring-2 ring-white/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F4E8C]">
-            {% include "componentes/avatar.html" %}
-            <span class="sr-only">Alterar foto de perfil</span>
-            <span class="absolute inset-0 hidden items-center justify-center bg-[#0B2545]/60 text-white group-hover:flex group-focus-visible:flex" aria-hidden="true">
-              <i data-lucide="camera" class="size-4"></i>
+        {# Menu do usuário: o avatar abre as opções da conta (foto de perfil e senha). #}
+        {# <details> abre e fecha sem JavaScript; o portal.js fecha ao clicar fora ou apertar Esc. #}
+        <details data-menu-usuario class="relative">
+          <summary aria-label="Menu da conta" class="flex cursor-pointer list-none items-center gap-3 rounded-lg p-1 hover:bg-white/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F4E8C] [&::-webkit-details-marker]:hidden">
+            <span class="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EAF0F8] text-sm font-semibold text-[#1F4E8C] ring-2 ring-white/80" aria-hidden="true">
+              {% include "componentes/avatar.html" %}
             </span>
-          </button>
-          <div class="hidden leading-tight sm:block">
-            <p class="text-sm font-medium">{{ user.nome_com_tratamento|default:user.matricula }}</p>
-            <p class="text-xs text-slate-500">{% if user.perfil == "ALUNO" %}RA{% else %}Matrícula{% endif %} {{ user.matricula }}</p>
+            <span class="hidden leading-tight sm:block">
+              <span class="block text-sm font-medium">{{ user.nome_com_tratamento|default:user.matricula }}</span>
+              <span class="block text-xs text-slate-500">{% if user.perfil == "ALUNO" %}RA{% else %}Matrícula{% endif %} {{ user.matricula }}</span>
+            </span>
+            <i data-lucide="chevron-down" class="hidden size-4 text-slate-500 sm:block" aria-hidden="true"></i>
+          </summary>
+
+          <div class="absolute right-0 top-12 z-30 w-60 overflow-hidden rounded-xl border border-[#E5E9F0] bg-white py-1 shadow-lg">
+            <button type="button" data-abrir-modal="janela-foto" aria-haspopup="dialog"
+                    class="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-[#F5F7FA] focus-visible:bg-[#F5F7FA] focus-visible:outline-none">
+              <i data-lucide="camera" class="size-4 text-slate-500"></i> Foto de perfil
+            </button>
+            <a href="{% url 'contas:senha_alterar' %}"
+               class="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-[#F5F7FA] focus-visible:bg-[#F5F7FA] focus-visible:outline-none">
+              <i data-lucide="key-round" class="size-4 text-slate-500"></i> Alterar minha senha
+            </a>
           </div>
-        </div>
+        </details>
       </div>
     </header>
 

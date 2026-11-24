@@ -3,10 +3,40 @@
 {% block titulo %}Verifique seu e-mail{% endblock %}
 
 {% block conteudo %}
-  <h1 class="text-3xl font-semibold">Verifique seu e-mail</h1>
-  <p class="mt-2 text-sm text-slate-500">
-    Se o e-mail informado estiver cadastrado, você receberá um link para criar uma nova senha. O link vale por 1 hora.
+  <span class="flex size-12 items-center justify-center rounded-full bg-green-50 text-green-800">
+    <i data-lucide="mail-check" class="size-6"></i>
+  </span>
+  <h1 class="mt-4 text-3xl font-semibold">Verifique seu e-mail</h1>
+  <p class="mt-2 text-sm leading-relaxed text-slate-500">
+    Enviamos o link de redefinição{% if email_mascarado %} para <strong class="break-all font-semibold text-[#0B2545]">{{ email_mascarado }}</strong>{% endif %}.
   </p>
+
+  <dl class="mt-6 space-y-3 rounded-lg border border-[#E5E9F0] bg-[#F5F7FA] p-4 text-sm">
+    <div class="flex gap-3">
+      <i data-lucide="clock" class="mt-0.5 size-4 shrink-0 text-[#1F4E8C]"></i>
+      <div>
+        <dt class="font-semibold">O link vale por {{ minutos }} minutos</dt>
+        <dd class="mt-0.5 text-slate-600">Válido até {{ valido_ate|date:"H:i" }}. Ele só funciona uma vez, e pedir um link novo cancela este.</dd>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <i data-lucide="inbox" class="mt-0.5 size-4 shrink-0 text-[#1F4E8C]"></i>
+      <div>
+        <dt class="font-semibold">Não chegou?</dt>
+        <dd class="mt-0.5 text-slate-600">Espere um minuto e olhe também a caixa de spam ou de lixo eletrônico.</dd>
+      </div>
+    </div>
+  </dl>
+
+  {# Reenviar: o mesmo envio da etapa anterior, com o mesmo limite de pedidos por hora. #}
+  <form method="post" action="{% url 'contas:senha_confirmar' %}" data-carregando class="mt-6">
+    {% csrf_token %}
+    <button type="submit" class="botao-vidro-claro flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-[#1F4E8C] disabled:cursor-wait">
+      <span data-estado="normal" class="flex items-center gap-2"><i data-lucide="rotate-cw" class="size-4"></i>Reenviar link</span>
+      <span data-estado="carregando" class="hidden items-center gap-2"><i data-lucide="loader-circle" class="size-4 animate-spin"></i>Reenviando…</span>
+    </button>
+  </form>
+
   <a href="{% url 'contas:entrar' %}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
     <i data-lucide="arrow-left" class="size-4"></i> Voltar para o login
   </a>

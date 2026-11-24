@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm, SetPasswordForm
 from django.core.exceptions import ValidationError
 
 from . import bloqueio
@@ -38,3 +38,53 @@ class FormularioLogin(AuthenticationForm):
                 self.cleaned_data.get("username", "")
             )
             raise
+
+
+class FormularioMatricula(forms.Form):
+    """Primeira etapa do "Esqueci minha senha": só a matrícula."""
+
+    matricula = forms.CharField(
+        label="Matrícula",
+        max_length=150,
+        error_messages={"required": "Digite a sua matrícula."},
+    )
+
+    def clean_matricula(self):
+        return self.cleaned_data["matricula"].strip()
+
+
+class SenhaNovaMixin:
+    """Rótulos em português e a limpeza da troca obrigatória ao salvar a senha nova."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["new_password1"].label = "Nova senha"
+        self.fields["new_password2"].label = "Confirmar nova senha"
+        self.fields["new_password1"].help_text = ""
+
+    def save(self, commit=True):
+        # A senha nova (sempre só o hash, pelo set_password) encerra a troca obrigatória.
+        self.user.precisa_trocar_senha = False
+        return super().save(commit=commit)
+
+
+class FormularioNovaSenha(SenhaNovaMixin, SetPasswordForm):
+    """Senha nova pelo link do e-mail.
+
+    Não existe campo de matrícula: a tela só mostra a matrícula da conta do link. Mesmo que
+    alguém envie uma "matricula" no POST, ela é ignorada; a conta é sempre a do link.
+    """
+
+
+class FormularioTrocaDeSenha(SenhaNovaMixin, PasswordChangeForm):
+    """"Alterar minha senha" (logado) e a troca obrigatória depois da senha provisória."""
+
+    error_messages = {
+        **PasswordChangeForm.error_messages,
+        "password_incorrect": "A senha atual está incorreta. Digite-a novamente.",
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        provisoria = self.user.precisa_trocar_senha
+        self.fields["old_password"].label = "Senha provisória" if provisoria else "Senha atual"

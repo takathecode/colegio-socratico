@@ -100,7 +100,12 @@ class TokenView(APIView):
         responses={
             200: TokenSerializer,
             400: OpenApiResponse(description="Matrícula ou senha incorretas, ou conta desativada."),
-            403: OpenApiResponse(description="Conta de administrador (usa só o Django Admin)."),
+            403: OpenApiResponse(
+                description=(
+                    "Conta sem acesso à API (administrador ou Secretaria), ou com a troca da "
+                    "senha provisória pendente."
+                )
+            ),
         },
         auth=[],
     )
@@ -118,8 +123,14 @@ class TokenView(APIView):
                 {"detail": "Matrícula ou senha incorretas."}, status=status.HTTP_400_BAD_REQUEST
             )
         if usuario.perfil not in PERFIS_DO_PORTAL:
+            # ADMIN usa o Django Admin; a Secretaria só administra acessos, pelas telas.
             return Response(
-                {"detail": "Contas de administrador usam o Django Admin, não a API."},
+                {"detail": "O seu perfil não usa a API."}, status=status.HTTP_403_FORBIDDEN
+            )
+        if usuario.precisa_trocar_senha:
+            # A senha provisória só serve para criar a senha própria, na tela do portal.
+            return Response(
+                {"detail": "Troque a senha provisória no portal antes de usar a API."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         token, _ = Token.objects.get_or_create(user=usuario)

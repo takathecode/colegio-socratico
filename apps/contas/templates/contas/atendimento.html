@@ -6,23 +6,31 @@
   <h1 class="text-3xl font-semibold">Central de Atendimento</h1>
   <p class="mt-2 text-sm text-slate-500">Orientações para acessar o portal.</p>
 
-  <dl class="mt-6 space-y-5 text-sm">
-    <div>
-      <dt class="font-semibold">É o seu primeiro acesso?</dt>
-      <dd class="mt-1 text-slate-500">As contas são criadas pela coordenação. Procure a secretaria para receber sua matrícula e senha.</dd>
-    </div>
-    <div>
-      <dt class="font-semibold">Esqueceu a senha?</dt>
-      <dd class="mt-1 text-slate-500">
-        <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-[#1F4E8C] hover:underline">Peça um link de redefinição</a>
-        usando o e-mail cadastrado na sua conta.
-      </dd>
-    </div>
-    <div>
-      <dt class="font-semibold">Mudou de e-mail ou o problema continua?</dt>
-      <dd class="mt-1 text-slate-500">Procure a secretaria para atualizar seus dados.</dd>
-    </div>
-  </dl>
+  <div class="mt-6 space-y-6 text-sm">
+    <section>
+      <h2 class="font-semibold">Primeiro acesso?</h2>
+      <p class="mt-1 leading-relaxed text-slate-600">Sua conta é criada pela Secretaria. Retire na Secretaria sua matrícula e a senha provisória. No primeiro login, o portal pede que você crie sua própria senha.</p>
+    </section>
+
+    <section>
+      <h2 class="font-semibold">Esqueceu a senha?</h2>
+      <ol class="mt-1 list-decimal space-y-1 pl-5 leading-relaxed text-slate-600">
+        <li>Clique em <a href="{% url 'contas:senha_esqueci' %}" class="font-semibold text-[#1F4E8C] hover:underline">Esqueci minha senha</a> e digite sua matrícula.</li>
+        <li>Confira o e-mail mostrado e clique em <strong class="text-[#0B2545]">Enviar link</strong>.</li>
+        <li>Abra o link em até 10 minutos e crie a nova senha.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 class="font-semibold">Conta bloqueada?</h2>
+      <p class="mt-1 leading-relaxed text-slate-600">Depois de 5 senhas erradas, a matrícula fica bloqueada por 15 minutos. Espere ou redefina a senha: a troca libera o acesso na hora.</p>
+    </section>
+
+    <section>
+      <h2 class="font-semibold">Não recebeu o e-mail ou não usa mais esse endereço?</h2>
+      <p class="mt-1 leading-relaxed text-slate-600">Olhe a caixa de spam. Se não estiver lá, ou se o e-mail estiver errado, vá <strong class="text-[#0B2545]">pessoalmente à Secretaria da escola</strong> com um documento com foto. Ela atualiza seu e-mail ou redefine sua senha.</p>
+    </section>
+  </div>
 
   <a href="{% url 'contas:inicio' %}" class="mt-8 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
     <i data-lucide="arrow-left" class="size-4"></i> Voltar ao portal

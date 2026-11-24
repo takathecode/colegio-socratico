@@ -16,7 +16,7 @@ from apps.contas.decorators import perfil_requerido
 
 from .models import Alerta
 
-PERFIS = ("ALUNO", "PROFESSOR", "COORDENADOR")
+PERFIS = ("ALUNO", "PROFESSOR", "COORDENADOR", "SECRETARIA")
 ITENS_POR_PAGINA = 20
 
 

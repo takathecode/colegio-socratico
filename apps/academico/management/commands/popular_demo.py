@@ -125,7 +125,7 @@ class Command(BaseCommand):
         self.sorteio = random.Random(2026)
         self.hoje = timezone.localdate()
         self.matriculas_demo = (
-            ["coord01"]
+            ["coord01", "secretaria01"]
             + [professor[0] for professor in PROFESSORES]
             + [f"aluno{numero:02d}" for numero in range(1, 41)]
         )
@@ -218,7 +218,11 @@ class Command(BaseCommand):
 
     def criar_usuarios(self):
         """Cria as contas, com a senha igual à matrícula. Retorna os professores por disciplina."""
-        usuarios = [self.novo_usuario("coord01", Usuario.Perfil.COORDENADOR, "Marta", "Oliveira")]
+        usuarios = [
+            self.novo_usuario("coord01", Usuario.Perfil.COORDENADOR, "Marta", "Oliveira"),
+            # A Secretaria só administra os acessos (contas, senhas e bloqueios).
+            self.novo_usuario("secretaria01", Usuario.Perfil.SECRETARIA, "Sônia", "Martins"),
+        ]
         for matricula, tratamento, nome, sobrenome, _codigo in PROFESSORES:
             usuarios.append(
                 self.novo_usuario(
@@ -547,12 +551,12 @@ class Command(BaseCommand):
         )
 
         conversa(
-            self.alunos["coord01"],
+            self.alunos["secretaria01"],
             "Atualização dos seus dados cadastrais",
             None,
             [
                 (
-                    self.alunos["coord01"],
+                    self.alunos["secretaria01"],
                     "Confira telefone e endereço no cadastro.",
                     timedelta(days=1),
                     False,
@@ -652,4 +656,6 @@ class Command(BaseCommand):
         )
         for nome, consulta in contagens:
             self.stdout.write(f"  {nome}: {consulta.count()}")
-        self.stdout.write("Acessos (senha igual à matrícula): coord01, prof01, aluno01")
+        self.stdout.write(
+            "Acessos (senha igual à matrícula): secretaria01, coord01, prof01, aluno01"
+        )

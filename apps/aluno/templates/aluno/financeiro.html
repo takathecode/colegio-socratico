@@ -19,7 +19,7 @@
     {% if atrasadas %}
       <p class="mt-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
         <i data-lucide="circle-alert" class="size-5 shrink-0"></i>
-        Mensalidades em atraso: {{ atrasadas }}. Procure a secretaria para regularizar.
+        Mensalidades em atraso: {{ atrasadas }}. Procure a Secretaria para regularizar.
       </p>
     {% else %}
       <p class="mt-4 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
@@ -112,13 +112,13 @@
       <i data-lucide="headphones" class="size-5 shrink-0 text-slate-500"></i>
       <div>
         <p class="text-sm font-semibold">Precisa conversar sobre sua mensalidade?</p>
-        <p class="text-xs text-slate-500">Envie uma mensagem para a secretaria pelo portal.</p>
+        <p class="text-xs text-slate-500">Envie uma mensagem para a Secretaria pelo portal.</p>
       </div>
     </div>
     {% if secretaria %}
       <a href="{% url 'mensagens:caixa' %}?para={{ secretaria.pk }}&assunto=Mensalidade"
          class="botao-vidro-claro inline-flex h-10 items-center rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
-        Falar com a secretaria
+        Falar com a Secretaria
       </a>
     {% endif %}
   </section>

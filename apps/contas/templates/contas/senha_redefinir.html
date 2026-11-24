@@ -1,0 +1,39 @@
+{% extends "contas/base_login.html" %}
+
+{% block titulo %}{% if validlink %}Criar nova senha{% else %}Link expirado{% endif %}{% endblock %}
+
+{% block conteudo %}
+  {% if validlink %}
+    <h1 class="text-3xl font-semibold">Criar nova senha</h1>
+    <p class="mt-2 text-sm text-slate-500">Escolha uma senha forte. Depois de salvar, entre no portal com ela.</p>
+
+    <form method="post" data-carregando novalidate class="mt-6 space-y-5">
+      {% csrf_token %}
+      {% for erro in form.non_field_errors %}
+        <p role="alert" class="rounded-lg border border-[#C62828] bg-red-50 px-4 py-3 text-sm text-[#B71C1C]">{{ erro }}</p>
+      {% endfor %}
+
+      {# Só para mostrar: o campo não tem "name", então nada dele vai no envio. A conta é sempre a do link. #}
+      {% include "contas/_matricula_travada.html" with matricula=form.user.matricula %}
+      {% include "componentes/campo.html" with campo=form.new_password1 icone="lock-keyhole" tipo="password" autocomplete="new-password" descrito_por="requisitos-senha" %}
+      {% include "componentes/campo.html" with campo=form.new_password2 icone="lock-keyhole" tipo="password" autocomplete="new-password" %}
+      {% include "componentes/checklist_senha.html" with campo=form.new_password1.id_for_label confirmacao=form.new_password2.id_for_label %}
+      {% include "componentes/botao_enviar.html" with texto="Salvar nova senha" texto_carregando="Salvando…" icone="check" %}
+    </form>
+  {% else %}
+    <span class="flex size-12 items-center justify-center rounded-full bg-amber-50 text-amber-800">
+      <i data-lucide="clock-alert" class="size-6"></i>
+    </span>
+    <h1 class="mt-4 text-3xl font-semibold">Este link expirou ou já foi usado</h1>
+    <p class="mt-2 text-sm leading-relaxed text-slate-500">
+      O link vale por 10 minutos e funciona uma única vez. Ele também deixa de valer quando um link mais novo é pedido. Peça outro para continuar.
+    </p>
+    <a href="{% url 'contas:senha_esqueci' %}" class="botao-vidro mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold text-white">
+      <i data-lucide="send" class="size-4"></i> Pedir outro link
+    </a>
+  {% endif %}
+
+  <a href="{% url 'contas:entrar' %}" class="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
+    <i data-lucide="arrow-left" class="size-4"></i> Voltar para o login
+  </a>
+{% endblock %}

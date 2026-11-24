@@ -1,7 +1,9 @@
-"""Formulários da coordenação: contas (aluno, professor, coordenador), turmas, disciplinas e ofertas."""
+"""Formulários da coordenação: matrícula do aluno, turmas, disciplinas e ofertas.
+
+As contas (criar, editar nome e e-mail, senha, desativar) são da Secretaria (apps/secretaria).
+"""
 
 from django import forms
-from django.db import transaction
 
 from apps.academico.models import Disciplina, Matricula, Oferta, Turma
 from apps.academico.utilidades import CLASSES_CAMPO
@@ -19,83 +21,18 @@ class EstiloMixin:
             campo.widget.attrs.setdefault("class", CLASSES_CAMPO)
 
 
-# --- Contas ---
+# --- Matrícula do aluno ---
 
 
-class ContaForm(EstiloMixin, forms.ModelForm):
-    """Base dos formulários de conta. Cada subclasse define o perfil da conta.
+class MatriculaDoAlunoForm(EstiloMixin, forms.Form):
+    """Turma e situação da matrícula do aluno (cadastro acadêmico).
 
-    Ao criar uma conta, o sistema gera uma senha provisória (self.senha_provisoria),
-    que a coordenação entrega ao usuário. Não existe tela de cadastro aberto.
-    """
-
-    perfil = None  # definido nas subclasses
-
-    class Meta:
-        model = Usuario
-        fields = ["matricula", "first_name", "last_name", "email"]
-        labels = {"first_name": "Nome", "last_name": "Sobrenome", "email": "E-mail"}
-        error_messages = {"matricula": {"unique": "Já existe uma conta com esta matrícula."}}
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # No modelo esses campos são opcionais (por causa do Admin); aqui são obrigatórios.
-        for nome in ("first_name", "last_name", "email"):
-            self.fields[nome].required = True
-        self.fields["email"].help_text = "Usado para redefinir a senha."
-        self.senha_provisoria = None
-
-    def clean_matricula(self):
-        return self.cleaned_data["matricula"].strip()
-
-    def clean_email(self):
-        # Dois usuários com o mesmo e-mail receberiam o link de redefinição um do outro.
-        email = self.cleaned_data["email"].strip().lower()
-        repetido = Usuario.objects.filter(email__iexact=email).exclude(pk=self.instance.pk)
-        if repetido.exists():
-            raise forms.ValidationError("Este e-mail já está em uso por outra conta.")
-        return email
-
-    def save(self, commit=True):
-        usuario = super().save(commit=False)
-        usuario.perfil = self.perfil
-        if usuario.pk is None:
-            self.senha_provisoria = servicos.gerar_senha_provisoria()
-            usuario.set_password(self.senha_provisoria)  # no banco fica só o hash
-        if commit:
-            usuario.save()
-        return usuario
-
-
-TRATAMENTOS = [("Prof.", "Prof."), ("Profa.", "Profa.")]
-
-
-class ProfessorForm(ContaForm):
-    perfil = Usuario.Perfil.PROFESSOR
-    tratamento = forms.ChoiceField(label="Tratamento", choices=TRATAMENTOS)
-
-    class Meta(ContaForm.Meta):
-        fields = ["matricula", "tratamento", "first_name", "last_name", "email"]
-
-
-class CoordenadorForm(ContaForm):
-    perfil = Usuario.Perfil.COORDENADOR
-    tratamento = forms.ChoiceField(
-        label="Tratamento", choices=[("", "Nenhum"), *TRATAMENTOS], required=False
-    )
-
-    class Meta(ContaForm.Meta):
-        fields = ["matricula", "tratamento", "first_name", "last_name", "email"]
-
-
-class AlunoForm(ContaForm):
-    """Conta do aluno e a sua matrícula na turma, salvas juntas.
-
+    A conta do aluno (nome, e-mail, senha) é da Secretaria; aqui só a parte acadêmica.
+    Aluno sem matrícula (conta recém-criada pela Secretaria) é matriculado na turma escolhida.
     A turma só pode mudar enquanto a matrícula não tem notas nem presenças; depois disso,
     trocar a turma deixaria notas ligadas a disciplinas que o aluno não cursa mais.
     """
 
-    perfil = Usuario.Perfil.ALUNO
     turma = forms.ModelChoiceField(
         label="Turma",
         queryset=Turma.objects.select_related("curso").order_by("-semestre", "codigo"),
@@ -103,19 +40,15 @@ class AlunoForm(ContaForm):
     )
     situacao = forms.ChoiceField(label="Situação da matrícula", choices=Matricula.Situacao.choices)
 
-    class Meta(ContaForm.Meta):
-        labels = {**ContaForm.Meta.labels, "matricula": "RA (matrícula)"}
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, aluno, **kwargs):
         super().__init__(*args, **kwargs)
+        self.aluno = aluno
         self.fields["turma"].label_from_instance = (
             lambda turma: f"{turma.codigo} · {turma.semestre} · {turma.curso.nome}"
         )
-        self.matricula_atual = (
-            servicos.ultima_matricula(self.instance) if self.instance.pk else None
-        )
+        self.matricula_atual = servicos.ultima_matricula(aluno)
         if self.matricula_atual is None:
-            # Aluno novo (ou sem matrícula): a matrícula começa ativa.
+            # Aluno sem matrícula: a matrícula começa ativa.
             del self.fields["situacao"]
             return
         self.fields["turma"].initial = self.matricula_atual.turma
@@ -126,26 +59,14 @@ class AlunoForm(ContaForm):
                 "O aluno já tem notas ou presenças nesta turma, então ela não pode mudar."
             )
 
-    def save(self, commit=True):
-        # transaction.atomic: a conta e a matrícula são salvas juntas, ou nenhuma das duas.
-        with transaction.atomic():
-            usuario = super().save(commit=True)
-            turma = self.cleaned_data["turma"]
-            if self.matricula_atual is None:
-                Matricula.objects.create(aluno=usuario, turma=turma)
-            else:
-                self.matricula_atual.turma = turma
-                self.matricula_atual.situacao = self.cleaned_data["situacao"]
-                self.matricula_atual.save(update_fields=["turma", "situacao"])
-        return usuario
-
-
-# Formulário usado na edição de cada perfil.
-FORM_DO_PERFIL = {
-    Usuario.Perfil.ALUNO: AlunoForm,
-    Usuario.Perfil.PROFESSOR: ProfessorForm,
-    Usuario.Perfil.COORDENADOR: CoordenadorForm,
-}
+    def save(self):
+        turma = self.cleaned_data["turma"]
+        if self.matricula_atual is None:
+            return Matricula.objects.create(aluno=self.aluno, turma=turma)
+        self.matricula_atual.turma = turma
+        self.matricula_atual.situacao = self.cleaned_data["situacao"]
+        self.matricula_atual.save(update_fields=["turma", "situacao"])
+        return self.matricula_atual
 
 
 # --- Turmas, disciplinas e ofertas ---

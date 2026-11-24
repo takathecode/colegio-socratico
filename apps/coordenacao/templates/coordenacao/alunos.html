@@ -7,17 +7,13 @@
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
       <h1 class="text-2xl font-semibold text-[#0B2545]">Alunos</h1>
-      <p class="mt-1 text-sm text-slate-500">Contas, matrículas e situação acadêmica de cada aluno.</p>
+      <p class="mt-1 text-sm text-slate-500">Matrículas e situação acadêmica de cada aluno. As contas de acesso são criadas pela Secretaria.</p>
     </div>
     <div class="flex flex-wrap gap-2">
       {# Exporta com a mesma busca e os mesmos filtros da lista (uma linha por matrícula). #}
       <a href="{% url 'relatorios:alunos' %}?{{ consulta }}{% if consulta %}&{% endif %}formato=xlsx"
          class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
         <i data-lucide="file-spreadsheet" class="size-4"></i> Excel
-      </a>
-      <a href="{% url 'coordenacao:aluno_novo' %}"
-         class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
-        <i data-lucide="user-plus" class="size-4"></i> Novo aluno
       </a>
     </div>
   </div>
@@ -97,7 +93,7 @@
                     </a>
                   {% endif %}
                   <a href="{% url 'coordenacao:aluno_editar' linha.aluno.pk %}" class="inline-flex items-center gap-1 text-sm font-semibold text-[#1F4E8C] hover:underline">
-                    <i data-lucide="pencil" class="size-4"></i> Editar
+                    {% if linha.matricula %}<i data-lucide="pencil" class="size-4"></i> Matrícula{% else %}<i data-lucide="user-plus" class="size-4"></i> Matricular{% endif %}
                   </a>
                 </td>
               </tr>
@@ -137,7 +133,7 @@
     {% elif filtrando %}
       {% include "componentes/vazio.html" with titulo="Nenhum aluno encontrado" texto="Confira a busca ou mude os filtros." icone="search" %}
     {% else %}
-      {% include "componentes/vazio.html" with titulo="Nenhum aluno cadastrado" texto="Use o botão Novo aluno para criar a primeira conta." icone="graduation-cap" %}
+      {% include "componentes/vazio.html" with titulo="Nenhum aluno cadastrado" texto="As contas de aluno são criadas pela Secretaria. Depois, matricule cada aluno em uma turma por aqui." icone="graduation-cap" %}
     {% endif %}
   </section>
 {% endblock %}

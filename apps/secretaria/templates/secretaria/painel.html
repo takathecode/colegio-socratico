@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block titulo %}Visão geral de acessos{% endblock %}
+{% block breadcrumb %}Visão geral de acessos{% endblock %}
+
+{% block conteudo %}
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0B2545]">Visão geral de acessos</h1>
+      <p class="mt-1 text-sm text-slate-500">Contas, senhas e bloqueios de alunos, professores e coordenação.</p>
+    </div>
+    <a href="{% url 'secretaria:contas' %}"
+       class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
+      <i data-lucide="key-round" class="size-4"></i> Ver contas
+    </a>
+  </div>
+
+  <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% include "componentes/card_kpi.html" with rotulo="Alunos" valor=alunos detalhe="Contas ativas" icone="graduation-cap" %}
+    {% include "componentes/card_kpi.html" with rotulo="Professores" valor=professores detalhe="Contas ativas" icone="users" %}
+    {% include "componentes/card_kpi.html" with rotulo="Coordenação" valor=coordenadores detalhe="Contas ativas" icone="briefcase" %}
+    {% include "componentes/card_kpi.html" with rotulo="Desativadas" valor=desativadas detalhe="Não entram no portal; o histórico continua guardado" icone="user-x" %}
+  </div>
+
+  {% if sem_email %}
+    <p class="mt-4 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      <i data-lucide="triangle-alert" class="size-4 shrink-0 translate-y-0.5 text-amber-600"></i>
+      {{ sem_email }} conta{{ sem_email|pluralize }} ativa{{ sem_email|pluralize }} sem e-mail: essas pessoas não conseguem recuperar a senha sozinhas.
+    </p>
+  {% endif %}
+
+  <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Logins bloqueados agora</h2>
+      <p class="mt-1 text-sm text-slate-500">5 senhas erradas seguidas bloqueiam a matrícula por 15 minutos.</p>
+      {% if bloqueadas %}
+        <ul class="mt-3 divide-y divide-[#E5E9F0]">
+          {% for conta in bloqueadas %}
+            <li class="flex items-center justify-between gap-3 py-2.5 text-sm">
+              <span class="min-w-0 truncate">{{ conta.get_full_name|default:conta.matricula }} <span class="text-xs text-slate-500">· {{ conta.matricula }}</span></span>
+              <a href="{% url 'secretaria:conta' conta.pk %}" class="shrink-0 font-semibold text-[#1F4E8C] hover:underline">Abrir</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhum login bloqueado" icone="lock-open" %}
+      {% endif %}
+    </section>
+
+    <section class="rounded-xl border border-[#E5E9F0] bg-white p-5">
+      <h2 class="font-semibold">Aguardando a primeira senha</h2>
+      <p class="mt-1 text-sm text-slate-500">Receberam senha provisória e ainda não criaram a própria.</p>
+      {% if troca_pendente %}
+        <ul class="mt-3 divide-y divide-[#E5E9F0]">
+          {% for conta in troca_pendente %}
+            <li class="flex items-center justify-between gap-3 py-2.5 text-sm">
+              <span class="min-w-0 truncate">{{ conta.get_full_name|default:conta.matricula }} <span class="text-xs text-slate-500">· {{ conta.get_perfil_display }}</span></span>
+              <a href="{% url 'secretaria:conta' conta.pk %}" class="shrink-0 font-semibold text-[#1F4E8C] hover:underline">Abrir</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        {% include "componentes/vazio.html" with titulo="Nenhuma troca pendente" icone="circle-check" %}
+      {% endif %}
+    </section>
+  </div>
+
+  <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-5">
+    <h2 class="font-semibold">Últimas ações nas contas</h2>
+    <p class="mt-1 text-sm text-slate-500">Registro de auditoria: quem fez, em qual conta e quando.</p>
+    {% if ultimas_acoes %}
+      {% include "secretaria/_historico.html" with registros=ultimas_acoes mostrar_conta=True %}
+    {% else %}
+      {% include "componentes/vazio.html" with titulo="Nenhuma ação registrada" icone="history" %}
+    {% endif %}
+  </section>
+{% endblock %}

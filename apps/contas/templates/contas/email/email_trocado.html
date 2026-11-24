@@ -1,0 +1,7 @@
+{% extends "contas/email/base.html" %}
+{% block titulo %}O e-mail da sua conta foi trocado{% endblock %}
+{% block conteudo %}
+  <p style="margin:0 0 12px;font-size:20px;font-weight:600;">Olá, {{ nome }}.</p>
+  <p style="margin:0 0 20px;">O e-mail da conta de matrícula <strong>{{ matricula }}</strong> foi trocado pela Secretaria em <strong>{{ quando|date:"d/m/Y" }} às {{ quando|date:"H:i" }}</strong>. A partir de agora, os avisos e os links de nova senha vão para o endereço novo, e não mais para este.</p>
+  <p style="margin:0;padding:12px 16px;background:#FEF2F2;border-radius:8px;font-size:13px;color:#991B1B;">Se você não pediu essa troca, procure a Secretaria imediatamente, com um documento com foto.</p>
+{% endblock %}

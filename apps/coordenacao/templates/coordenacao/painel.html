@@ -10,10 +10,6 @@
       <p class="mt-1 text-sm text-slate-500">Situação acadêmica da instituição{% if semestre %} · semestre {{ semestre }}{% endif %}.</p>
     </div>
     <div class="flex flex-wrap gap-2">
-      <a href="{% url 'coordenacao:aluno_novo' %}"
-         class="botao-vidro-claro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-[#1F4E8C]">
-        <i data-lucide="user-plus" class="size-4"></i> Novo aluno
-      </a>
       <a href="{% url 'coordenacao:turma_nova' %}"
          class="botao-vidro inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold text-white">
         <i data-lucide="plus" class="size-4"></i> Nova turma
