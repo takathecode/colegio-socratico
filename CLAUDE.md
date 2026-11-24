@@ -146,6 +146,10 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
 
 ## Gráficos e ML
 - Matplotlib com `matplotlib.use("Agg")`; gráficos gerados no servidor e enviados como PNG em base64.
+  Fonte Inter (arquivos .ttf em `apps/analytics/fontes`, licença OFL, para sair igual na Vercel), cores dos
+  tokens da marca e dos selos, PNG com dpi 192 (2× o px do CSS). Cada gráfico devolve também a `largura`
+  natural (px do CSS), e `componentes/grafico.html` nunca estica a imagem além dela: assim o texto do
+  gráfico fica do tamanho do texto da página (9 pt = 12 px).
 - Evasão: dados simulados gerados por script, modelo `RandomForestClassifier` (ou `LogisticRegression`)
   com features: frequência, média, tendência das notas, justificativas pendentes. Saída: probabilidade
   e nível (baixo/médio/alto) + principais motivos. Recalculado por tarefa Celery agendada.
