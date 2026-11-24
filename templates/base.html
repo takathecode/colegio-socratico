@@ -66,6 +66,30 @@
 
     {# Mesmas margens do topo, para os cards alinharem com as bordas da barra. #}
     <main class="max-w-pagina px-barra pb-segura pt-5 lg:pl-0">
+      {# Esqueleto de carregamento: só aparece enquanto a próxima página carrega (portal.js). #}
+      <div class="esqueleto-pagina" aria-hidden="true">
+        <div class="esqueleto h-8 w-64 max-w-full"></div>
+        <div class="esqueleto mt-3 h-4 w-96 max-w-full"></div>
+        <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {% for _ in "1234" %}
+            <div class="cartao p-4">
+              <div class="esqueleto h-3 w-28"></div>
+              <div class="esqueleto mt-3 h-7 w-16"></div>
+              <div class="esqueleto mt-3 h-3 w-36 max-w-full"></div>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="mt-4 grid gap-4 xl:grid-cols-3">
+          <div class="cartao p-5 xl:col-span-2">
+            <div class="esqueleto h-5 w-48"></div>
+            <div class="esqueleto mt-5 h-48 w-full"></div>
+          </div>
+          <div class="cartao p-5">
+            <div class="esqueleto h-5 w-40"></div>
+            {% for _ in "123" %}<div class="esqueleto mt-5 h-10 w-full"></div>{% endfor %}
+          </div>
+        </div>
+      </div>
       {% include "componentes/mensagens.html" %}
       {% block conteudo %}{% endblock %}
     </main>

@@ -339,3 +339,91 @@
     @apply disabled:bg-fundo disabled:text-slate-500;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Animações leves. Curtas (até 0,4 s), só com opacidade e um deslocamento pequeno,
+   e todas desligadas para quem pediu menos movimento no sistema (prefers-reduced-motion).
+   --------------------------------------------------------------------------- */
+@theme {
+  --ease-suave: cubic-bezier(0.22, 1, 0.36, 1); /* sai rápido e assenta devagar, como no iOS */
+}
+
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(6px); }
+}
+@keyframes abrir-lista {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+}
+@keyframes brilho {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@layer components {
+  /* Entrada dos cards: cada um aparece 40 ms depois do anterior (no máximo 8 passos).
+     "backwards" só vale antes e durante a animação: depois dela o card fica sem transform,
+     e as listas que abrem dentro dele (ex.: "Chamar professor") não ficam presas por baixo. */
+  main .cartao {
+    animation: surgir 0.32s var(--ease-suave) backwards;
+  }
+  main :where(.grid, .flex-col) > .cartao:nth-child(2) { animation-delay: 40ms; }
+  main :where(.grid, .flex-col) > .cartao:nth-child(3) { animation-delay: 80ms; }
+  main :where(.grid, .flex-col) > .cartao:nth-child(4) { animation-delay: 120ms; }
+  main :where(.grid, .flex-col) > .cartao:nth-child(5) { animation-delay: 160ms; }
+  main :where(.grid, .flex-col) > .cartao:nth-child(n + 6) { animation-delay: 200ms; }
+
+  /* Listas do topo (sino e menu da conta) abrem com um leve deslize. */
+  details[open] > .cartao {
+    animation: abrir-lista 0.18s var(--ease-suave);
+    transform-origin: top right;
+  }
+
+  /* Hover: a linha da tabela e os itens do menu clareiam com uma transição curta. */
+  .tabela tbody tr {
+    transition: background-color 0.15s;
+  }
+  .tabela tbody tr:hover {
+    background-color: --alpha(var(--color-fundo) / 70%);
+  }
+  #barra-lateral nav a {
+    transition: background-color 0.15s, color 0.15s;
+  }
+
+  /* Skeleton (esqueleto) de carregamento: blocos cinza com um brilho que passa da direita
+     para a esquerda. Aparece no lugar do conteúdo enquanto a próxima página carrega
+     (ver "Esqueleto da navegação" em static/js/portal.js). */
+  .esqueleto {
+    @apply rounded-controle;
+    background: linear-gradient(90deg, var(--color-borda) 25%, var(--color-fundo) 50%, var(--color-borda) 75%);
+    background-size: 200% 100%;
+    animation: brilho 1.2s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    main .cartao,
+    details[open] > .cartao {
+      animation: none;
+    }
+    .tabela tbody tr,
+    #barra-lateral nav a {
+      transition: none;
+    }
+    /* Sem brilho correndo: o bloco fica parado, ainda mostrando que algo carrega. */
+    .esqueleto {
+      animation: none;
+      background: var(--color-borda);
+    }
+  }
+}
+
+/* Troca conteúdo ↔ esqueleto. Fica fora das camadas (@layer) de propósito: CSS sem camada vence
+   as classes do Tailwind (ex.: "flex" de um template), e o conteúdo precisa sumir de verdade. */
+.esqueleto-pagina {
+  display: none;
+}
+html[data-navegando] .esqueleto-pagina {
+  display: block;
+}
+html[data-navegando] main > :not(.esqueleto-pagina) {
+  display: none;
+}

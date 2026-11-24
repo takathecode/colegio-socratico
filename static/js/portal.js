@@ -153,6 +153,55 @@ formularios.forEach((formulario) => {
 // Ao voltar pelo botão do navegador, a página pode reaparecer ainda no estado "carregando".
 window.addEventListener("pageshow", () => {
   formularios.forEach((formulario) => marcarCarregando(formulario, false));
+  pararEsqueleto();
+});
+
+// --- Esqueleto da navegação ---
+// Cada página vem do servidor (e o banco fica no Supabase), então trocar de tela pode levar
+// cerca de 1 segundo. Se a próxima página demorar mais de 300 ms, o conteúdo dá lugar ao
+// esqueleto (base.html), mostrando que algo está carregando. Abaixo de 300 ms nada muda,
+// para a tela não piscar.
+let esperaDoEsqueleto;
+const conteudo = document.querySelector("main");
+
+function mostrarEsqueleto() {
+  clearTimeout(esperaDoEsqueleto);
+  esperaDoEsqueleto = setTimeout(() => {
+    raiz.dataset.navegando = "";
+    conteudo?.setAttribute("aria-busy", "true");
+    // Rede de segurança: se a página não trocou (ex.: um download), o conteúdo volta.
+    esperaDoEsqueleto = setTimeout(pararEsqueleto, 10000);
+  }, 300);
+}
+
+function pararEsqueleto() {
+  clearTimeout(esperaDoEsqueleto);
+  delete raiz.dataset.navegando;
+  conteudo?.removeAttribute("aria-busy");
+}
+
+// Só links que trocam de página dentro do portal: nada de nova aba, download, âncora (#),
+// arquivo (PDF/Excel) ou clique com Ctrl/Shift/Cmd.
+document.addEventListener("click", (evento) => {
+  const link = evento.target.closest("a[href]");
+  if (!link || evento.defaultPrevented || evento.button !== 0) return;
+  if (evento.ctrlKey || evento.metaKey || evento.shiftKey || evento.altKey) return;
+  if (link.target && link.target !== "_self") return;
+  if (link.hasAttribute("download")) return;
+  const destino = new URL(link.href, location.href);
+  if (destino.origin !== location.origin) return;
+  if (destino.pathname === location.pathname && destino.search === location.search) return;
+  // Arquivos baixados não trocam a página: relatórios (PDF/Excel), anexos e fotos.
+  if (destino.searchParams.has("formato") || /\/(anexo|foto)/.test(destino.pathname)) return;
+  if (/^\/relatorios\/.+/.test(destino.pathname)) return;
+  mostrarEsqueleto();
+});
+
+// Filtros e buscas (formulários GET) também trocam a página inteira.
+document.querySelectorAll('main form:not([method]), main form[method="get"]').forEach((formulario) => {
+  formulario.addEventListener("submit", () => {
+    if (!formulario.target) mostrarEsqueleto();
+  });
 });
 
 // --- Janelas modais (elemento <dialog>) ---
