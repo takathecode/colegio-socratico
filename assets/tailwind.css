@@ -54,7 +54,10 @@
   --spacing-conteudo-recolhido: calc(var(--spacing-menu-recolhido) + 2 * var(--spacing-barra)); /* 110px */
 
   /* Logo abaixo da barra do topo (espaço + 64px da barra + 8px de folga): lista do sino no celular. */
-  --spacing-abaixo-do-topo: calc(var(--spacing-barra) + 4.5rem); /* 84px */
+  --spacing-abaixo-do-topo: calc(var(--spacing-barra) + 4.5rem + env(safe-area-inset-top, 0px)); /* 84px + entalhe */
+
+  /* Menor área de toque confortável (Apple e WCAG 2.5.5): 44px. */
+  --spacing-toque: 2.75rem;
 
   /* Textos menores que o text-xs (12px) do Tailwind. */
   --text-micro: 10px;  /* contadores (sino, mensagens não lidas) e "PORTAL ACADÊMICO" */
@@ -87,9 +90,54 @@
     0 10px 24px -12px --alpha(var(--color-primaria) / 40%);
 }
 
+/* ---------------------------------------------------------------------------
+   Safe-area: no iPhone com entalhe (ou barra de gestos), env(safe-area-inset-*) diz
+   quanto da tela fica escondido. Com viewport-fit=cover (esqueleto.html), somamos
+   esse espaço às margens das barras flutuantes. Em telas sem entalhe ele vale 0.
+   --------------------------------------------------------------------------- */
+@utility top-barra-segura {
+  top: calc(var(--spacing-barra) + env(safe-area-inset-top, 0px));
+}
+@utility mt-barra-segura {
+  margin-top: calc(var(--spacing-barra) + env(safe-area-inset-top, 0px));
+}
+@utility inset-y-barra-segura {
+  top: calc(var(--spacing-barra) + env(safe-area-inset-top, 0px));
+  bottom: calc(var(--spacing-barra) + env(safe-area-inset-bottom, 0px));
+}
+@utility left-barra-segura {
+  left: calc(var(--spacing-barra) + env(safe-area-inset-left, 0px));
+}
+@utility pb-segura {
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+}
+
 @layer base {
   button:not(:disabled) {
     cursor: pointer;
+  }
+
+  /* Celular deitado: o entalhe fica na lateral; o conteúdo não passa por baixo dele. */
+  body {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* Menu aberto no celular: a página de trás não rola junto com o dedo. */
+  @media (width < 64rem) {
+    html[data-menu="aberto"] body {
+      overflow: hidden;
+    }
+  }
+
+  /* Telas de toque: botões e campos com pelo menos 44px de altura, para o dedo acertar.
+     No computador (mouse), as alturas do protótipo continuam iguais. */
+  @media (pointer: coarse) {
+    .botao-vidro,
+    .botao-vidro-claro,
+    .campo {
+      min-height: var(--spacing-toque);
+    }
   }
 
   /* O Edge desenha um olho próprio no campo de senha; o portal já tem o seu. */
@@ -256,7 +304,8 @@
   /* Campo de formulário (input, select, textarea). A altura e a largura ficam no template
      (h-10, py-2.5, w-full...). O foco mostra borda azul + anel claro, também nos filtros. */
   .campo {
-    @apply rounded-controle border border-borda bg-white px-3 text-sm outline-none;
+    /* 16px no celular: com menos que isso, o iPhone dá zoom na página ao tocar no campo. */
+    @apply rounded-controle border border-borda bg-white px-3 text-base outline-none sm:text-sm;
     @apply focus:border-primaria focus:ring-2 focus:ring-primaria/30;
     @apply aria-[invalid=true]:border-perigo;
     @apply disabled:bg-fundo disabled:text-slate-500;

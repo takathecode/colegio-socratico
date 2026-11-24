@@ -24,7 +24,7 @@
     <nav aria-label="Avaliações" class="mt-4 flex gap-2 overflow-x-auto pb-1">
       {% for item in avaliacoes %}
         <a href="?oferta={{ oferta.pk }}&avaliacao={{ item.pk }}" {% if item.pk == avaliacao.pk %}aria-current="page"{% endif %}
-           class="inline-flex h-9 shrink-0 items-center rounded-controle border px-3 text-sm font-semibold {% if item.pk == avaliacao.pk %}border-primaria bg-primaria-suave text-primaria{% else %}border-borda bg-white text-slate-600 hover:border-primaria{% endif %}">
+           class="inline-flex h-9 shrink-0 items-center rounded-controle border px-3 text-sm font-semibold {% if item.pk == avaliacao.pk %}border-primaria bg-primaria-suave text-primaria{% else %}border-borda bg-white text-slate-600 hover:border-primaria{% endif %} pointer-coarse:min-h-toque">
           {{ item.nome }}
         </a>
       {% endfor %}

@@ -126,6 +126,11 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
   `botao-vidro` e `botao-vidro-claro` em `assets/tailwind.css`). Cards, tabelas e formulários continuam opacos.
   O `expo-glass-effect` foi descartado: é React Native/iOS e não funciona na web.
 - Responsivo: em telas pequenas a barra lateral vira menu hambúrguer e os cards empilham.
+  Pensar em 375px. Safe-area do iPhone (`viewport-fit=cover` + utilitários `*-barra-segura` e `pb-segura`
+  em `assets/tailwind.css`); em tela de toque (`pointer: coarse`) botões e campos têm no mínimo 44px
+  (`--spacing-toque`; nos alvos pequenos, `pointer-coarse:min-h-toque`); campos com 16px no celular
+  para o iPhone não dar zoom. O menu do celular atualiza `aria-expanded`, leva o foco para dentro e trava
+  a rolagem da página.
 - Ícones: Lucide (via CDN). Componentes repetidos ficam em `templates/componentes/`.
 
 ## Gráficos e ML

@@ -47,7 +47,7 @@
       <div class="flex gap-2">
         <button type="submit" class="botao-vidro-claro h-10 rounded-controle px-4 text-sm font-semibold text-primaria">Filtrar</button>
         {% if filtrando %}
-          <a href="{% url 'coordenacao:alunos' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline">Limpar</a>
+          <a href="{% url 'coordenacao:alunos' %}" class="inline-flex h-10 items-center px-2 text-sm font-semibold text-slate-500 hover:underline pointer-coarse:min-h-toque">Limpar</a>
         {% endif %}
       </div>
     </form>

@@ -10,17 +10,38 @@ if (window.lucide) {
 // O botão do topo recolhe o menu no computador e abre o menu no celular.
 const raiz = document.documentElement;
 const telaGrande = window.matchMedia("(min-width: 1024px)");
+const botaoDoMenu = document.querySelector("[data-alternar-menu]");
+const barraLateral = document.getElementById("barra-lateral");
 
-function fecharMenuCelular() {
-  delete raiz.dataset.menu;
+// No celular: abrir leva o foco para o primeiro link do menu; fechar devolve o foco ao botão,
+// para quem usa teclado ou leitor de tela não se perder na página.
+function abrirMenuCelular() {
+  raiz.dataset.menu = "aberto";
+  botaoDoMenu?.setAttribute("aria-expanded", "true");
+  barraLateral?.querySelector("a, button")?.focus();
 }
 
-document.querySelector("[data-alternar-menu]")?.addEventListener("click", () => {
+function fecharMenuCelular() {
+  if (raiz.dataset.menu !== "aberto") return;
+  delete raiz.dataset.menu;
+  botaoDoMenu?.setAttribute("aria-expanded", "false");
+  botaoDoMenu?.focus();
+}
+
+// Virou o celular ou aumentou a janela até o tamanho de computador: o menu do celular fecha.
+telaGrande.addEventListener("change", () => {
+  if (telaGrande.matches) {
+    delete raiz.dataset.menu;
+    botaoDoMenu?.setAttribute("aria-expanded", "false");
+  }
+});
+
+botaoDoMenu?.addEventListener("click", () => {
   if (!telaGrande.matches) {
     if (raiz.dataset.menu === "aberto") {
       fecharMenuCelular();
     } else {
-      raiz.dataset.menu = "aberto";
+      abrirMenuCelular();
     }
     return;
   }

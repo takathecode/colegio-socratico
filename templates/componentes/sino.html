@@ -1,7 +1,7 @@
 {# Sino de notificações do topo. Os dados vêm de apps/alertas/context_processors.py. #}
 {# <details> abre e fecha sem JavaScript; o portal.js só fecha ao clicar fora ou apertar Esc. #}
 <details data-sino class="relative">
-  <summary class="relative flex size-10 cursor-pointer list-none items-center justify-center rounded-controle text-slate-600 hover:bg-white/70 [&::-webkit-details-marker]:hidden"
+  <summary class="relative flex size-toque cursor-pointer list-none items-center justify-center rounded-controle text-slate-600 hover:bg-white/70 [&::-webkit-details-marker]:hidden"
            aria-label="Notificações{% if sino_nao_lidos %}: {{ sino_nao_lidos }} não lida{{ sino_nao_lidos|pluralize }}{% endif %}">
     <i data-lucide="bell" class="size-5"></i>
     {% if sino_nao_lidos %}

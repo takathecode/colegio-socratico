@@ -1,9 +1,9 @@
 {# Barra lateral das áreas internas. O menu vem de apps/contas/context_processors.py. #}
-{# Ela flutua: fica a 12px (token --spacing-barra: inset-y-barra left-barra) das bordas da tela, com cantos arredondados e vidro (.vidro-barra). #}
+{# Ela flutua: fica a 12px (token --spacing-barra; as classes "-segura" somam o entalhe do iPhone) das bordas da tela, com cantos arredondados e vidro (.vidro-barra). #}
 <div data-fundo-menu class="fixed inset-0 z-30 hidden bg-marinho/40 menu-aberto:block lg:menu-aberto:hidden"></div>
 
 <aside id="barra-lateral"
-       class="vidro-barra fixed inset-y-barra left-barra z-40 flex w-menu flex-col rounded-barra px-4 py-6 transition-all duration-200
+       class="vidro-barra fixed inset-y-barra-segura left-barra-segura z-40 flex w-menu flex-col rounded-barra px-4 py-6 transition-all duration-200
               max-lg:invisible max-lg:-translate-x-[calc(100%+1.5rem)] max-lg:menu-aberto:visible max-lg:menu-aberto:translate-x-0
               lg:recolhida:w-menu-recolhido lg:recolhida:px-3">
   {# Só o nome, sem o quadrado do "S". Com a barra recolhida, o nome some e o menu sobe. #}
@@ -48,7 +48,7 @@
   <form method="post" action="{% url 'contas:sair' %}" class="mt-4">
     {% csrf_token %}
     <button type="submit" title="Sair do portal" aria-label="Sair do portal"
-            class="flex h-10 w-full items-center gap-3 rounded-controle px-1 text-sm text-slate-600 hover:text-marinho lg:recolhida:justify-center">
+            class="flex h-toque w-full items-center gap-3 rounded-controle px-2.5 text-sm text-slate-600 hover:bg-white/70 hover:text-marinho lg:recolhida:justify-center">
       <i data-lucide="log-out" class="size-5"></i>
       <span class="lg:recolhida:hidden">Sair do portal</span>
     </button>

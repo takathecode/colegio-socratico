@@ -28,7 +28,7 @@
       </a>
       {% if not linhas and not ofertas %}
         <a href="{% url 'coordenacao:turma_excluir' turma.pk %}"
-           class="inline-flex h-10 items-center gap-2 rounded-controle border border-borda bg-white px-4 text-sm font-semibold text-red-800 hover:border-red-800">
+           class="inline-flex h-10 items-center gap-2 rounded-controle border border-borda bg-white px-4 text-sm font-semibold text-red-800 hover:border-red-800 pointer-coarse:min-h-toque">
           <i data-lucide="trash-2" class="size-4"></i> Excluir
         </a>
       {% endif %}

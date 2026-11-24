@@ -70,9 +70,9 @@
                   </td>
                   <td class="text-right whitespace-nowrap">
                     <a href="{% url 'professor:notas' %}?oferta={{ resumo.oferta.pk }}" title="Lançar notas" aria-label="Lançar notas de {{ resumo.oferta.disciplina.nome }} da turma {{ resumo.oferta.turma.codigo }}"
-                       class="inline-flex size-9 items-center justify-center rounded-controle text-primaria hover:bg-primaria-suave"><i data-lucide="square-pen" class="size-4"></i></a>
+                       class="inline-flex size-9 items-center justify-center rounded-controle text-primaria hover:bg-primaria-suave pointer-coarse:min-h-toque pointer-coarse:min-w-toque"><i data-lucide="square-pen" class="size-4"></i></a>
                     <a href="{% url 'professor:chamada' %}?oferta={{ resumo.oferta.pk }}" title="Fazer chamada" aria-label="Fazer chamada de {{ resumo.oferta.disciplina.nome }} da turma {{ resumo.oferta.turma.codigo }}"
-                       class="inline-flex size-9 items-center justify-center rounded-controle text-primaria hover:bg-primaria-suave"><i data-lucide="fingerprint" class="size-4"></i></a>
+                       class="inline-flex size-9 items-center justify-center rounded-controle text-primaria hover:bg-primaria-suave pointer-coarse:min-h-toque pointer-coarse:min-w-toque"><i data-lucide="fingerprint" class="size-4"></i></a>
                   </td>
                 </tr>
               {% endfor %}

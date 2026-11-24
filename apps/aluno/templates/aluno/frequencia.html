@@ -11,7 +11,7 @@
     </div>
     {# O relatório é criado na etapa 10. #}
     <button type="button" disabled title="O relatório estará disponível em breve"
-            class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-controle border border-borda bg-white px-4 text-sm font-semibold text-slate-400">
+            class="inline-flex h-10 cursor-not-allowed items-center gap-2 rounded-controle border border-borda bg-white px-4 text-sm font-semibold text-slate-400 pointer-coarse:min-h-toque">
       <i data-lucide="download" class="size-4"></i> Exportar relatório
     </button>
   </div>
@@ -48,9 +48,9 @@
         <h2 class="font-semibold">{{ mes|date:"F \d\e Y"|capfirst }}</h2>
         <div class="flex items-center gap-1">
           <a href="?mes={{ mes_anterior|date:'Y-m' }}{% if oferta_id %}&disciplina={{ oferta_id }}{% endif %}" aria-label="Mês anterior"
-             class="flex size-8 items-center justify-center rounded-controle text-slate-500 hover:bg-fundo"><i data-lucide="chevron-left" class="size-4"></i></a>
+             class="flex size-8 items-center justify-center rounded-controle text-slate-500 hover:bg-fundo pointer-coarse:min-h-toque pointer-coarse:min-w-toque"><i data-lucide="chevron-left" class="size-4"></i></a>
           <a href="?mes={{ mes_seguinte|date:'Y-m' }}{% if oferta_id %}&disciplina={{ oferta_id }}{% endif %}" aria-label="Mês seguinte"
-             class="flex size-8 items-center justify-center rounded-controle text-slate-500 hover:bg-fundo"><i data-lucide="chevron-right" class="size-4"></i></a>
+             class="flex size-8 items-center justify-center rounded-controle text-slate-500 hover:bg-fundo pointer-coarse:min-h-toque pointer-coarse:min-w-toque"><i data-lucide="chevron-right" class="size-4"></i></a>
         </div>
       </div>
       <p class="mb-3 mt-1 text-xs text-slate-500">Presenças registradas até {{ hoje|date:"d/m" }}</p>
