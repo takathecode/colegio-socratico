@@ -254,7 +254,7 @@ class EsqueciMinhaSenhaTests(TestCase):
         for nome in ("senha_esqueci", "senha_confirmar"):
             with self.subTest(nome=nome):
                 resposta = self.client.get(reverse(f"contas:{nome}"))
-                self.assertEqual(resposta["Referrer-Policy"], "no-referrer")
+                self.assertEqual(resposta["Referrer-Policy"], "same-origin")
 
     # --- Limite de pedidos ---
 
@@ -299,7 +299,7 @@ class EsqueciMinhaSenhaTests(TestCase):
         self.pedir_link()
         tela, endereco = self.abrir_link(self.link_do_email())
         self.assertTrue(endereco.endswith("/set-password/"))  # o código foi para a sessão
-        self.assertEqual(tela["Referrer-Policy"], "no-referrer")
+        self.assertEqual(tela["Referrer-Policy"], "same-origin")
         self.assertContains(tela, "Criar nova senha")
         self.assertContains(tela, 'value="aluno01" readonly aria-readonly="true"')
         self.assertContains(tela, 'autocomplete="new-password"', count=2)
@@ -390,6 +390,20 @@ class EsqueciMinhaSenhaTests(TestCase):
         tela, _ = self.abrir_link(novo)
         self.assertContains(tela, "Criar nova senha")
 
+    def test_link_novo_muda_mesmo_com_o_relogio_parado(self):
+        """No Windows, dois pedidos seguidos podem cair no mesmo instante do relógio."""
+        parado = timezone.now()
+        with mock.patch("django.utils.timezone.now", return_value=parado):
+            self.pedir_link()
+            self.client.post(reverse("contas:senha_confirmar"))
+        antigo, novo = self.link_do_email(0), self.link_do_email(1)
+        self.assertNotEqual(antigo, novo)
+        tela, _ = self.abrir_link(antigo)
+        self.assertContains(tela, "Este link expirou ou já foi usado")
+        self.client = Client()
+        tela, _ = self.abrir_link(novo)
+        self.assertContains(tela, "Criar nova senha")
+
     def test_link_adulterado_e_recusado(self):
         self.pedir_link()
         link = self.link_do_email()
@@ -429,6 +443,43 @@ class EsqueciMinhaSenhaTests(TestCase):
         self.assertEqual(resposta.status_code, 200)
         self.aluno.refresh_from_db()
         self.assertTrue(self.aluno.check_password(SENHA_ANTIGA))
+
+    # --- CSRF como no navegador de verdade ---
+
+    def test_formularios_passam_pelo_csrf_do_navegador(self):
+        """Regressão do 403 "Verificação CSRF falhou" visto na Vercel.
+
+        O cliente de testes do Django não manda o cabeçalho Origin, mas o navegador manda, e o
+        valor depende do Referrer-Policy da página que tem o formulário: com "no-referrer", o
+        navegador envia "Origin: null", e o CSRF do Django recusa. Aqui cada envio leva o Origin
+        que o navegador mandaria, com a conferência de CSRF ligada.
+        """
+        navegador = Client(enforce_csrf_checks=True)
+
+        def enviar(pagina, dados=None, destino=None):
+            tela = navegador.get(pagina, follow=True)
+            self.assertEqual(tela.status_code, 200, pagina)
+            politica = tela.get("Referrer-Policy", "same-origin")
+            origem = "null" if politica == "no-referrer" else "http://testserver"
+            # O formulário envia para a própria página (depois dos redirecionamentos), salvo "destino".
+            endereco = tela.redirect_chain[-1][0] if tela.redirect_chain else pagina
+            endereco = destino or endereco
+            dados = {"csrfmiddlewaretoken": navegador.cookies["csrftoken"].value, **(dados or {})}
+            resposta = navegador.post(endereco, dados, HTTP_ORIGIN=origem)
+            self.assertNotEqual(resposta.status_code, 403, f"CSRF recusou o envio em {endereco}")
+            return resposta
+
+        enviar(reverse("contas:senha_esqueci"), {"matricula": "aluno01"})
+        enviar(reverse("contas:senha_confirmar"))  # "Enviar link"
+        enviar(reverse("contas:senha_enviada"), destino=reverse("contas:senha_confirmar"))  # "Reenviar"
+        self.assertEqual(len(mail.outbox), 2)
+
+        resposta = enviar(
+            self.link_do_email(), {"new_password1": SENHA_NOVA, "new_password2": SENHA_NOVA}
+        )
+        self.assertRedirects(resposta, reverse("contas:entrar"), fetch_redirect_response=False)
+        self.aluno.refresh_from_db()
+        self.assertTrue(self.aluno.check_password(SENHA_NOVA))
 
     # --- Auditoria ---
 

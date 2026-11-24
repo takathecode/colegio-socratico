@@ -76,6 +76,13 @@
           {{ aviso_de_identidade }}
         </p>
 
+        {% if email_sem_entrega %}
+          <p role="note" class="mt-3 flex gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800">
+            <i data-lucide="mail-x" class="size-4 shrink-0 translate-y-0.5"></i>
+            O envio de e-mails ainda não está configurado neste servidor: o link não chega à pessoa. Use a senha provisória.
+          </p>
+        {% endif %}
+
         {% if conta.is_active %}
           <form method="post" action="{% url 'secretaria:conta_redefinir' conta.pk %}" data-enviar-uma-vez class="mt-4 space-y-3">
             {% csrf_token %}

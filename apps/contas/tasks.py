@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
+from .envio_de_email import entrega_de_verdade
 from .tokens import gerador_de_link, validade_do_link
 
 logger = logging.getLogger(__name__)
@@ -35,6 +36,9 @@ def enviar(tarefa, assunto, modelo, contexto, para):
         to=[para],
     )
     mensagem.attach_alternative(render_to_string(f"contas/email/{modelo}.html", contexto), "text/html")
+    if not entrega_de_verdade() and not settings.DEBUG:
+        # No servidor publicado sem SMTP, deixa claro no log que ninguém vai receber.
+        logger.warning("E-mail '%s' não será entregue: falta configurar o SMTP.", assunto)
     try:
         mensagem.send()
     except OSError as erro:  # falhas de rede e do servidor de e-mail (smtplib) são OSError

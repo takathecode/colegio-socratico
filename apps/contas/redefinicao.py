@@ -14,6 +14,7 @@ Os pedidos ficam no banco (model PedidoDeSenha), pelo mesmo motivo do bloqueio d
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.utils import timezone
 
 from apps.alertas.fila import enfileirar
@@ -77,15 +78,30 @@ def enviar_link(request, conta):
     from .tasks import enviar_link_de_senha
     from .tokens import validade_do_link
 
-    agora = timezone.now()
-    PedidoDeSenha.objects.filter(criado_em__lt=agora - GUARDAR_POR).delete()
-    PedidoDeSenha.objects.create(
-        tipo=PedidoDeSenha.Tipo.ENVIO, matricula=conta.matricula, ip=auditoria.ip_de(request)
-    )
-    conta.ultimo_pedido_reset = agora
-    conta.save(update_fields=["ultimo_pedido_reset"])
-    auditoria.registrar(request, conta, RegistroDeAuditoria.Acao.LINK_ENVIADO)
-    # O worker só recebe o número da conta: o código do link é criado lá e nunca passa
-    # pelo Redis nem pelo log.
+    with transaction.atomic():
+        agora = timezone.now()
+        PedidoDeSenha.objects.filter(criado_em__lt=agora - GUARDAR_POR).delete()
+        PedidoDeSenha.objects.create(
+            tipo=PedidoDeSenha.Tipo.ENVIO, matricula=conta.matricula, ip=auditoria.ip_de(request)
+        )
+        # O momento do pedido entra no código do link: ele precisa mudar a cada pedido, para
+        # o link anterior perder a validade. No Windows o relógio avança de poucos em poucos
+        # milissegundos, e dois pedidos seguidos podiam receber o mesmo horário (e o mesmo
+        # código). Por isso o novo pedido fica sempre pelo menos 1 microssegundo depois do
+        # anterior. O select_for_update trava a linha da conta: dois pedidos ao mesmo tempo
+        # (duas abas) esperam um pelo outro e nunca leem o mesmo "anterior".
+        anterior = (
+            get_user_model()
+            .objects.select_for_update()
+            .values_list("ultimo_pedido_reset", flat=True)
+            .get(pk=conta.pk)
+        )
+        if anterior is not None and agora <= anterior:
+            agora = anterior + timedelta(microseconds=1)
+        conta.ultimo_pedido_reset = agora
+        conta.save(update_fields=["ultimo_pedido_reset"])
+        auditoria.registrar(request, conta, RegistroDeAuditoria.Acao.LINK_ENVIADO)
+    # Fora da transação: o worker só começa depois que o pedido já está gravado. Ele recebe
+    # só o número da conta; o código do link é criado lá e nunca passa pelo Redis nem pelo log.
     enfileirar(enviar_link_de_senha, conta.pk)
     return validade_do_link(conta)

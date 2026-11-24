@@ -8,6 +8,7 @@ Cada ação sensível fica no registro de auditoria (apps/contas/auditoria.py).
 Contas nunca são apagadas, só desativadas, para não perder o histórico acadêmico.
 """
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -22,6 +23,7 @@ from django.views.decorators.http import require_POST
 from apps.alertas.fila import enfileirar
 from apps.contas import auditoria, redefinicao
 from apps.contas.decorators import perfil_requerido
+from apps.contas.envio_de_email import entrega_de_verdade
 from apps.contas.mascara import mascarar_email
 from apps.contas.models import BloqueioDeLogin, RegistroDeAuditoria, Usuario
 from apps.contas.senhas import gerar_senha_provisoria
@@ -180,6 +182,8 @@ def conta(request, pk):
             "bloqueio": bloqueio,
             "historico": Paginator(historico, ITENS_POR_PAGINA).get_page(request.GET.get("pagina")),
             "aviso_de_identidade": AVISO_DE_IDENTIDADE,
+            # Sem SMTP no servidor publicado, o link não chega: a tela avisa antes do clique.
+            "email_sem_entrega": not entrega_de_verdade() and not settings.DEBUG,
         },
     )
 
@@ -250,11 +254,21 @@ def conta_redefinir(request, pk):
             messages.error(request, "A conta não tem e-mail. Edite a conta ou gere uma senha provisória.")
             return voltar
         valido_ate = redefinicao.enviar_link(request, conta)
-        messages.success(
-            request,
+        texto = (
             f"Link enviado para {mascarar_email(conta.email)}. "
-            f"Ele vale até {timezone.localtime(valido_ate):%H:%M}.",
+            f"Ele vale até {timezone.localtime(valido_ate):%H:%M}."
         )
+        if entrega_de_verdade():
+            messages.success(request, texto)
+        elif settings.DEBUG:
+            messages.info(request, f"{texto} Em desenvolvimento, o e-mail aparece no terminal do runserver.")
+        else:
+            # Sem SMTP o e-mail não chega: melhor avisar do que dizer que deu certo.
+            messages.warning(
+                request,
+                "O envio de e-mails ainda não está configurado neste servidor, então o link não "
+                "chega à pessoa. Use \"Gerar senha provisória\" e entregue a senha pessoalmente.",
+            )
         return voltar
 
     senha = gerar_senha_provisoria(conta)

@@ -100,8 +100,17 @@ def atendimento(request):
 
 
 def sem_referer(resposta):
-    """Estas telas não contam a outros sites de onde a pessoa veio (cabeçalho Referer)."""
-    resposta["Referrer-Policy"] = "no-referrer"
+    """Estas telas não contam a outros sites de onde a pessoa veio (cabeçalho Referer).
+
+    "same-origin": o endereço da página só vai para o próprio portal; para outros sites
+    (fontes do Google, ícones do CDN), nada. Assim o endereço com o código do link nunca vaza.
+
+    Não use "no-referrer": com ele, o navegador envia "Origin: null" nos formulários (POST),
+    e a proteção CSRF do Django recusa o envio com 403, porque não consegue confirmar que o
+    formulário veio do próprio site. O teste test_formularios_passam_pelo_csrf_do_navegador
+    (test_senha.py) protege contra essa volta.
+    """
+    resposta["Referrer-Policy"] = "same-origin"
     return resposta
 
 
