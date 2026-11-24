@@ -31,11 +31,11 @@ from .dados import ABAIXO_DE_6, ENTRE_6_E_7, SETE_OU_MAIS  # noqa: E402
 
 # --- Cores (as mesmas do Tailwind nas telas) ---
 TEXTO = "#0B2545"  # azul-marinho da marca
-TEXTO_SECUNDARIO = "#64748B"  # slate-500
+TEXTO_SECUNDARIO = "#56677F"  # slate-500 do tema (assets/tailwind.css), que passa no WCAG AA
 GRADE = "#E5E9F0"  # borda dos cards
 EIXO = "#CBD5E1"  # slate-300
 AZUL = "#1F4E8C"  # botão primário
-REFERENCIA = "#64748B"  # linhas de mínimo (média 7, frequência 75%)
+REFERENCIA = "#56677F"  # linhas de mínimo (média 7, frequência 75%)
 
 # Cores das faixas de média: as mesmas do anel "Situação das disciplinas" do aluno.
 # O azul é um pouco mais claro que o da marca para separar bem do vermelho e do âmbar,

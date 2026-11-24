@@ -88,7 +88,7 @@
                 <td class="py-3 text-slate-500">{{ parcela.vencimento|date:"d/m/Y" }}</td>
                 <td class="py-3 whitespace-nowrap">R$ {{ parcela.valor|floatformat:"2g" }}</td>
                 <td class="py-3">{% include "componentes/selo.html" with situacao=parcela.situacao %}</td>
-                <td class="py-3 text-slate-400">
+                <td class="py-3 text-slate-500">
                   {% if parcela.paga_em %}
                     <span title="Módulo de demonstração: o comprovante não é gerado">Baixar comprovante</span>
                   {% else %}

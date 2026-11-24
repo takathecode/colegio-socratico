@@ -39,7 +39,7 @@
             <div class="grid grid-cols-7 {% if not forloop.last %}border-b border-borda{% endif %}">
               {% for dia in semana %}
                 <div class="min-h-28 border-r border-borda p-2 last:border-r-0 {% if dia.hoje %}bg-primaria-suave{% elif dia.fim_de_semana or dia.fora_do_mes %}bg-fundo{% endif %} {% if visao == 'semana' %}min-h-64{% endif %}">
-                  <p class="flex size-6 items-center justify-center rounded-full text-xs {% if dia.hoje %}bg-primaria font-semibold text-white{% elif dia.fora_do_mes %}text-slate-400{% else %}text-slate-600{% endif %}">{{ dia.data.day }}</p>
+                  <p class="flex size-6 items-center justify-center rounded-full text-xs {% if dia.hoje %}bg-primaria font-semibold text-white{% elif dia.fora_do_mes %}text-slate-500{% else %}text-slate-600{% endif %}">{{ dia.data.day }}</p>
                   {% for item in dia.itens %}
                     {% include "aluno/_item_calendario.html" %}
                   {% endfor %}

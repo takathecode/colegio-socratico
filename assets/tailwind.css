@@ -32,6 +32,12 @@
   --color-borda-forte: #CBD5E1;    /* borda tracejada do anexo, trilho da barra de frequência */
   --color-travado: #EEF1F5;        /* campo que não pode ser editado */
 
+  /* Texto secundário (subtítulos, horários, cabeçalho de tabela). O slate-500 original do
+     Tailwind (#62748E) dá 4,44:1 sobre o fundo da página, abaixo dos 4,5:1 do WCAG AA.
+     Este tom um pouco mais escuro passa em todos os fundos do portal:
+     branco 5,77 · fundo 5,37 · primaria-suave 5,03 · travado 5,09. */
+  --color-slate-500: #56677F;
+
   /* Situações (selos e avisos). */
   --color-atencao: #D97706;        /* "Em atenção" (âmbar) */
   --color-perigo: #C62828;         /* "Em risco", erros, botão de encerrar */
