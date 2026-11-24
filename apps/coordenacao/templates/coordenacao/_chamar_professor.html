@@ -1,0 +1,25 @@
+{# "Chamar professor sobre este aluno" (Alunos em risco). Parâmetro: risco. #}
+{# Lista só os professores ativos das disciplinas da turma do aluno (views.marcar_professores_para_chamar). #}
+{# O link abre Videochamadas com o professor e o assunto já preenchidos; a chamada só sai em "Chamar agora". #}
+{% if risco.chamar_professores %}
+  <details class="group">
+    <summary title="Chamar professor sobre este aluno"
+             class="inline-flex cursor-pointer list-none items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-sm font-semibold text-[#1F4E8C] hover:bg-[#EAF0F8] focus-visible:outline-2 focus-visible:outline-[#1F4E8C] [&::-webkit-details-marker]:hidden">
+      <i data-lucide="video" class="size-4" aria-hidden="true"></i> Chamar professor
+      <span class="sr-only">sobre {{ risco.matricula.aluno.get_full_name|default:risco.matricula.aluno.matricula }}</span>
+      <i data-lucide="chevron-down" class="size-4 transition-transform group-open:rotate-180" aria-hidden="true"></i>
+    </summary>
+    <ul class="mt-1 space-y-0.5">
+      {% for item in risco.chamar_professores %}
+        <li>
+          <a href="{{ item.url }}" class="block rounded-md px-2 py-1.5 hover:bg-[#F5F7FA]">
+            <span class="block text-sm font-medium text-[#0B2545]">{{ item.nome }}</span>
+            <span class="block text-xs text-slate-500">{{ item.disciplinas }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  </details>
+{% else %}
+  <span class="text-xs text-slate-500">Nenhum professor ativo na turma</span>
+{% endif %}

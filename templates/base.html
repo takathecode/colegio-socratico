@@ -60,4 +60,9 @@
   </div>
 
   {% include "componentes/modal.html" with id="janela-foto" titulo="Foto de perfil" subtitulo="Aparece no topo do portal, ao lado do seu nome." conteudo="componentes/foto_perfil.html" %}
+
+  {# Videochamada recebida: só quem participa das chamadas (o aluno não). #}
+  {% if user.perfil == "PROFESSOR" or user.perfil == "COORDENADOR" %}
+    {% include "componentes/chamada_recebida.html" %}
+  {% endif %}
 {% endblock %}

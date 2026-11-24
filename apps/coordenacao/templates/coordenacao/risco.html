@@ -95,6 +95,7 @@
               <th scope="col" class="px-3 py-2.5 font-medium">Probabilidade</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Nível</th>
               <th scope="col" class="px-3 py-2.5 font-medium">Principais motivos</th>
+              <th scope="col" class="px-3 py-2.5 font-medium">Conversar</th>
             </tr>
           </thead>
           <tbody>
@@ -104,7 +105,7 @@
                   <a href="{% url 'coordenacao:aluno_editar' risco.matricula.aluno.pk %}" class="font-medium hover:underline">{{ risco.matricula.aluno.get_full_name|default:risco.matricula.aluno.matricula }}</a>
                   <p class="mt-0.5 text-xs text-slate-500">RA {{ risco.matricula.aluno.matricula }} · média {{ risco.media|floatformat:1 }} · freq. {{ risco.frequencia|floatformat:0 }}%</p>
                 </td>
-                <td class="px-3 py-3">{{ risco.matricula.turma.codigo }}</td>
+                <td class="whitespace-nowrap px-3 py-3">{{ risco.matricula.turma.codigo }}</td>
                 <td class="px-3 py-3">
                   {% include "coordenacao/_barra_risco.html" %}
                 </td>
@@ -118,6 +119,7 @@
                     <span class="text-slate-500">Nenhum sinal de alerta</span>
                   {% endif %}
                 </td>
+                <td class="px-3 py-2">{% include "coordenacao/_chamar_professor.html" %}</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -140,6 +142,7 @@
                 {% for motivo in risco.motivos %}<li>{{ motivo }}</li>{% endfor %}
               </ul>
             {% endif %}
+            <div class="-ml-2 mt-2">{% include "coordenacao/_chamar_professor.html" %}</div>
           </li>
         {% endfor %}
       </ul>

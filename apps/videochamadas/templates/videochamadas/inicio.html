@@ -44,6 +44,7 @@
                   <p class="mt-0.5 truncate text-xs text-slate-500">
                     {% if chamada.fui_eu_que_chamei %}Você chamou{% else %}Recebida{% endif %}
                     · {{ chamada.criada_em|date:"d/m/Y \à\s H:i" }}
+                    {% if chamada.texto_da_duracao %}· {{ chamada.texto_da_duracao }}{% endif %}
                     · {{ chamada.assunto|default:"Sem assunto" }}
                   </p>
                 </div>

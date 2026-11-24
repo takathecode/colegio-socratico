@@ -6,6 +6,10 @@ O coordenador chama um professor (ou o professor chama a coordenação) com um c
 conversam por vídeo **dentro do portal**. O vídeo vai direto de um computador ao outro, sem
 passar pelo nosso servidor e sem ser gravado. O aluno não participa.
 
+Quem é chamado vê, em qualquer tela do portal, a janela **"Fulano está te chamando"**, com
+**Atender** e **Recusar**. O histórico mostra se cada chamada foi atendida, recusada ou não
+atendida, e quanto tempo durou.
+
 ## Como funciona (sala própria, o padrão)
 
 O vídeo usa o **WebRTC**, um recurso que todo navegador moderno já tem: dois navegadores
@@ -35,8 +39,8 @@ Os recados (model `SinalChamada`, em `apps/videochamadas/models.py`) são de cin
 
 Passo a passo:
 
-1. Os dois abrem a sala (`/videochamadas/<número>/`). O navegador pede permissão para a câmera e
-   o microfone e manda `entrei`.
+1. Os dois abrem a sala (`/videochamadas/<número>/`) e passam pela **pré-sala** (ver abaixo). Ao
+   clicar em **Entrar na sala**, o navegador manda `entrei`.
 2. Quando quem criou a chamada vê o `entrei` do outro, ele manda a `oferta`. A regra é fixa
    (sempre quem criou oferece) para os dois não oferecerem ao mesmo tempo.
 3. O convidado lê a oferta e manda a `resposta`.
@@ -57,6 +61,24 @@ Detalhes que fazem a conexão não falhar:
 - **Sem câmera ou sem permissão.** A pessoa entra mesmo assim: vê e ouve o outro, e a tela
   explica o problema (permissão negada, câmera usada por outro programa, computador sem câmera,
   página sem HTTPS). Sem câmera, ela entra só com o microfone.
+
+## Antes de entrar: a pré-sala
+
+Ao abrir a sala, a pessoa ainda não está na chamada. O navegador pede permissão para a câmera e o
+microfone e mostra:
+
+- a **prévia da câmera** (espelhada, como num espelho);
+- a lista de **câmeras** e de **microfones** do computador (`enumerateDevices`), para escolher
+  outro aparelho (um fone de ouvido, uma câmera USB). A escolha fica guardada **neste navegador**
+  (`localStorage`) e vale para as próximas chamadas. Se o aparelho guardado for desconectado, o
+  navegador usa outro;
+- uma **barra verde** que acompanha o volume do microfone (Web Audio, `AnalyserNode`): se ela
+  mexe quando a pessoa fala, o microfone está ouvindo;
+- os botões de **microfone** e **câmera**: dá para entrar com a câmera desligada.
+
+Só ao clicar em **Entrar na sala** o outro fica sabendo que a pessoa está ali. Enquanto isso, o
+portal já busca os servidores STUN/TURN, para a entrada ser rápida. Plugar ou tirar um aparelho
+atualiza a lista sozinho.
 
 ## Na sala: botões e conversa
 
@@ -97,6 +119,63 @@ voltado, a tela explica o problema e sugere recarregar ou usar o Jitsi.
 Só quem criou a chamada refaz a oferta (a mesma regra do começo), para os dois não fazerem ao
 mesmo tempo. Cada oferta leva um número, e a resposta repete esse número: resposta de uma
 oferta antiga é ignorada.
+
+## Chamada recebida, situações e Alunos em risco
+
+### A janela "Fulano está te chamando"
+
+Em **qualquer tela** do professor e da coordenação, o `static/js/portal.js` pergunta ao portal a
+cada 10 segundos (30 s com a aba em segundo plano, e na hora quando a pessoa volta para a aba) se
+alguém está chamando: rota `GET /videochamadas/recebida/`. É polling, pelo mesmo motivo da
+sinalização (ver abaixo). A resposta traz a chamada mais recente que é para a pessoa, ainda não
+foi atendida, recusada nem encerrada, e começou há menos de **2 minutos** (`TEMPO_DE_TOQUE`). São
+3 consultas ao banco por pergunta (2 do login e 1 da chamada).
+
+Se houver uma, abre a janela (`templates/componentes/chamada_recebida.html`) com a foto, o nome e
+o assunto de quem chama. O título da aba pisca ("Chamada de Fulano") e o navegador toca um bipe
+curto feito pelo próprio Web Audio, sem arquivo de som. Se o navegador bloquear o som antes de a
+pessoa clicar na página, fica só a janela.
+
+| Botão | O que faz |
+|---|---|
+| **Atender** | abre a sala (e a pré-sala) |
+| **Recusar** | `POST /videochamadas/<número>/recusar/` por `fetch`, sem recarregar a página (a pessoa pode estar no meio das notas); a chamada fica "Recusada" e é encerrada para os dois |
+| **Esc** | fecha a janela sem recusar; ela não abre de novo naquela aba, e o convite continua no sino |
+
+Quem chamou, esperando na sala, vê "Chamando Fulano...", depois "Fulano abriu o convite" ou
+"Fulano não atendeu" (a rota `sinal/` também devolve a situação). Se a chamada for recusada, a
+sala recarrega e mostra "Fulano recusou a chamada.".
+
+### Situações no histórico
+
+Nada novo é digitado: a situação vem de duas datas novas da `Chamada`, `atendida_em` e
+`recusada_em` (migração `videochamadas/0003`), junto com `criada_em` e `encerrada_em`.
+
+| Situação | Quando |
+|---|---|
+| Chamando | ninguém atendeu ainda e faz menos de 2 minutos |
+| Em andamento | o convidado abriu a sala, e a chamada não acabou |
+| Atendida | o convidado abriu a sala, e a chamada acabou |
+| Recusada | o convidado clicou em Recusar |
+| Não atendida | passaram 2 minutos (ou quem chamou desistiu) sem o convidado abrir a sala |
+
+**Atendida = o convidado abriu a sala** (pelo botão Atender, pelo sino ou pelo histórico). A
+regra vale igual no modo `proprio` e no `jitsi`. Se ele abrir a sala depois dos 2 minutos, com
+quem chamou ainda esperando, a chamada ainda vira "Em andamento".
+
+A **duração** vai do atendimento ao encerramento ("menos de 1 min", "12 min", "1 h 05 min"). Uma
+chamada que ninguém encerrou (as duas abas fechadas) não tem duração no histórico: não dá para
+saber quando a conversa acabou.
+
+### "Chamar professor sobre este aluno"
+
+Na tela **Alunos em risco** da coordenação, cada aluno tem o menu **Chamar professor**, que lista
+só os **professores ativos das disciplinas da turma do aluno**, com as disciplinas de cada um. A
+lista sai de uma consulta só para a página inteira (`marcar_professores_para_chamar`, em
+`apps/coordenacao/views.py`). Escolher um professor abre Videochamadas com o professor e o
+assunto já preenchidos ("Aluno em risco: Nome (RA ...)"), pelos parâmetros `?para=` e
+`?assunto=`. A chamada só sai quando o coordenador confere e clica em **Chamar agora**: o
+formulário valida tudo de novo, como em qualquer chamada.
 
 ## Por que a sinalização é por polling (e não por WebSocket)
 
@@ -188,6 +267,7 @@ link.
 | Professor | chamar qualquer coordenador **ativo** |
 | Aluno e ADMIN | nada: a área inteira responde **403** (`@perfil_requerido`) |
 | Quem não participa da chamada | nem abre a sala, nem lê ou manda sinais: **404** (`Chamada.objects.do_usuario`) |
+| Convidado | recusar a chamada (quem chamou recebe **404** em `recusar/`; chamada já atendida ou encerrada dá **400**) |
 
 Coordenador com coordenador ou professor com professor não é permitido: o formulário só lista
 o outro perfil, e `Chamada.clean()` confere de novo antes de gravar. Quem chama é sempre quem
@@ -205,7 +285,10 @@ está logado, nunca um campo do formulário.
   conteúdo que não é um objeto JSON e recado com mais de **16 KB** (uma oferta de vídeo e áudio tem cerca de 6 KB).
 - Os recados são apagados quando a chamada é encerrada, e os com mais de **2 horas** são
   apagados sempre que alguém entra numa sala (sem Celery).
-- As respostas de `sinal/` e `ice/` têm `Cache-Control: no-cache`: nada fica guardado no
+- `recebida/` só devolve chamadas **para quem pergunta**, e `recusar/` só aceita o convidado
+  (POST com o token CSRF no cabeçalho). O nome e o assunto aparecem na janela com
+  `textContent`, nunca como HTML.
+- As respostas de `sinal/`, `ice/` e `recebida/` têm `Cache-Control: no-cache`: nada fica guardado no
   navegador nem em proxy.
 - **Nada é gravado.** O vídeo, o áudio e a conversa não passam pelo portal, e o WebRTC
   criptografa a ligação entre os dois navegadores (DTLS-SRTP no vídeo, DTLS no canal de dados). Mesmo quando passa pelo TURN, o vídeo continua
@@ -224,13 +307,15 @@ encerrada, a tela do outro percebe em até 5 s e mostra "Esta chamada foi encerr
 
 | Arquivo | O que faz |
 |---|---|
-| `apps/videochamadas/models.py` | models `Chamada` (histórico) e `SinalChamada` (recados da sinalização) |
+| `apps/videochamadas/models.py` | models `Chamada` (histórico, situação e duração) e `SinalChamada` (recados da sinalização) |
 | `apps/videochamadas/forms.py` | quem pode ser chamado (`pessoas_para_chamar`) |
-| `apps/videochamadas/views.py` | telas (início, sala, encerrar) e as rotas `sinal/` e `ice/` |
+| `apps/videochamadas/views.py` | telas (início, sala, encerrar), as rotas `sinal/` e `ice/` e as rotas `recebida/` e `recusar/` |
 | `apps/videochamadas/templates/videochamadas/_sala_propria.html` | a sala dentro do portal |
-| `static/js/chamada.js` | a negociação WebRTC, os botões, a conversa, a reconexão, os estados da conexão e os avisos |
+| `static/js/chamada.js` | a pré-sala, a negociação WebRTC, os botões, a conversa, a reconexão, os estados da conexão e os avisos |
+| `templates/componentes/chamada_recebida.html` + `static/js/portal.js` | a janela "Fulano está te chamando" |
+| `apps/coordenacao/templates/coordenacao/_chamar_professor.html` | o menu "Chamar professor" de Alunos em risco |
 | `apps/alertas/regras.py` | `aviso_de_chamada`: o convite no sino |
-| `apps/videochamadas/tests.py` | testes de permissão, sinais, STUN/TURN, sala e histórico |
+| `apps/videochamadas/tests.py` | testes de permissão, sinais, STUN/TURN, sala, histórico, situações, chamada recebida e Alunos em risco |
 
 ## Para a apresentação
 
@@ -248,6 +333,15 @@ câmera, compartilhar a tela e usar a tela cheia. A conversa e os avisos de "mic
 desligado" vão por um canal de dados do próprio WebRTC, direto entre os navegadores: o portal
 não vê as mensagens e nada fica no banco. Se a internet oscilar, quem criou a chamada refaz a
 negociação de rede sozinho, sem fechar a ligação, e a conversa continua.
+
+**Resumo da fase 3 (integração com o portal).** Agora a chamada "toca": em qualquer tela, o
+professor vê a janela "Fulano está te chamando", com Atender e Recusar, e a aba pisca e apita. O
+navegador pergunta ao portal a cada 10 segundos, pelo mesmo motivo do polling da sinalização. O
+histórico mostra se a chamada foi atendida, recusada ou não atendida, e quanto durou, tudo
+calculado por datas guardadas na chamada. Antes de entrar, cada um passa por uma pré-sala, vê a
+própria câmera, escolhe o microfone e confere se ele está ouvindo. E na tela de Alunos em risco,
+a coordenação chama o professor de uma disciplina do aluno com o assunto já preenchido: o modelo
+de evasão aponta o aluno, e a conversa com o professor começa em dois cliques.
 
 - Testem antes, na rede onde vão apresentar. Com cada computador num celular diferente,
   configurem o TURN.

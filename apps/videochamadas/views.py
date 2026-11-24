@@ -17,7 +17,9 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.text import slugify
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
@@ -26,7 +28,13 @@ from apps.alertas.regras import aviso_de_chamada, chave_da_chamada
 from apps.contas.decorators import perfil_requerido
 
 from .forms import NovaChamadaForm
-from .models import VALIDADE_DO_SINAL, Chamada, SinalChamada, nome_na_chamada
+from .models import (
+    TEMPO_DE_TOQUE,
+    VALIDADE_DO_SINAL,
+    Chamada,
+    SinalChamada,
+    nome_na_chamada,
+)
 
 PERFIS = ("PROFESSOR", "COORDENADOR")
 ITENS_POR_PAGINA = 20
@@ -73,7 +81,13 @@ def renderizar_inicio(request, form):
 @perfil_requerido(*PERFIS)
 def inicio(request):
     # ?para= vem do botão "Chamar" da lista de professores e já escolhe a pessoa.
-    form = NovaChamadaForm(usuario=request.user, initial={"convidado": request.GET.get("para")})
+    # ?assunto= vem de "Alunos em risco" e já preenche o assunto. Os dois são só sugestões:
+    # o formulário confere tudo de novo quando a pessoa clica em "Chamar agora".
+    assunto = request.GET.get("assunto", "")[: Chamada._meta.get_field("assunto").max_length]
+    form = NovaChamadaForm(
+        usuario=request.user,
+        initial={"convidado": request.GET.get("para"), "assunto": assunto},
+    )
     return renderizar_inicio(request, form)
 
 
@@ -101,10 +115,15 @@ def nova(request):
 @perfil_requerido(*PERFIS)
 def sala(request, pk):
     chamada = get_object_or_404(chamadas_do_usuario(request.user), pk=pk)
+    agora = timezone.now()
     # Quem abriu a sala já viu o convite: ele deixa de contar como não lido no sino.
-    Alerta.objects.filter(
-        destinatario=request.user, chave=chave_da_chamada(chamada.pk), lido_em__isnull=True
-    ).update(lido_em=timezone.now())
+    marcar_convite_como_lido(request.user, chamada)
+    # O convidado abriu a sala de uma chamada em andamento: ela foi atendida (a duração
+    # começa a contar daqui). O filtro atendida_em__isnull garante que vale só a primeira vez,
+    # mesmo com duas abas abrindo juntas.
+    if chamada.convidado_id == request.user.pk and chamada.em_andamento and not chamada.atendida_em:
+        Chamada.objects.filter(pk=chamada.pk, atendida_em__isnull=True).update(atendida_em=agora)
+        chamada.atendida_em = agora
     outro = chamada.outro_participante(request.user)
 
     # Na sala própria, o navegador começa a ler os sinais depois do último que já existe:
@@ -147,6 +166,83 @@ def encerrar(request, pk):
     return redirect("videochamadas:inicio")
 
 
+def marcar_convite_como_lido(usuario, chamada):
+    Alerta.objects.filter(
+        destinatario=usuario, chave=chave_da_chamada(chamada.pk), lido_em__isnull=True
+    ).update(lido_em=timezone.now())
+
+
+# --- Chamada recebida: a janela "Fulano está te chamando" (static/js/portal.js) ---
+
+
+@login_required
+@perfil_requerido(*PERFIS)
+@require_GET
+@never_cache
+def recebida(request):
+    """A chamada que está tocando para quem pergunta, ou null.
+
+    O portal.js pergunta a cada 10 s, em qualquer tela do professor e da coordenação. Toca a
+    chamada mais recente que: é para esta pessoa, não foi atendida, recusada nem encerrada, e
+    começou há menos de 2 minutos (TEMPO_DE_TOQUE). São 3 consultas: as 2 do login e esta.
+    """
+    chamada = (
+        Chamada.objects.filter(
+            convidado=request.user,
+            atendida_em__isnull=True,
+            encerrada_em__isnull=True,
+            criada_em__gt=timezone.now() - TEMPO_DE_TOQUE,
+        )
+        .select_related("criada_por")
+        .order_by("-criada_em", "-id")
+        .first()
+    )
+    if chamada is None:
+        return JsonResponse({"chamada": None})
+
+    quem_chamou = chamada.criada_por
+    foto = ""
+    if quem_chamou.foto:
+        # O mesmo endereço do componentes/avatar.html (a regra de quem vê está em contas/foto.py).
+        foto = f"{reverse('contas:foto_de', args=[quem_chamou.pk])}?v={slugify(quem_chamou.foto.name)}"
+    return JsonResponse(
+        {
+            "chamada": {
+                "id": chamada.pk,
+                "nome": nome_na_chamada(quem_chamou),
+                "iniciais": quem_chamou.iniciais,
+                "foto": foto,
+                "assunto": chamada.assunto,
+                "url_sala": reverse("videochamadas:sala", args=[chamada.pk]),
+                "url_recusar": reverse("videochamadas:recusar", args=[chamada.pk]),
+            }
+        }
+    )
+
+
+@login_required
+@perfil_requerido(*PERFIS)
+@require_POST
+def recusar_chamada(request, pk):
+    """O convidado recusa a chamada: ela fica "Recusada" e é encerrada para os dois.
+
+    Só o convidado recusa (para quem chamou, a chamada não existe aqui: 404). Responde em JSON,
+    porque é a janela do portal.js que pede, sem recarregar a página (a pessoa pode estar no
+    meio de um formulário). Quem chamou percebe na sala em até 5 s e vê "Fulano recusou".
+    """
+    chamada = get_object_or_404(Chamada.objects.filter(convidado=request.user), pk=pk)
+    if not chamada.em_andamento or chamada.atendida_em:
+        return recusar("A chamada já foi atendida ou encerrada.")
+    agora = timezone.now()
+    with transaction.atomic():
+        chamada.recusada_em = agora
+        chamada.encerrada_em = agora
+        chamada.save(update_fields=["recusada_em", "encerrada_em"])
+        chamada.sinais.all().delete()
+        marcar_convite_como_lido(request.user, chamada)
+    return JsonResponse({"recusada": True})
+
+
 # --- Sinalização da sala própria (respostas em JSON, lidas por static/js/chamada.js) ---
 
 
@@ -180,7 +276,8 @@ def ler_sinais(request, chamada):
 
     Cada pessoa só lê o que foi mandado PARA ela (filtro para=request.user). É a consulta que
     o navegador repete a cada segundo, então ela usa o índice (chamada, para, id) e devolve só
-    três campos.
+    três campos. A situação ("chamando", "nao_atendida", "recusada"...) deixa quem chamou
+    mostrar "Fulano não atendeu" enquanto espera; ela vem das datas, sem consulta a mais.
     """
     try:
         depois = int(request.GET.get("depois", "0"))
@@ -197,7 +294,9 @@ def ler_sinais(request, chamada):
             .order_by("id")
             .values("id", "tipo", "conteudo")[:SINAIS_POR_CONSULTA]
         )
-    return JsonResponse({"sinais": sinais, "encerrada": encerrada})
+    return JsonResponse(
+        {"sinais": sinais, "encerrada": encerrada, "situacao": chamada.situacao.value}
+    )
 
 
 def gravar_sinal(request, chamada):

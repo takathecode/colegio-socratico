@@ -32,6 +32,7 @@ from apps.analytics.models import RiscoEvasao
 from apps.contas.decorators import perfil_requerido
 from apps.contas.models import Usuario
 from apps.relatorios.filtros import RiscoFiltro
+from apps.videochamadas.models import Chamada, nome_na_chamada
 
 from . import servicos
 from .forms import (
@@ -222,6 +223,42 @@ def riscos_com_aluno():
     ).order_by("-probabilidade")
 
 
+def marcar_professores_para_chamar(riscos):
+    """Botão "Chamar professor sobre este aluno": os professores ativos da turma de cada aluno.
+
+    Uma consulta para a página inteira. Cada risco ganha a lista chamar_professores, com o
+    link para Videochamadas já com o professor e o assunto escolhidos (?para= e ?assunto=). Um
+    professor com duas disciplinas na turma aparece uma vez só, com as duas.
+    """
+    turmas = {risco.matricula.turma_id for risco in riscos}
+    professores_por_turma = {}
+    ofertas = (
+        Oferta.objects.filter(turma_id__in=turmas, professor__is_active=True)
+        .select_related("professor", "disciplina")
+        .order_by("professor__first_name", "professor__last_name", "disciplina__nome")
+    )
+    for oferta in ofertas:
+        da_turma = professores_por_turma.setdefault(oferta.turma_id, {})
+        item = da_turma.setdefault(
+            oferta.professor_id, {"professor": oferta.professor, "disciplinas": []}
+        )
+        item["disciplinas"].append(oferta.disciplina.nome)
+
+    endereco = reverse("videochamadas:inicio")
+    limite = Chamada._meta.get_field("assunto").max_length
+    for risco in riscos:
+        aluno = risco.matricula.aluno
+        assunto = f"Aluno em risco: {aluno.get_full_name() or aluno.matricula} (RA {aluno.matricula})"
+        risco.chamar_professores = [
+            {
+                "nome": nome_na_chamada(item["professor"]),
+                "disciplinas": ", ".join(item["disciplinas"]),
+                "url": f"{endereco}?{urlencode({'para': item['professor'].pk, 'assunto': assunto[:limite]})}",
+            }
+            for item in professores_por_turma.get(risco.matricula.turma_id, {}).values()
+        ]
+
+
 @login_required
 @perfil_requerido("COORDENADOR")
 def risco(request):
@@ -238,12 +275,14 @@ def risco(request):
     # O mesmo filtro do relatório (apps/relatorios/filtros.py): o PDF traz a lista da tela.
     riscos = list(RiscoFiltro(request.GET, queryset=riscos).qs)
     filtros_usados = {"busca": busca, "turma": turma, "nivel": nivel}
+    pagina = paginar(request, riscos)
+    marcar_professores_para_chamar(pagina.object_list)
 
     return render(
         request,
         "coordenacao/risco.html",
         {
-            "pagina": paginar(request, riscos),
+            "pagina": pagina,
             "total": len(riscos),
             "modelo_treinado": evasao.modelo_treinado(),
             "alto": por_nivel.get(RiscoEvasao.Nivel.ALTO, 0),

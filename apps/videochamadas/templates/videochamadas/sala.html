@@ -30,9 +30,20 @@
       <dl class="mt-5 text-sm">
         <dt class="font-medium text-slate-500">Assunto</dt>
         <dd class="mt-1">{{ chamada.assunto|default:"Sem assunto" }}</dd>
-        {% if chamada.encerrada_em %}
+        {% if chamada.atendida_em %}
+          <dt class="mt-3 font-medium text-slate-500">Atendida em</dt>
+          <dd class="mt-1">{{ chamada.atendida_em|date:"d/m/Y \à\s H:i" }}</dd>
+        {% endif %}
+        {% if chamada.recusada_em %}
+          <dt class="mt-3 font-medium text-slate-500">Recusada em</dt>
+          <dd class="mt-1">{{ chamada.recusada_em|date:"d/m/Y \à\s H:i" }}</dd>
+        {% elif chamada.encerrada_em %}
           <dt class="mt-3 font-medium text-slate-500">Encerrada em</dt>
           <dd class="mt-1">{{ chamada.encerrada_em|date:"d/m/Y \à\s H:i" }}</dd>
+        {% endif %}
+        {% if chamada.texto_da_duracao %}
+          <dt class="mt-3 font-medium text-slate-500">Duração</dt>
+          <dd class="mt-1">{{ chamada.texto_da_duracao }}</dd>
         {% endif %}
       </dl>
 
@@ -65,7 +76,10 @@
         </div>
       {% else %}
         <div class="mt-5 rounded-lg bg-[#F5F7FA] p-4 text-sm text-slate-600">
-          {% if chamada.encerrada_em %}Esta chamada foi encerrada.{% else %}Esta chamada passou de 3 horas e não está mais em andamento.{% endif %}
+          {% if chamada.recusada_em %}
+            {% if fui_eu_que_chamei %}{{ nome_do_outro }} recusou a chamada.{% else %}Você recusou esta chamada.{% endif %}
+          {% elif chamada.encerrada_em %}Esta chamada foi encerrada.{% else %}Esta chamada passou de 3 horas e não está mais em andamento.{% endif %}
+          {% if chamada.situacao == "nao_atendida" %}{% if fui_eu_que_chamei %}{{ nome_do_outro }} não atendeu.{% else %}Você não atendeu.{% endif %}{% endif %}
           Para falar de novo, crie uma chamada nova.
         </div>
         {% if outro.is_active %}

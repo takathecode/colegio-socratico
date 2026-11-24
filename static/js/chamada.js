@@ -21,6 +21,10 @@
 //
 // Se a internet oscilar e a ligação cair, quem criou a chamada refaz a negociação de rede
 // ("ICE restart") sem fechar a ligação: o vídeo e a conversa voltam sozinhos.
+//
+// Antes de tudo isso vem a pré-sala: a pessoa vê a própria câmera, escolhe a câmera e o
+// microfone e confere se o microfone está ouvindo. Só ao clicar em "Entrar na sala" ela manda
+// o "entrei" e a negociação começa.
 
 (() => {
   const sala = document.querySelector("[data-sala-propria]");
@@ -35,6 +39,10 @@
   const NOME_DO_OUTRO = sala.dataset.nomeDoOutro;
   const SOU_QUEM_CHAMOU = sala.dataset.souQuemChamou === "true";
   const TOKEN_CSRF = sala.querySelector("[name=csrfmiddlewaretoken]").value;
+
+  // Aparelho escolhido na pré-sala, lembrado neste navegador para a próxima chamada.
+  const CHAVE_DA_CAMERA = "videochamada-camera";
+  const CHAVE_DO_MICROFONE = "videochamada-microfone";
 
   const INTERVALO_CONECTANDO = 1000; // ms entre as consultas enquanto conecta
   const INTERVALO_CONECTADO = 5000; // depois de conectado, só para perceber "saiu"/"encerrada"
@@ -76,6 +84,18 @@
   const formConversa = sala.querySelector("[data-form-conversa]");
   const campoConversa = sala.querySelector("[data-campo-conversa]");
   const botaoEnviar = sala.querySelector("[data-enviar-conversa]");
+  // Pré-sala
+  const preSala = sala.querySelector("[data-pre-sala]");
+  const dentroDaSala = sala.querySelector("[data-dentro-da-sala]");
+  const previa = sala.querySelector("[data-previa]");
+  const previaSemVideo = sala.querySelector("[data-previa-sem-video]");
+  const previaTexto = sala.querySelector("[data-previa-texto]");
+  const botaoPreviaMicrofone = sala.querySelector("[data-previa-microfone]");
+  const botaoPreviaCamera = sala.querySelector("[data-previa-camera]");
+  const escolhaCamera = sala.querySelector("[data-escolha-camera]");
+  const escolhaMicrofone = sala.querySelector("[data-escolha-microfone]");
+  const nivelMicrofone = sala.querySelector("[data-nivel-microfone]");
+  const botaoEntrar = sala.querySelector("[data-entrar]");
 
   // --- Situação da sala ---
   const minhaSessao = sortearSessao();
@@ -99,6 +119,12 @@
   let tentativasDeReconexao = 0;
   let relogioDaReconexao = null;
   let relogioDaFalha = null;
+  let entrou = false; // já clicou em "Entrar na sala"? (antes disso, está na pré-sala)
+  let pedidoDosServidoresIce = null; // buscados enquanto a pessoa está na pré-sala
+  // Situação da chamada no portal ("chamando", "nao_atendida", "em_andamento"...), atualizada
+  // a cada consulta. Quem chamou usa para mostrar "Chamando..." ou "Fulano não atendeu".
+  let situacao = sala.dataset.situacao;
+  let outroJaEntrou = false;
 
   function sortearSessao() {
     // crypto.getRandomValues funciona mesmo fora do HTTPS (o randomUUID, não).
@@ -222,8 +248,14 @@
           }
         }
         if (dados.encerrada) {
-          terminar();
+          terminar(); // encerrada ou recusada: a página recarregada explica o que houve
           return;
+        }
+        if (dados.situacao && dados.situacao !== situacao) {
+          situacao = dados.situacao;
+          if (!sessaoDoOutro && !outroJaEntrou) {
+            mostrarEspera(); // "Chamando..." virou "não atendeu" ou "abriu o convite"
+          }
         }
         intervalo = conectado ? INTERVALO_CONECTADO : INTERVALO_CONECTANDO;
       }
@@ -267,6 +299,7 @@
       return; // já estamos conversando com esta aba
     }
     sessaoDoOutro = sessao;
+    outroJaEntrou = true;
     fecharConexao();
     mostrarEstado("Conectando...", { textoDaCapa: "O outro participante entrou. Conectando..." });
     if (SOU_QUEM_CHAMOU) {
@@ -300,6 +333,7 @@
     const reconexao = Boolean(conexao && sessao === sessaoDoOutro && conexao.remoteDescription);
     if (sessao !== sessaoDoOutro || !conexao) {
       sessaoDoOutro = sessao;
+      outroJaEntrou = true;
       novaConexao();
     }
     if (!reconexao) {
@@ -358,6 +392,29 @@
       } catch (erro) {
         console.warn("Candidato de rede não aplicado:", erro);
       }
+    }
+  }
+
+  function mostrarEspera() {
+    // Texto enquanto o outro ainda não entrou na sala. Para quem chamou, diz também se a
+    // chamada ainda está tocando para o outro (situação vinda do portal).
+    if (!SOU_QUEM_CHAMOU || outroJaEntrou) {
+      mostrarEstado("Aguardando o outro entrar...");
+    } else if (situacao === "chamando") {
+      mostrarEstado(`Chamando ${NOME_DO_OUTRO}...`, {
+        textoDaCapa: `Chamando ${NOME_DO_OUTRO}... O convite aparece na tela e no sino.`,
+      });
+    } else if (situacao === "nao_atendida") {
+      mostrarEstado(`${NOME_DO_OUTRO} não atendeu`, {
+        cor: "problema",
+        textoDaCapa:
+          `${NOME_DO_OUTRO} ainda não atendeu. Você pode esperar mais um pouco ` +
+          "(o convite continua no sino) ou encerrar a chamada.",
+      });
+    } else {
+      mostrarEstado("Aguardando o outro entrar...", {
+        textoDaCapa: `${NOME_DO_OUTRO} abriu o convite. Aguardando entrar na sala...`,
+      });
     }
   }
 
@@ -764,18 +821,23 @@
   }
 
   function atualizarBotoes() {
+    // Os botões de microfone e câmera da pré-sala são iguais aos da chamada.
     const microfone = midiaLocal?.getAudioTracks()[0];
-    marcarBotao(botaoMicrofone, {
-      desligado: !microfone?.enabled,
-      desativado: !microfone,
-      rotulo: !microfone ? "Sem microfone" : microfone.enabled ? "Desligar o microfone" : "Ligar o microfone",
-    });
+    for (const botao of [botaoMicrofone, botaoPreviaMicrofone]) {
+      marcarBotao(botao, {
+        desligado: !microfone?.enabled,
+        desativado: !microfone,
+        rotulo: !microfone ? "Sem microfone" : microfone.enabled ? "Desligar o microfone" : "Ligar o microfone",
+      });
+    }
     const camera = midiaLocal?.getVideoTracks()[0];
-    marcarBotao(botaoCamera, {
-      desligado: !camera?.enabled,
-      desativado: !camera,
-      rotulo: !camera ? "Sem câmera" : camera.enabled ? "Desligar a câmera" : "Ligar a câmera",
-    });
+    for (const botao of [botaoCamera, botaoPreviaCamera]) {
+      marcarBotao(botao, {
+        desligado: !camera?.enabled,
+        desativado: !camera,
+        rotulo: !camera ? "Sem câmera" : camera.enabled ? "Desligar a câmera" : "Ligar a câmera",
+      });
+    }
     marcarBotao(botaoTela, {
       desligado: false,
       ativo: Boolean(telaCompartilhada),
@@ -797,11 +859,17 @@
     faixa.enabled = !faixa.enabled;
     atualizarBotoes();
     mostrarMidiaLocal();
+    mostrarPrevia();
     enviarEstado();
   }
 
-  botaoMicrofone.addEventListener("click", () => alternarFaixa(midiaLocal?.getAudioTracks()[0]));
-  botaoCamera.addEventListener("click", () => alternarFaixa(midiaLocal?.getVideoTracks()[0]));
+  // Desligar na pré-sala vale também dentro da chamada: dá para entrar com a câmera desligada.
+  for (const botao of [botaoMicrofone, botaoPreviaMicrofone]) {
+    botao.addEventListener("click", () => alternarFaixa(midiaLocal?.getAudioTracks()[0]));
+  }
+  for (const botao of [botaoCamera, botaoPreviaCamera]) {
+    botao.addEventListener("click", () => alternarFaixa(midiaLocal?.getVideoTracks()[0]));
+  }
 
   async function trocarVideoEnviado() {
     // replaceTrack troca a câmera pela tela (ou o contrário) sem negociar a ligação de novo.
@@ -889,6 +957,30 @@
   };
   const AINDA_VE = " Você vê e ouve o outro, mas ele não vê nem ouve você.";
 
+  // localStorage pode não existir (janela anônima, site bloqueado): aí só não lembra.
+  function lerPreferencia(chave) {
+    try {
+      return localStorage.getItem(chave) || "";
+    } catch (erro) {
+      return "";
+    }
+  }
+
+  function guardarPreferencia(chave, valor) {
+    try {
+      localStorage.setItem(chave, valor);
+    } catch (erro) {
+      // sem armazenamento: só não lembra a escolha
+    }
+  }
+
+  function pedidoDoAparelho(chave) {
+    // O aparelho escolhido da última vez vai como preferência, e não como exigência: se ele
+    // foi desconectado, o navegador usa outro.
+    const id = lerPreferencia(chave);
+    return id ? { deviceId: id } : true;
+  }
+
   async function pegarMidia() {
     // O navegador só libera a câmera em página segura: https:// ou http://localhost.
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
@@ -899,7 +991,10 @@
       return null;
     }
     try {
-      return await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      return await navigator.mediaDevices.getUserMedia({
+        audio: pedidoDoAparelho(CHAVE_DO_MICROFONE),
+        video: pedidoDoAparelho(CHAVE_DA_CAMERA),
+      });
     } catch (erro) {
       if (erro.name !== "NotFoundError" && erro.name !== "OverconstrainedError") {
         avisarSobreAMidia((ERROS_DA_MIDIA[erro.name] || "Não foi possível usar a câmera e o microfone.") + AINDA_VE);
@@ -908,7 +1003,7 @@
     }
     // Sem câmera (comum em computador de laboratório): tenta entrar só com o microfone.
     try {
-      const soAudio = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const soAudio = await navigator.mediaDevices.getUserMedia({ audio: pedidoDoAparelho(CHAVE_DO_MICROFONE) });
       avisarSobreAMidia("Nenhuma câmera foi encontrada neste computador. Você entra só com o microfone.");
       return soAudio;
     } catch (erro) {
@@ -930,7 +1025,179 @@
     mostrarSe(semCamera, !imagem);
   }
 
+  // --- Pré-sala: prévia da câmera, escolha dos aparelhos e nível do microfone ---
+  function mostrarPrevia() {
+    const camera = midiaLocal?.getVideoTracks()[0];
+    const ligada = Boolean(camera?.enabled);
+    if (ligada && previa.srcObject !== midiaLocal) {
+      previa.srcObject = midiaLocal;
+    }
+    previa.classList.toggle("invisible", !ligada);
+    mostrarSe(previaSemVideo, !ligada);
+    if (!midiaLocal) {
+      previaTexto.textContent = "Sem câmera e sem microfone. Você ainda pode entrar para ver e ouvir o outro.";
+    } else if (!camera) {
+      previaTexto.textContent = "Sem câmera. Você entra só com o microfone.";
+    } else {
+      previaTexto.textContent = "Câmera desligada. O outro vê a sua foto.";
+    }
+  }
+
+  function preencherEscolha(campo, aparelhos, faixa, { nome, semAparelho, semAcesso }) {
+    // new Option(texto, valor) escreve o nome do aparelho como texto, sem virar código.
+    campo.replaceChildren();
+    if (!faixa) {
+      // Sem a faixa (sem permissão ou sem aparelho), o navegador não deixa trocar.
+      campo.append(new Option(aparelhos.length ? semAcesso : semAparelho, ""));
+      campo.disabled = true;
+      return;
+    }
+    const emUso = faixa.getSettings().deviceId;
+    aparelhos.forEach((aparelho, posicao) => {
+      const texto = aparelho.label || `${nome} ${posicao + 1}`;
+      campo.append(new Option(texto, aparelho.deviceId, false, aparelho.deviceId === emUso));
+    });
+    campo.disabled = false;
+  }
+
+  async function preencherAparelhos() {
+    // Os nomes dos aparelhos só aparecem depois que a pessoa permite a câmera e o microfone.
+    let aparelhos = [];
+    try {
+      aparelhos = (await navigator.mediaDevices.enumerateDevices()).filter((aparelho) => aparelho.deviceId);
+    } catch (erro) {
+      // navegador sem a lista de aparelhos: os campos ficam desativados
+    }
+    preencherEscolha(
+      escolhaCamera,
+      aparelhos.filter((aparelho) => aparelho.kind === "videoinput"),
+      midiaLocal?.getVideoTracks()[0],
+      { nome: "Câmera", semAparelho: "Nenhuma câmera encontrada", semAcesso: "Sem acesso à câmera" }
+    );
+    preencherEscolha(
+      escolhaMicrofone,
+      aparelhos.filter((aparelho) => aparelho.kind === "audioinput"),
+      midiaLocal?.getAudioTracks()[0],
+      { nome: "Microfone", semAparelho: "Nenhum microfone encontrado", semAcesso: "Sem acesso ao microfone" }
+    );
+  }
+
+  async function trocarAparelho(tipo, campo, chave) {
+    const antiga = midiaLocal?.getTracks().find((faixa) => faixa.kind === tipo);
+    const idNovo = campo.value;
+    const idAntigo = antiga?.getSettings().deviceId;
+    if (!antiga || !idNovo || idNovo === idAntigo) {
+      return;
+    }
+    const ligada = antiga.enabled; // câmera desligada continua desligada no aparelho novo
+    campo.disabled = true;
+    // Fecha o aparelho antigo antes de abrir o novo: algumas câmeras não abrem duas vezes.
+    antiga.stop();
+    midiaLocal.removeTrack(antiga);
+    let nova = null;
+    try {
+      const fluxo = await navigator.mediaDevices.getUserMedia({ [tipo]: { deviceId: { exact: idNovo } } });
+      nova = fluxo.getTracks()[0];
+      guardarPreferencia(chave, idNovo);
+      mostrarAviso(avisoDaMidia);
+    } catch (erro) {
+      mostrarAviso(
+        tipo === "video"
+          ? "Não foi possível usar esta câmera. Ela pode estar sendo usada por outro programa; escolha outra."
+          : "Não foi possível usar este microfone. Escolha outro."
+      );
+      try {
+        // Volta para o aparelho de antes.
+        const fluxo = await navigator.mediaDevices.getUserMedia({ [tipo]: { deviceId: idAntigo } });
+        nova = fluxo.getTracks()[0];
+      } catch (erroDeNovo) {
+        // nem o de antes abriu: segue sem este tipo de aparelho
+      }
+    }
+    if (!ativa) {
+      nova?.stop();
+      return;
+    }
+    if (nova) {
+      nova.enabled = ligada;
+      midiaLocal.addTrack(nova);
+    }
+    // O <video> nem sempre percebe a faixa nova no mesmo fluxo: liga de novo.
+    previa.srcObject = null;
+    videoLocal.srcObject = null;
+    await preencherAparelhos();
+    mostrarPrevia();
+    mostrarMidiaLocal();
+    atualizarBotoes();
+    if (tipo === "audio") {
+      medirMicrofone();
+    }
+  }
+
+  escolhaCamera.addEventListener("change", () => trocarAparelho("video", escolhaCamera, CHAVE_DA_CAMERA));
+  escolhaMicrofone.addEventListener("change", () => trocarAparelho("audio", escolhaMicrofone, CHAVE_DO_MICROFONE));
+  // Plugou ou tirou um fone ou uma câmera USB: a lista se atualiza (só na pré-sala).
+  navigator.mediaDevices?.addEventListener?.("devicechange", () => {
+    if (!entrou && ativa && midiaLocal) {
+      preencherAparelhos();
+    }
+  });
+
+  // Medidor do microfone: a barra verde acompanha o volume do que o microfone ouve.
+  let medidor = null;
+
+  function medirMicrofone() {
+    pararMedidor();
+    const microfone = midiaLocal?.getAudioTracks()[0];
+    const Contexto = window.AudioContext || window.webkitAudioContext;
+    if (!microfone || !Contexto) {
+      return;
+    }
+    try {
+      const contexto = new Contexto();
+      const analisador = contexto.createAnalyser();
+      analisador.fftSize = 512;
+      contexto.createMediaStreamSource(new MediaStream([microfone])).connect(analisador);
+      const amostras = new Uint8Array(analisador.fftSize);
+      const este = { contexto, quadro: null };
+      medidor = este;
+      const desenhar = () => {
+        if (medidor !== este) {
+          return; // o medidor foi trocado ou parado
+        }
+        analisador.getByteTimeDomainData(amostras);
+        // Volume (RMS): o quanto o som se afasta do silêncio, que é o valor 128.
+        let soma = 0;
+        for (const amostra of amostras) {
+          soma += ((amostra - 128) / 128) ** 2;
+        }
+        const volume = Math.sqrt(soma / amostras.length);
+        nivelMicrofone.style.width = `${Math.min(100, Math.round(volume * 400))}%`;
+        este.quadro = requestAnimationFrame(desenhar);
+      };
+      desenhar();
+      // O navegador pode deixar o som "suspenso" até a pessoa clicar na página.
+      if (contexto.state === "suspended") {
+        contexto.resume().catch(() => {});
+        preSala.addEventListener("pointerdown", () => contexto.resume().catch(() => {}), { once: true });
+      }
+    } catch (erro) {
+      medidor = null; // sem o medidor, a pré-sala continua funcionando
+    }
+  }
+
+  function pararMedidor() {
+    if (!medidor) {
+      return;
+    }
+    cancelAnimationFrame(medidor.quadro);
+    medidor.contexto.close().catch(() => {});
+    medidor = null;
+    nivelMicrofone.style.width = "0%";
+  }
+
   function pararMidia() {
+    pararMedidor();
     midiaLocal?.getTracks().forEach((faixa) => faixa.stop());
     telaCompartilhada?.getTracks().forEach((faixa) => faixa.stop());
     midiaLocal = null;
@@ -954,26 +1221,55 @@
 
   // --- Entrar, sair e terminar ---
   async function iniciar() {
+    // 1ª parte: a pré-sala. Pega a câmera e o microfone, mostra a prévia e libera "Entrar".
     atualizarBotoes();
     if (!window.RTCPeerConnection) {
       mostrarEstado("Navegador sem suporte", { cor: "problema", textoDaCapa: "Este navegador não faz videochamadas." });
+      previaTexto.textContent = "Este navegador não faz videochamadas.";
       mostrarAviso('Este navegador não faz videochamadas. Use o Chrome, o Edge ou o Firefox atualizados, ou o link "Entrar pelo Jitsi".');
       return;
     }
-    mostrarEstado("Preparando câmera e microfone...", {
-      textoDaCapa: "Se o navegador perguntar, permita o uso da câmera e do microfone.",
-    });
+    mostrarEstado("Preparando câmera e microfone...");
+    // Os servidores STUN/TURN são buscados enquanto a pessoa confere a câmera.
+    pedidoDosServidoresIce = buscarServidoresIce();
     midiaLocal = await pegarMidia();
+    if (!ativa) {
+      pararMidia();
+      return;
+    }
+    await preencherAparelhos();
+    mostrarPrevia();
     mostrarMidiaLocal();
     atualizarBotoes();
-    servidoresIce = await buscarServidoresIce();
+    medirMicrofone();
+    mostrarEstado("Confira a câmera e o microfone");
+    botaoEntrar.disabled = false;
+  }
+
+  async function entrarNaSala() {
+    // 2ª parte: a sala. Daqui em diante o outro fica sabendo que você está aqui ("entrei").
+    if (entrou || !ativa) {
+      return;
+    }
+    entrou = true;
+    botaoEntrar.disabled = true;
+    pararMedidor();
+    previa.srcObject = null; // a sua imagem passa para a miniatura da sala
+    preSala.hidden = true;
+    dentroDaSala.hidden = false;
+    mostrarMidiaLocal();
+    atualizarBotoes();
+    mostrarEstado("Entrando...");
+    servidoresIce = await pedidoDosServidoresIce;
     if (!ativa) {
       return;
     }
     await enviarSinal("entrei");
-    mostrarEstado("Aguardando o outro entrar...");
+    mostrarEspera();
     consultar();
   }
+
+  botaoEntrar.addEventListener("click", entrarNaSala);
 
   function desligar({ avisarOOutro = true } = {}) {
     // Para tudo nesta aba e avisa o outro ("saiu"). Seguro de chamar mais de uma vez.
@@ -982,15 +1278,21 @@
     }
     ativa = false;
     clearTimeout(proximaConsulta);
-    if (avisarOOutro) {
+    // Quem ainda estava na pré-sala não mandou "entrei", então não há o que avisar.
+    if (avisarOOutro && entrou) {
       postar(corpoDoSinal("saiu"), { keepalive: true });
     }
     fecharConexao();
     pararMidia();
     videoLocal.srcObject = null;
-    [botaoMicrofone, botaoCamera, botaoTela, botaoTelaCheia].forEach((botao) => {
-      botao.disabled = true;
-    });
+    previa.srcObject = null;
+    [botaoMicrofone, botaoCamera, botaoTela, botaoTelaCheia, botaoPreviaMicrofone, botaoPreviaCamera, botaoEntrar].forEach(
+      (botao) => {
+        botao.disabled = true;
+      }
+    );
+    escolhaCamera.disabled = true;
+    escolhaMicrofone.disabled = true;
   }
 
   function terminar() {
@@ -1008,9 +1310,12 @@
   // Plano B: ao abrir o Jitsi, esta sala desliga para não usar a câmera duas vezes.
   sala.querySelector("[data-link-jitsi]").addEventListener("click", () => {
     desligar();
-    mostrarEstado("Chamada aberta no Jitsi", {
-      textoDaCapa: "A chamada continua no Jitsi, em outra aba. Para voltar para cá, recarregue a página.",
-    });
+    const texto = "A chamada continua no Jitsi, em outra aba. Para voltar para cá, recarregue a página.";
+    mostrarEstado("Chamada aberta no Jitsi", { textoDaCapa: texto });
+    // Se ainda estava na pré-sala, o aviso aparece no lugar da prévia.
+    previa.classList.add("invisible");
+    mostrarSe(previaSemVideo, true);
+    previaTexto.textContent = texto;
   });
 
   // Fechar a aba, recarregar ou ir para outra tela também avisa o outro ("saiu").

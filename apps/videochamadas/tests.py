@@ -2,6 +2,9 @@
 
 VideochamadasTests roda no modo "jitsi" (plano B) e confere que ele continua como antes.
 SinalizacaoTests confere a sala própria: as rotas sinal/ e ice/.
+SituacaoTests e ChamadaRecebidaTests conferem a fase 3: situações no histórico (Atendida,
+Recusada, Não atendida, com a duração) e a janela "Fulano está te chamando".
+ChamarSobreAlunoTests confere o botão "Chamar professor sobre este aluno" de Alunos em risco.
 As permissões por perfil (aluno e ADMIN levam 403) também estão na varredura de
 apps/contas/test_permissoes.py.
 """
@@ -18,8 +21,18 @@ from django.utils import timezone
 from apps.alertas.models import Alerta
 from apps.professor.tests import HASH_RAPIDO
 
+from apps.academico.models import Curso, Disciplina, Matricula, Oferta, Turma
+from apps.analytics.models import RiscoEvasao
+
 from .forms import pessoas_para_chamar
-from .models import DURACAO_MAXIMA, Chamada, SinalChamada, nome_na_chamada
+from .models import (
+    DURACAO_MAXIMA,
+    TEMPO_DE_TOQUE,
+    Chamada,
+    SinalChamada,
+    nome_na_chamada,
+    texto_da_duracao,
+)
 from .views import LIMITE_DO_SINAL, STUN_PADRAO
 
 Usuario = get_user_model()
@@ -206,7 +219,13 @@ class VideochamadasTests(TestCase):
             criada_em=timezone.now() - DURACAO_MAXIMA - timedelta(minutes=1),
         )
         self.assertFalse(chamada.em_andamento)
-        self.assertEqual(chamada.situacao, "Encerrada")
+        # Ninguém abriu a sala: "Não atendida". Se tivesse sido atendida, seria "Atendida",
+        # mas sem duração (ninguém encerrou, então não se sabe quando a conversa acabou).
+        self.assertEqual(chamada.situacao, Chamada.Situacao.NAO_ATENDIDA)
+        chamada.atendida_em = chamada.criada_em + timedelta(seconds=20)
+        self.assertEqual(chamada.situacao, Chamada.Situacao.ATENDIDA)
+        self.assertIsNone(chamada.duracao)
+        self.assertEqual(chamada.texto_da_duracao, "")
 
     def test_historico_mostra_so_as_chamadas_da_pessoa(self):
         Chamada.objects.create(
@@ -382,7 +401,10 @@ class SinalizacaoTests(TestCase):
         self.assertEqual(resposta.status_code, 400)
         self.assertTrue(resposta.json()["encerrada"])
         self.assertFalse(SinalChamada.objects.exists())
-        self.assertEqual(self.ler(self.professor).json(), {"sinais": [], "encerrada": True})
+        self.assertEqual(
+            self.ler(self.professor).json(),
+            {"sinais": [], "encerrada": True, "situacao": "nao_atendida"},
+        )
         self.assertEqual(self.client.get(self.url_ice()).status_code, 400)
 
     def test_chamada_de_mais_de_3_horas_nao_aceita_sinal(self):
@@ -533,3 +555,355 @@ class SinalizacaoTests(TestCase):
         self.assertContains(
             self.client.get(reverse("videochamadas:inicio")), "A chamada acontece aqui mesmo, no portal."
         )
+
+    def test_sala_propria_comeca_pela_pre_sala(self):
+        self.client.force_login(self.professor)
+        resposta = self.client.get(reverse("videochamadas:sala", args=[self.chamada.pk]))
+        for parte in ("data-pre-sala", "data-previa", "data-escolha-camera", "data-escolha-microfone",
+                      "data-nivel-microfone", "data-entrar"):
+            self.assertContains(resposta, parte)
+        # A sala (vídeo do outro e conversa) fica escondida até "Entrar na sala".
+        self.assertContains(resposta, "<div data-dentro-da-sala hidden>")
+        # A situação vai para o chamada.js mostrar "Chamando..." ou "não atendeu".
+        self.assertContains(resposta, 'data-situacao="em_andamento"')
+
+
+@override_settings(PASSWORD_HASHERS=HASH_RAPIDO, VIDEO_MODO="proprio", **SEM_TURN)
+class SituacaoTests(TestCase):
+    """Situações do histórico, calculadas pelas datas da chamada."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.coordenador = Usuario.objects.create_user(
+            "coord", "senha", perfil="COORDENADOR", first_name="Carla", last_name="Souza"
+        )
+        cls.professor = Usuario.objects.create_user(
+            "prof", "senha", perfil="PROFESSOR", first_name="Ana", last_name="Dias"
+        )
+
+    def nova_chamada(self, **campos):
+        return Chamada.objects.create(criada_por=self.coordenador, convidado=self.professor, **campos)
+
+    def abrir_sala(self, pessoa, chamada):
+        self.client.force_login(pessoa)
+        return self.client.get(reverse("videochamadas:sala", args=[chamada.pk]))
+
+    def test_situacoes(self):
+        agora = timezone.now()
+        casos = {
+            Chamada.Situacao.CHAMANDO: {},
+            Chamada.Situacao.NAO_ATENDIDA: {"criada_em": agora - TEMPO_DE_TOQUE - timedelta(seconds=1)},
+            Chamada.Situacao.EM_ANDAMENTO: {"atendida_em": agora},
+            Chamada.Situacao.ATENDIDA: {"atendida_em": agora, "encerrada_em": agora + timedelta(minutes=5)},
+            Chamada.Situacao.RECUSADA: {"recusada_em": agora, "encerrada_em": agora},
+        }
+        for esperada, campos in casos.items():
+            with self.subTest(situacao=esperada.label):
+                self.assertEqual(self.nova_chamada(**campos).situacao, esperada)
+
+    def test_quem_chamou_desistiu_antes_de_atenderem(self):
+        chamada = self.nova_chamada(encerrada_em=timezone.now())
+        self.assertEqual(chamada.situacao, Chamada.Situacao.NAO_ATENDIDA)
+
+    def test_duracao_conta_do_atendimento_ao_encerramento(self):
+        inicio = timezone.now()
+        chamada = self.nova_chamada(
+            atendida_em=inicio, encerrada_em=inicio + timedelta(minutes=12, seconds=40)
+        )
+        self.assertEqual(chamada.duracao, timedelta(minutes=12, seconds=40))
+        self.assertEqual(chamada.texto_da_duracao, "12 min")
+        self.assertIsNone(self.nova_chamada().duracao)  # não atendida: sem duração
+
+    def test_texto_da_duracao(self):
+        self.assertEqual(texto_da_duracao(timedelta(seconds=30)), "menos de 1 min")
+        self.assertEqual(texto_da_duracao(timedelta(minutes=1)), "1 min")
+        self.assertEqual(texto_da_duracao(timedelta(minutes=65)), "1 h 05 min")
+
+    def test_convidado_abrir_a_sala_marca_a_chamada_como_atendida(self):
+        chamada = self.nova_chamada()
+        self.abrir_sala(self.coordenador, chamada)  # quem chamou não "atende"
+        chamada.refresh_from_db()
+        self.assertIsNone(chamada.atendida_em)
+
+        self.abrir_sala(self.professor, chamada)
+        chamada.refresh_from_db()
+        primeira = chamada.atendida_em
+        self.assertIsNotNone(primeira)
+        self.assertEqual(chamada.situacao, Chamada.Situacao.EM_ANDAMENTO)
+
+        self.abrir_sala(self.professor, chamada)  # abrir de novo não muda a hora
+        chamada.refresh_from_db()
+        self.assertEqual(chamada.atendida_em, primeira)
+
+    def test_convidado_atrasado_ainda_atende(self):
+        # Passou o tempo do toque, mas quem chamou ainda espera: abrir a sala vale como atender.
+        chamada = self.nova_chamada(criada_em=timezone.now() - TEMPO_DE_TOQUE - timedelta(minutes=1))
+        self.abrir_sala(self.professor, chamada)
+        chamada.refresh_from_db()
+        self.assertEqual(chamada.situacao, Chamada.Situacao.EM_ANDAMENTO)
+
+    def test_abrir_chamada_encerrada_nao_vira_atendida(self):
+        chamada = self.nova_chamada(encerrada_em=timezone.now())
+        resposta = self.abrir_sala(self.professor, chamada)
+        chamada.refresh_from_db()
+        self.assertIsNone(chamada.atendida_em)
+        self.assertContains(resposta, "Você não atendeu.")
+
+    def test_historico_mostra_situacao_e_duracao(self):
+        inicio = timezone.now()
+        self.nova_chamada(atendida_em=inicio, encerrada_em=inicio + timedelta(minutes=65), assunto="Longa")
+        self.nova_chamada(recusada_em=inicio, encerrada_em=inicio, assunto="Curta")
+        self.client.force_login(self.coordenador)
+        resposta = self.client.get(reverse("videochamadas:inicio"))
+        self.assertContains(resposta, "1 h 05 min")
+        self.assertContains(resposta, "Atendida")
+        self.assertContains(resposta, "Recusada")
+
+    def test_detalhes_da_chamada_atendida(self):
+        inicio = timezone.now()
+        chamada = self.nova_chamada(atendida_em=inicio, encerrada_em=inicio + timedelta(minutes=3))
+        resposta = self.abrir_sala(self.coordenador, chamada)
+        self.assertContains(resposta, "Atendida em")
+        self.assertContains(resposta, "Duração")
+        self.assertContains(resposta, "3 min")
+
+
+@override_settings(PASSWORD_HASHERS=HASH_RAPIDO, VIDEO_MODO="proprio", **SEM_TURN)
+class ChamadaRecebidaTests(TestCase):
+    """Janela "Fulano está te chamando": a rota recebida/ e o botão Recusar."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.coordenador = Usuario.objects.create_user(
+            "coord", "senha", perfil="COORDENADOR", first_name="Carla", last_name="Souza"
+        )
+        cls.professor = Usuario.objects.create_user(
+            "prof", "senha", perfil="PROFESSOR", first_name="Ana", last_name="Dias"
+        )
+        cls.outro_professor = Usuario.objects.create_user("prof2", "senha", perfil="PROFESSOR")
+        cls.aluno = Usuario.objects.create_user("aluno", "senha", perfil="ALUNO")
+        cls.admin = Usuario.objects.create_user("admin", "senha", perfil="ADMIN", is_staff=True)
+
+    def chamar(self, assunto="Planejamento"):
+        """Cria a chamada pela tela, como o coordenador faria (com o convite no sino)."""
+        self.client.force_login(self.coordenador)
+        self.client.post(
+            reverse("videochamadas:nova"), {"convidado": self.professor.pk, "assunto": assunto}
+        )
+        return Chamada.objects.latest("id")
+
+    def recebida(self, pessoa):
+        self.client.force_login(pessoa)
+        return self.client.get(reverse("videochamadas:recebida"))
+
+    def recusar(self, pessoa, chamada):
+        self.client.force_login(pessoa)
+        return self.client.post(reverse("videochamadas:recusar", args=[chamada.pk]))
+
+    # --- recebida/ ---
+
+    def test_convidado_recebe_a_chamada_que_esta_tocando(self):
+        chamada = self.chamar()
+        resposta = self.recebida(self.professor)
+        self.assertIn("no-cache", resposta["Cache-Control"])
+        self.assertEqual(
+            resposta.json(),
+            {
+                "chamada": {
+                    "id": chamada.pk,
+                    "nome": "Carla Souza",
+                    "iniciais": self.coordenador.iniciais,
+                    "foto": "",
+                    "assunto": "Planejamento",
+                    "url_sala": reverse("videochamadas:sala", args=[chamada.pk]),
+                    "url_recusar": reverse("videochamadas:recusar", args=[chamada.pk]),
+                }
+            },
+        )
+
+    def test_so_toca_para_o_convidado(self):
+        self.chamar()
+        for pessoa in (self.coordenador, self.outro_professor):
+            with self.subTest(pessoa=pessoa.matricula):
+                self.assertEqual(self.recebida(pessoa).json(), {"chamada": None})
+
+    def test_para_de_tocar(self):
+        # Atendida, encerrada (quem chamou desistiu) ou passou o tempo do toque.
+        agora = timezone.now()
+        mudancas = {
+            "atendida": {"atendida_em": agora},
+            "encerrada": {"encerrada_em": agora},
+            "tempo do toque": {"criada_em": agora - TEMPO_DE_TOQUE - timedelta(seconds=1)},
+        }
+        for motivo, campos in mudancas.items():
+            with self.subTest(motivo=motivo):
+                chamada = Chamada.objects.create(
+                    criada_por=self.coordenador, convidado=self.professor, **campos
+                )
+                self.assertEqual(self.recebida(self.professor).json(), {"chamada": None})
+                chamada.delete()
+
+    def test_recebida_leva_a_foto_de_quem_chamou(self):
+        self.coordenador.foto.name = "fotos/carla.jpg"
+        self.coordenador.save(update_fields=["foto"])
+        self.chamar()
+        foto = self.recebida(self.professor).json()["chamada"]["foto"]
+        self.assertTrue(foto.startswith(reverse("contas:foto_de", args=[self.coordenador.pk])))
+
+    def test_recebida_usa_poucas_consultas(self):
+        self.chamar()
+        self.client.force_login(self.professor)
+        # A pergunta se repete a cada 10 s: 2 do login (sessão e usuário) + 1 da chamada.
+        with self.assertNumQueries(3):
+            self.client.get(reverse("videochamadas:recebida"))
+
+    def test_aluno_e_admin_recebem_403(self):
+        for pessoa in (self.aluno, self.admin):
+            with self.subTest(pessoa=pessoa.matricula):
+                self.assertEqual(self.recebida(pessoa).status_code, 403)
+
+    def test_janela_aparece_so_para_professor_e_coordenacao(self):
+        for pessoa, aparece in ((self.professor, True), (self.coordenador, True), (self.aluno, False)):
+            with self.subTest(pessoa=pessoa.matricula):
+                self.client.force_login(pessoa)
+                resposta = self.client.get(reverse("contas:inicio"), follow=True)
+                self.assertEqual(resposta.status_code, 200)
+                if aparece:
+                    self.assertContains(resposta, "data-chamada-recebida")
+                    self.assertContains(resposta, f'data-url="{reverse("videochamadas:recebida")}"')
+                else:
+                    self.assertNotContains(resposta, "data-chamada-recebida")
+
+    # --- Recusar ---
+
+    def test_convidado_recusa(self):
+        chamada = self.chamar()
+        SinalChamada.objects.create(
+            chamada=chamada, de=self.coordenador, para=self.professor, tipo="entrei"
+        )
+        resposta = self.recusar(self.professor, chamada)
+        self.assertEqual(resposta.json(), {"recusada": True})
+        chamada.refresh_from_db()
+        self.assertIsNotNone(chamada.recusada_em)
+        self.assertEqual(chamada.encerrada_em, chamada.recusada_em)
+        self.assertEqual(chamada.situacao, Chamada.Situacao.RECUSADA)
+        self.assertFalse(SinalChamada.objects.exists())
+        self.assertIsNotNone(Alerta.objects.get(destinatario=self.professor).lido_em)
+        self.assertEqual(self.recebida(self.professor).json(), {"chamada": None})
+
+    def test_quem_chamou_percebe_a_recusa(self):
+        chamada = self.chamar()
+        self.recusar(self.professor, chamada)
+        self.client.force_login(self.coordenador)
+        dados = self.client.get(reverse("videochamadas:sinal", args=[chamada.pk])).json()
+        self.assertEqual((dados["encerrada"], dados["situacao"]), (True, "recusada"))
+        resposta = self.client.get(reverse("videochamadas:sala", args=[chamada.pk]))
+        self.assertContains(resposta, "Ana Dias recusou a chamada.")
+
+    def test_so_o_convidado_recusa(self):
+        chamada = self.chamar()
+        for pessoa in (self.coordenador, self.outro_professor):
+            with self.subTest(pessoa=pessoa.matricula):
+                self.assertEqual(self.recusar(pessoa, chamada).status_code, 404)
+        chamada.refresh_from_db()
+        self.assertIsNone(chamada.recusada_em)
+
+    def test_nao_recusa_chamada_atendida_ou_encerrada(self):
+        agora = timezone.now()
+        for campos in ({"atendida_em": agora}, {"encerrada_em": agora}):
+            with self.subTest(campos=list(campos)):
+                chamada = Chamada.objects.create(
+                    criada_por=self.coordenador, convidado=self.professor, **campos
+                )
+                self.assertEqual(self.recusar(self.professor, chamada).status_code, 400)
+                chamada.refresh_from_db()
+                self.assertIsNone(chamada.recusada_em)
+
+    def test_recusar_so_aceita_post(self):
+        chamada = self.chamar()
+        self.client.force_login(self.professor)
+        self.assertEqual(
+            self.client.get(reverse("videochamadas:recusar", args=[chamada.pk])).status_code, 405
+        )
+
+    def test_recusar_exige_o_token_csrf(self):
+        chamada = self.chamar()
+        navegador = Client(enforce_csrf_checks=True)
+        navegador.force_login(self.professor)
+        navegador.get(reverse("videochamadas:inicio"))  # recebe o cookie
+        url = reverse("videochamadas:recusar", args=[chamada.pk])
+        self.assertEqual(navegador.post(url).status_code, 403)
+        resposta = navegador.post(url, headers={"X-CSRFToken": navegador.cookies["csrftoken"].value})
+        self.assertEqual(resposta.status_code, 200)
+
+
+@override_settings(PASSWORD_HASHERS=HASH_RAPIDO)
+class ChamarSobreAlunoTests(TestCase):
+    """Alunos em risco: "Chamar professor sobre este aluno" lista só os professores ativos da
+    turma do aluno e abre Videochamadas com o professor e o assunto já preenchidos."""
+
+    @classmethod
+    def setUpTestData(cls):
+        curso = Curso.objects.create(nome="Curso", total_creditos=200)
+        cls.turma = Turma.objects.create(curso=curso, codigo="T1", semestre="2026.2", periodo=1)
+        cls.turma_sem_professor = Turma.objects.create(
+            curso=curso, codigo="T2", semestre="2026.2", periodo=1
+        )
+        disciplinas = [
+            Disciplina.objects.create(
+                curso=curso, codigo=f"D{numero}", nome=nome, creditos=4, carga_horaria=40
+            )
+            for numero, nome in enumerate(["Cálculo", "Física", "Química"])
+        ]
+        cls.coordenador = Usuario.objects.create_user("coord", "senha", perfil="COORDENADOR")
+        cls.professor = Usuario.objects.create_user(
+            "prof", "senha", perfil="PROFESSOR", first_name="Ana", last_name="Dias", tratamento="Profa."
+        )
+        cls.desativado = Usuario.objects.create_user(
+            "prof2", "senha", perfil="PROFESSOR", first_name="Bruno", is_active=False
+        )
+        cls.de_outra_turma = Usuario.objects.create_user(
+            "prof3", "senha", perfil="PROFESSOR", first_name="Caio"
+        )
+        # A professora dá duas disciplinas na turma: aparece uma vez, com as duas.
+        Oferta.objects.create(turma=cls.turma, disciplina=disciplinas[0], professor=cls.professor)
+        Oferta.objects.create(turma=cls.turma, disciplina=disciplinas[1], professor=cls.professor)
+        Oferta.objects.create(turma=cls.turma, disciplina=disciplinas[2], professor=cls.desativado)
+
+        cls.aluno = Usuario.objects.create_user(
+            "2026001", "senha", perfil="ALUNO", first_name="Lia", last_name="Costa"
+        )
+        cls.outro_aluno = Usuario.objects.create_user(
+            "2026002", "senha", perfil="ALUNO", first_name="Rui"
+        )
+        for aluno, turma, chance in ((cls.aluno, cls.turma, 72), (cls.outro_aluno, cls.turma_sem_professor, 65)):
+            RiscoEvasao.objects.create(
+                matricula=Matricula.objects.create(aluno=aluno, turma=turma),
+                probabilidade=chance, nivel=RiscoEvasao.Nivel.ALTO, motivos=[],
+                frequencia=60, media=4, tendencia=-1, justificativas_pendentes=0,
+            )
+
+    def setUp(self):
+        self.client.force_login(self.coordenador)
+
+    def test_lista_so_os_professores_ativos_da_turma(self):
+        resposta = self.client.get(reverse("coordenacao:risco"))
+        self.assertContains(resposta, "Chamar professor")
+        self.assertContains(resposta, "Profa. Ana Dias")
+        self.assertContains(resposta, "Cálculo, Física")
+        self.assertNotContains(resposta, f"?para={self.desativado.pk}&amp;")
+        self.assertNotContains(resposta, f"?para={self.de_outra_turma.pk}&amp;")
+        # O aluno da turma sem professor ativo não tem para quem ligar.
+        self.assertContains(resposta, "Nenhum professor ativo na turma")
+
+    def test_link_abre_videochamadas_com_o_assunto_preenchido(self):
+        resposta = self.client.get(reverse("coordenacao:risco"))
+        link = resposta.context["pagina"][0].chamar_professores[0]["url"]
+        self.assertTrue(link.startswith(f"{reverse('videochamadas:inicio')}?para={self.professor.pk}&"))
+        tela = self.client.get(link)
+        self.assertContains(tela, f'<option value="{self.professor.pk}" selected>')
+        self.assertContains(tela, 'value="Aluno em risco: Lia Costa (RA 2026001)"')
+
+    def test_assunto_longo_e_cortado_no_limite_do_campo(self):
+        tela = self.client.get(reverse("videochamadas:inicio"), {"assunto": "x" * 300})
+        self.assertEqual(len(tela.context["form"]["assunto"].value()), 120)

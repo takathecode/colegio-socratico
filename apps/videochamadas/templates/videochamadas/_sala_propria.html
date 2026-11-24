@@ -1,7 +1,7 @@
 {% comment %}
   Sala de vídeo própria (VIDEO_MODO=proprio). Usada só em videochamadas/sala.html.
-  O static/js/chamada.js lê os data-* deste <section> e controla os vídeos, os botões, a
-  conversa, o estado da conexão e os avisos. O {% csrf_token %} daqui vai no cabeçalho
+  O static/js/chamada.js lê os data-* deste <section> e controla a pré-sala (prévia da câmera
+  e escolha dos aparelhos), os vídeos, os botões, a conversa, o estado da conexão e os avisos. O {% csrf_token %} daqui vai no cabeçalho
   X-CSRFToken dos POSTs.
 {% endcomment %}
 <section class="mt-4 rounded-xl border border-[#E5E9F0] bg-white p-4 sm:p-5"
@@ -12,6 +12,7 @@
          data-url-inicio="{% url 'videochamadas:inicio' %}"
          data-ultimo-sinal="{{ ultimo_sinal }}"
          data-nome-do-outro="{{ nome_do_outro }}"
+         data-situacao="{{ chamada.situacao.value }}"
          data-sou-quem-chamou="{% if fui_eu_que_chamei %}true{% else %}false{% endif %}">
   {% csrf_token %}
 
@@ -33,7 +34,63 @@
     </p>
   </div>
 
+  {# Pré-sala: antes de entrar, a pessoa vê a própria câmera, escolhe a câmera e o microfone #}
+  {# e confere se o microfone está ouvindo. O outro só recebe a imagem depois de "Entrar na sala". #}
+  <div data-pre-sala class="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    {# No celular, a prévia é mais baixa que o vídeo da sala, para o botão "Entrar" aparecer sem rolar muito. #}
+    <div class="relative aspect-[4/3] max-h-[45vh] w-full overflow-hidden rounded-xl bg-[#0B2545] sm:aspect-video sm:max-h-[60vh]">
+      {# Espelhada (-scale-x-100), como num espelho. #}
+      <video data-previa autoplay playsinline muted aria-label="Prévia da sua câmera" class="size-full -scale-x-100 object-cover"></video>
+      <div data-previa-sem-video class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#0B2545] p-4 text-center text-white">
+        <span class="flex size-16 items-center justify-center overflow-hidden rounded-full bg-white/10 text-xl font-semibold sm:size-20 sm:text-2xl" aria-hidden="true">{% include "componentes/avatar.html" %}</span>
+        <p data-previa-texto class="max-w-sm text-sm text-white/80">Se o navegador perguntar, permita o uso da câmera e do microfone.</p>
+      </div>
+      <div class="absolute inset-x-0 bottom-3 flex justify-center gap-2 px-3">
+        <button type="button" data-previa-microfone aria-label="Desligar o microfone" title="Desligar o microfone"
+                class="botao-vidro flex size-11 items-center justify-center rounded-full text-white disabled:opacity-50 data-[desligado]:bg-[#C62828] data-[desligado]:hover:bg-[#A51F1F]">
+          <span data-icone-ligado><i data-lucide="mic" class="size-5" aria-hidden="true"></i></span>
+          <span data-icone-desligado class="hidden"><i data-lucide="mic-off" class="size-5" aria-hidden="true"></i></span>
+        </button>
+        <button type="button" data-previa-camera aria-label="Desligar a câmera" title="Desligar a câmera"
+                class="botao-vidro flex size-11 items-center justify-center rounded-full text-white disabled:opacity-50 data-[desligado]:bg-[#C62828] data-[desligado]:hover:bg-[#A51F1F]">
+          <span data-icone-ligado><i data-lucide="video" class="size-5" aria-hidden="true"></i></span>
+          <span data-icone-desligado class="hidden"><i data-lucide="video-off" class="size-5" aria-hidden="true"></i></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-4 rounded-xl border border-[#E5E9F0] p-4">
+      <div>
+        <h2 class="text-base font-semibold text-[#0B2545]">Antes de entrar</h2>
+        <p class="mt-1 text-sm text-slate-500">Confira a imagem e o som. {{ nome_do_outro }} só vê e ouve você depois que você entrar.</p>
+      </div>
+      <div>
+        <label for="escolha-camera" class="mb-1 block text-sm font-medium">Câmera</label>
+        <select id="escolha-camera" data-escolha-camera disabled class="w-full rounded-lg border border-[#E5E9F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F4E8C] focus:ring-2 focus:ring-[#1F4E8C]/30 disabled:bg-[#F5F7FA] disabled:text-slate-500">
+          <option>Procurando...</option>
+        </select>
+      </div>
+      <div>
+        <label for="escolha-microfone" class="mb-1 block text-sm font-medium">Microfone</label>
+        <select id="escolha-microfone" data-escolha-microfone disabled class="w-full rounded-lg border border-[#E5E9F0] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#1F4E8C] focus:ring-2 focus:ring-[#1F4E8C]/30 disabled:bg-[#F5F7FA] disabled:text-slate-500">
+          <option>Procurando...</option>
+        </select>
+        {# A barra verde acompanha o volume do microfone: se ela mexe, o microfone está ouvindo. #}
+        <div class="mt-2 h-2 overflow-hidden rounded-full bg-[#E5E9F0]" aria-hidden="true">
+          <div data-nivel-microfone class="h-full w-0 rounded-full bg-green-600"></div>
+        </div>
+        <p class="mt-1 text-xs text-slate-500">Fale alguma coisa: a barra verde mexe quando o microfone está ouvindo.</p>
+      </div>
+      <button type="button" data-entrar disabled
+              class="botao-vidro mt-auto inline-flex h-12 items-center justify-center gap-2 rounded-lg px-5 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60">
+        <i data-lucide="log-in" class="size-4" aria-hidden="true"></i> Entrar na sala
+      </button>
+    </div>
+  </div>
+
   {# Vídeo à esquerda e conversa à direita na tela grande; um embaixo do outro no celular. #}
+  {# Fica escondido (atributo hidden) até a pessoa clicar em "Entrar na sala". #}
+  <div data-dentro-da-sala hidden>
   <div class="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
     {# "Palco": o vídeo do outro em tamanho grande, o seu em miniatura e os botões. É ele que #}
     {# ocupa a tela inteira no botão "Tela cheia". Altura limitada para caber no notebook. #}
@@ -129,6 +186,7 @@
       </aside>
     </div>
   </div>
+  </div>{# fim de data-dentro-da-sala #}
 
   {# Avisos de câmera, microfone e conexão, em português. #}
   <div data-aviso role="alert" class="mt-4 hidden items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">

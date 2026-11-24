@@ -406,6 +406,173 @@ document.querySelectorAll("[data-copiar]").forEach((botao) => {
   });
 });
 
+// --- Videochamada recebida (componentes/chamada_recebida.html) ---
+// Em qualquer tela do professor e da coordenação, pergunta ao portal a cada 10 s se alguém
+// está chamando (rota videochamadas:recebida). Se estiver, abre a janela com Atender e Recusar.
+// É polling, como na sala de vídeo: a Vercel não segura conexões abertas (docs/VIDEOCHAMADA.md).
+const janelaDeChamada = document.querySelector("dialog[data-chamada-recebida]");
+if (janelaDeChamada) {
+  const INTERVALO_COM_A_ABA_ABERTA = 10000;
+  const INTERVALO_EM_SEGUNDO_PLANO = 30000; // aba escondida: pergunta com menos frequência
+  const RITMO_DO_TOQUE = 1500; // o título da aba pisca neste ritmo; o bipe toca a cada 2 piscadas
+
+  const urlRecebida = janelaDeChamada.dataset.url;
+  const tokenCsrf = janelaDeChamada.querySelector("[name=csrfmiddlewaretoken]").value;
+  const campoNome = janelaDeChamada.querySelector("[data-chamada-nome]");
+  const campoAssunto = janelaDeChamada.querySelector("[data-chamada-assunto]");
+  const campoAvatar = janelaDeChamada.querySelector("[data-chamada-avatar]");
+  const campoErro = janelaDeChamada.querySelector("[data-chamada-erro]");
+  const botaoAtender = janelaDeChamada.querySelector("[data-chamada-atender]");
+  const botaoRecusar = janelaDeChamada.querySelector("[data-chamada-recusar]");
+  const tituloDaPagina = document.title;
+
+  const ignoradas = new Set(); // chamadas que a pessoa fechou com Esc nesta aba
+  let chamadaNaTela = null;
+  let proximaPergunta = null;
+  let relogioDoToque = null;
+  let audio = null;
+
+  function bipe() {
+    // Dois tons curtos feitos pelo próprio navegador (Web Audio), sem arquivo de som. Se o
+    // navegador bloquear som antes de a pessoa clicar na página, fica só a janela.
+    try {
+      audio ||= new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === "suspended") audio.resume().catch(() => {});
+      const agora = audio.currentTime;
+      [520, 660].forEach((frequencia, ordem) => {
+        const inicio = agora + ordem * 0.25;
+        const oscilador = audio.createOscillator();
+        const volume = audio.createGain();
+        oscilador.frequency.value = frequencia;
+        volume.gain.setValueAtTime(0.0001, inicio);
+        volume.gain.exponentialRampToValueAtTime(0.08, inicio + 0.02);
+        volume.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.2);
+        oscilador.connect(volume).connect(audio.destination);
+        oscilador.start(inicio);
+        oscilador.stop(inicio + 0.22);
+      });
+    } catch (erro) {
+      // navegador sem Web Audio: segue só com a janela
+    }
+  }
+
+  function comecarATocar() {
+    pararDeTocar();
+    bipe();
+    let piscada = 0;
+    relogioDoToque = setInterval(() => {
+      piscada += 1;
+      document.title = piscada % 2 ? `Chamada de ${chamadaNaTela.nome}` : tituloDaPagina;
+      if (piscada % 2 === 0) bipe();
+    }, RITMO_DO_TOQUE);
+  }
+
+  function pararDeTocar() {
+    clearInterval(relogioDoToque);
+    relogioDoToque = null;
+    document.title = tituloDaPagina;
+  }
+
+  function mostrarChamada(chamada) {
+    if (chamadaNaTela?.id === chamada.id) return; // já está na tela
+    chamadaNaTela = chamada;
+    // textContent (e nunca innerHTML): nome e assunto aparecem como texto.
+    campoNome.textContent = chamada.nome;
+    campoAssunto.textContent = chamada.assunto ? `Assunto: ${chamada.assunto}` : "Sem assunto";
+    campoAvatar.replaceChildren();
+    if (chamada.foto) {
+      const foto = document.createElement("img");
+      foto.src = chamada.foto;
+      foto.alt = "";
+      foto.className = "size-full object-cover";
+      campoAvatar.append(foto);
+    } else {
+      campoAvatar.textContent = chamada.iniciais;
+    }
+    botaoAtender.href = chamada.url_sala;
+    campoErro.classList.add("hidden");
+    botaoRecusar.disabled = false;
+    if (!janelaDeChamada.open) janelaDeChamada.showModal();
+    comecarATocar();
+  }
+
+  let fechandoPeloPortal = false;
+
+  function esconderChamada() {
+    // Recusou, quem chamou desistiu, outra aba atendeu ou passou o tempo do toque.
+    if (!janelaDeChamada.open) return;
+    fechandoPeloPortal = true;
+    janelaDeChamada.close(); // o evento "close" faz o resto
+  }
+
+  janelaDeChamada.addEventListener("close", () => {
+    // Fechada pela própria pessoa (Esc): não recusa e não abre de novo nesta aba; o convite
+    // continua no sino. Não dá para usar o evento "cancel": o Chrome não o dispara quando a
+    // janela abriu sem um clique da pessoa (como aqui, aberta pelo relógio).
+    if (!fechandoPeloPortal && chamadaNaTela) ignoradas.add(chamadaNaTela.id);
+    fechandoPeloPortal = false;
+    pararDeTocar();
+    chamadaNaTela = null;
+  });
+  botaoAtender.addEventListener("click", pararDeTocar);
+
+  botaoRecusar.addEventListener("click", async () => {
+    if (!chamadaNaTela) return;
+    botaoRecusar.disabled = true;
+    try {
+      const resposta = await fetch(chamadaNaTela.url_recusar, {
+        method: "POST",
+        headers: { "X-CSRFToken": tokenCsrf },
+        credentials: "same-origin",
+      });
+      // 400/404: a chamada já foi atendida (em outra aba), encerrada ou não existe mais.
+      if (resposta.ok || resposta.status === 400 || resposta.status === 404) {
+        esconderChamada();
+        return;
+      }
+    } catch (erro) {
+      // sem rede: mostra o aviso abaixo
+    }
+    campoErro.textContent = "Não foi possível recusar. Confira a internet e tente de novo.";
+    campoErro.classList.remove("hidden");
+    botaoRecusar.disabled = false;
+  });
+
+  let perguntando = false; // trava: nunca duas perguntas ao mesmo tempo (nem dois laços)
+
+  async function perguntar() {
+    if (perguntando) return;
+    perguntando = true;
+    clearTimeout(proximaPergunta);
+    try {
+      const resposta = await fetch(urlRecebida, { credentials: "same-origin", cache: "no-store" });
+      // Login vencido (foi redirecionado para a tela de login) ou sem acesso: para de perguntar
+      // (perguntando fica true de propósito, para nada recomeçar o laço).
+      if (resposta.redirected || resposta.status === 403) return;
+      if (resposta.ok) {
+        const { chamada } = await resposta.json();
+        if (chamada && !ignoradas.has(chamada.id)) {
+          mostrarChamada(chamada);
+        } else {
+          esconderChamada(); // ninguém chamando, ou já atendida/recusada em outra aba
+        }
+      }
+    } catch (erro) {
+      // portal fora do ar ou sem internet: tenta de novo na próxima
+    }
+    perguntando = false;
+    const intervalo = document.hidden ? INTERVALO_EM_SEGUNDO_PLANO : INTERVALO_COM_A_ABA_ABERTA;
+    proximaPergunta = setTimeout(perguntar, intervalo);
+  }
+
+  // Voltou para a aba: pergunta na hora, sem esperar o intervalo.
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) perguntar();
+  });
+
+  perguntar();
+}
+
 // --- Sino de notificações ---
 // O <details> já abre e fecha sozinho; aqui ele também fecha ao clicar fora ou apertar Esc.
 const sino = document.querySelector("details[data-sino]");
