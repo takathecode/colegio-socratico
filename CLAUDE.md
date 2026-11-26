@@ -107,8 +107,9 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
   Manter `.env.example` atualizado (sem valores reais). `.env` está no `.gitignore`.
 
 ## Padrão visual (protótipo Figma)
-- O nome é sempre **Instituto Socrático** e a logo é um "S", mesmo onde o protótipo mostrar outro
-  nome ou outra letra.
+- O nome é sempre **Instituto Socrático**, mesmo onde o protótipo mostrar outro nome ou outra letra.
+  A logo na tela é o Sócrates com os livros (`componentes/logo.html`, o mesmo desenho do favicon);
+  os e-mails e os PDFs ainda usam o "S".
 - Cores, raios, sombras, espaços e tamanhos de texto ficam como **tokens** no `@theme` de
   `assets/tailwind.css` (ex.: `bg-fundo`, `border-borda`, `text-marinho`, `text-primaria`, `rounded-cartao`,
   `rounded-controle`, `w-menu`). Nos templates, nada de hex solto; hex só onde o Tailwind não chega
