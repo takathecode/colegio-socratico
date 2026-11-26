@@ -1,4 +1,4 @@
-<!doctype html>
+{% load static %}<!doctype html>
 <html lang="pt-br">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block titulo %}{% endblock %}</title></head>
 {# E-mail em HTML: estilos dentro das tags, porque muitos programas de e-mail ignoram <style>. #}
@@ -7,7 +7,9 @@
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border:1px solid #E5E9F0;border-radius:12px;">
         <tr><td style="background:#0B2545;border-radius:12px 12px 0 0;padding:20px 28px;">
-          <span style="display:inline-block;width:32px;height:32px;line-height:32px;text-align:center;border-radius:8px;background:#FFFFFF;color:#0B2545;font-weight:700;font-size:18px;vertical-align:middle;">S</span>
+          {# Logo (Sócrates com os livros), a mesma do site. O e-mail precisa do endereço completo
+             da imagem (site + /static/...), porque o programa de e-mail não conhece o portal. #}
+          <img src="{{ site }}{% static 'img/apple-touch-icon.png' %}?v=2" alt="" width="40" height="40" style="display:inline-block;width:40px;height:40px;border:1px solid #33507A;border-radius:8px;vertical-align:middle;">
           <span style="color:#FFFFFF;font-weight:700;font-size:16px;margin-left:10px;vertical-align:middle;">Instituto Socrático</span>
         </td></tr>
         <tr><td style="padding:28px;font-size:15px;line-height:1.6;">

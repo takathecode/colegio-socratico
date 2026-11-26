@@ -109,7 +109,8 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
 ## Padrão visual (protótipo Figma)
 - O nome é sempre **Instituto Socrático**, mesmo onde o protótipo mostrar outro nome ou outra letra.
   A logo na tela é o Sócrates com os livros (`componentes/logo.html`, o mesmo desenho do favicon);
-  os e-mails e os PDFs ainda usam o "S".
+  os e-mails (imagem pelo endereço completo, `SITE_URL` + `/static/...`) e os PDFs usam o mesmo arquivo
+  (`static/img/apple-touch-icon.png`). O "S" saiu de tudo.
 - Cores, raios, sombras, espaços e tamanhos de texto ficam como **tokens** no `@theme` de
   `assets/tailwind.css` (ex.: `bg-fundo`, `border-borda`, `text-marinho`, `text-primaria`, `rounded-cartao`,
   `rounded-controle`, `w-menu`). Nos templates, nada de hex solto; hex só onde o Tailwind não chega
@@ -126,7 +127,7 @@ ml/                modelo treinado (.joblib), versionado para a Vercel (treinou 
   pelo `portal.js` quando a próxima página demora mais de 300 ms (links internos e filtros GET; downloads
   ficam de fora). Tudo desligado com `prefers-reduced-motion`.
 - Fonte Inter. Fundo da página `fundo` (#F5F7FA), cards brancos com borda `borda` (#E5E9F0) e cantos `rounded-cartao`.
-- Azul-marinho da marca `marinho` (#0B2545: painel lateral do login, logo "S"); botão primário `primaria` (#1F4E8C).
+- Azul-marinho da marca `marinho` (#0B2545: painel lateral do login, cabeçalho dos e-mails); botão primário `primaria` (#1F4E8C).
 - Selos: verde "Regular", âmbar "Em atenção", vermelho "Em risco".
 - Layout das áreas internas: barra lateral à esquerda (nome do instituto sem o quadrado do "S", menu,
   card "Precisa de ajuda?", "Sair do portal"), topo com breadcrumb, sino de notificações e avatar (a busca geral do topo foi retirada por não ter função; as listas têm busca própria).

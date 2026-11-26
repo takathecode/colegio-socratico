@@ -16,6 +16,7 @@ from functools import partial
 from io import BytesIO
 from xml.sax.saxutils import escape
 
+from django.conf import settings
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4, landscape
@@ -75,6 +76,9 @@ for _selo, (_cor_do_texto, _cor_do_fundo) in CORES_DO_SELO.items():
 
 MARGEM = 1.6 * cm
 
+# Logo da marca (Sócrates com os livros), o mesmo arquivo do ícone do site.
+LOGO = str(settings.BASE_DIR / "static" / "img" / "apple-touch-icon.png")
+
 
 def texto(valor, estilo):
     """Parágrafo com o texto protegido: um "&" ou "<" no nome não quebra o PDF."""
@@ -85,18 +89,14 @@ def texto(valor, estilo):
 
 
 def desenhar_moldura(canvas, documento, relatorio):
-    """Cabeçalho (logo "S" e nome) e rodapé (data de emissão e página), em toda página."""
+    """Cabeçalho (logo e nome) e rodapé (data de emissão e página), em toda página."""
     largura, altura = documento.pagesize
     esquerda, direita = documento.leftMargin, largura - documento.rightMargin
     topo = altura - 1.1 * cm
     lado = 0.8 * cm  # tamanho do quadrado da logo
 
     canvas.saveState()
-    canvas.setFillColor(AZUL_MARINHO)
-    canvas.roundRect(esquerda, topo - lado, lado, lado, 3, stroke=0, fill=1)
-    canvas.setFillColor(colors.white)
-    canvas.setFont("Helvetica-Bold", 14)
-    canvas.drawCentredString(esquerda + lado / 2, topo - lado + 0.24 * cm, "S")
+    canvas.drawImage(LOGO, esquerda, topo - lado, lado, lado, mask="auto")
 
     canvas.setFillColor(AZUL_MARINHO)
     canvas.setFont("Helvetica-Bold", 11)
